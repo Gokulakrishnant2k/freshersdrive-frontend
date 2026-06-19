@@ -7,6 +7,10 @@ function AdminDashboard() {
   const { auth } = useAuth();
   const { dark } = useTheme();
 
+  const isAdmin    = auth.role === "ROLE_ADMIN";
+  const isEmployee = auth.role === "ROLE_EMPLOYEE";
+  const canAccess  = isAdmin || isEmployee;
+
   const [tab, setTab] = useState("drives"); // "drives" | "users"
 
   const [drives, setDrives] = useState([]);
@@ -23,6 +27,8 @@ function AdminDashboard() {
   const emptyForm = {
     companyName: "",
     jobRole: "",
+    jobDescription: "",
+    keySkills: "",
     location: "",
     ctcDisplay: "",
     minCgpa: "",
@@ -41,7 +47,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchDrives();
-    fetchUsers();
+    if (isAdmin) fetchUsers();
   }, []);
 
   const fetchDrives = async () => {
@@ -80,6 +86,20 @@ function AdminDashboard() {
     }
   };
 
+  const promoteUser = async (user) => {
+    const newRole = user.role === "ROLE_EMPLOYEE" ? "ROLE_USER" : "ROLE_EMPLOYEE";
+    const label   = newRole === "ROLE_EMPLOYEE" ? "promote to Employee" : "demote to User";
+    if (!window.confirm(`Are you sure you want to ${label} "${user.name}"?`)) return;
+    setUserError(null);
+    try {
+      const res = await axios.put(`/admin/users/${user.id}/role`, { role: newRole });
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: res.data.role } : u)));
+    } catch (err) {
+      console.error("PUT /admin/users/role →", err.response ?? err);
+      setUserError(err.response?.data?.message || "Failed to update role.");
+    }
+  };
+
   const buildPayload = (f) => ({
     ...f,
     minCgpa:  f.minCgpa  ? parseFloat(f.minCgpa) : null,
@@ -90,7 +110,6 @@ function AdminDashboard() {
     if (!data) return "Unknown error";
     if (typeof data === "string") return data;
     if (typeof data === "object") {
-      // field-level validation errors from GlobalExceptionHandler
       const entries = Object.entries(data).filter(([k]) => k !== "timestamp" && k !== "path" && k !== "status");
       if (entries.length > 0) return entries.map(([k, v]) => `${k}: ${v}`).join(" | ");
     }
@@ -120,6 +139,8 @@ function AdminDashboard() {
     setForm({
       companyName:       drive.companyName       || "",
       jobRole:           drive.jobRole           || "",
+      jobDescription:    drive.jobDescription    || "",
+      keySkills:         drive.keySkills         || "",
       location:          drive.location          || "",
       ctcDisplay:        drive.ctcDisplay        || "",
       minCgpa:           drive.minCgpa           ?? "",
@@ -169,7 +190,8 @@ function AdminDashboard() {
 
   const t = dark ? dm : s;
 
-  if (auth.role !== "ROLE_ADMIN") {
+  // Block anyone who isn't admin or employee
+  if (!canAccess) {
     return (
       <div style={t.deniedPage}>
         <div style={t.deniedCard}>
@@ -211,17 +233,18 @@ function AdminDashboard() {
             </svg>
           </div>
           <div>
-            <div style={t.pageTitle}>Admin dashboard</div>
-            <div style={s.pageSub}>Manage drives &amp; announcements</div>
+            <div style={t.pageTitle}>{isAdmin ? "Admin dashboard" : "Employee dashboard"}</div>
+            <div style={s.pageSub}>Manage drives</div>
           </div>
         </div>
         <div style={t.adminPill}>
-          <div style={s.avatar}>A</div>
-          {auth.name || "Admin"}
+          <div style={s.avatar}>{isAdmin ? "A" : "E"}</div>
+          {auth.name || (isAdmin ? "Admin" : "Employee")}
+          <span style={t.roleBadge}>{isAdmin ? "Admin" : "Employee"}</span>
         </div>
       </div>
 
-      {/* TABS */}
+      {/* TABS — Users tab only visible to admin */}
       <div style={s.tabRow}>
         <button
           style={tab === "drives" ? t.tabBtnActive : t.tabBtn}
@@ -229,12 +252,14 @@ function AdminDashboard() {
         >
           Drives
         </button>
-        <button
-          style={tab === "users" ? t.tabBtnActive : t.tabBtn}
-          onClick={() => setTab("users")}
-        >
-          Users {users.length > 0 ? `(${users.length})` : ""}
-        </button>
+        {isAdmin && (
+          <button
+            style={tab === "users" ? t.tabBtnActive : t.tabBtn}
+            onClick={() => setTab("users")}
+          >
+            Users {users.length > 0 ? `(${users.length})` : ""}
+          </button>
+        )}
       </div>
 
       {tab === "drives" && (
@@ -284,6 +309,7 @@ function AdminDashboard() {
                 { key: "eligibleBranches", placeholder: "Branches (CSE, ECE)"  },
                 { key: "eligibleBatches",  placeholder: "Batches (2024, 2025)" },
                 { key: "applyLink",        placeholder: "Apply link (URL)"     },
+                { key: "keySkills",        placeholder: "Key skills (e.g. Java, React, SQL)" },
               ].map(({ key, placeholder }) => (
                 <div key={key} style={s.formField}>
                   <label style={s.fieldLabel}>{placeholder.split(" (")[0]}</label>
@@ -356,6 +382,19 @@ function AdminDashboard() {
                   onBlur={(e)  => (e.target.style.borderColor = dark ? "#334155" : "#e2e8f0")}
                 />
               </div>
+            </div>
+
+            {/* JOB DESCRIPTION */}
+            <div style={{ ...s.formField, marginTop: "12px" }}>
+              <label style={s.fieldLabel}>Job description</label>
+              <textarea
+                style={{ ...t.input, minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
+                placeholder="Describe the role, responsibilities, and what the company is looking for..."
+                value={form.jobDescription}
+                onChange={set("jobDescription")}
+                onFocus={(e) => (e.target.style.borderColor = "#2563eb")}
+                onBlur={(e)  => (e.target.style.borderColor = dark ? "#334155" : "#e2e8f0")}
+              />
             </div>
 
             <label style={t.toggleRow}>
@@ -433,7 +472,10 @@ function AdminDashboard() {
                         </td>
                         <td style={t.td}>
                           <button style={t.editBtn} onClick={() => startEdit(d)}>Edit</button>
-                          <button style={s.deleteBtn} onClick={() => deleteDrive(d.id)}>Delete</button>
+                          {/* Delete only visible to admin */}
+                          {isAdmin && (
+                            <button style={s.deleteBtn} onClick={() => deleteDrive(d.id)}>Delete</button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -445,9 +487,9 @@ function AdminDashboard() {
         </>
       )}
 
-      {tab === "users" && (
+      {/* Users tab — admin only */}
+      {tab === "users" && isAdmin && (
         <>
-          {/* ERROR BANNER */}
           {userError && (
             <div style={s.errorBanner}>
               <span>⚠️ {userError}</span>
@@ -455,7 +497,6 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* TABLE CARD */}
           <div style={t.card}>
             <div style={s.cardHeader}>
               <h2 style={t.cardTitle}>Registered users</h2>
@@ -496,10 +537,16 @@ function AdminDashboard() {
                           <td style={t.td}>
                             <span style={{
                               ...s.badge,
-                              background: u.role === "ROLE_ADMIN" ? "#ede9fe" : "#f1f5f9",
-                              color:      u.role === "ROLE_ADMIN" ? "#6d28d9" : "#64748b",
+                              background: u.role === "ROLE_ADMIN"     ? "#ede9fe"
+                                        : u.role === "ROLE_EMPLOYEE"  ? "#fef3c7"
+                                        :                               "#f1f5f9",
+                              color:      u.role === "ROLE_ADMIN"     ? "#6d28d9"
+                                        : u.role === "ROLE_EMPLOYEE"  ? "#92400e"
+                                        :                               "#64748b",
                             }}>
-                              {u.role === "ROLE_ADMIN" ? "Admin" : "User"}
+                              {u.role === "ROLE_ADMIN"    ? "Admin"
+                             : u.role === "ROLE_EMPLOYEE" ? "Employee"
+                             :                              "User"}
                             </span>
                           </td>
                           <td style={t.td}>{u.college || "—"}</td>
@@ -515,7 +562,18 @@ function AdminDashboard() {
                             </span>
                           </td>
                           <td style={t.td}>
-                            <button style={s.deleteBtn} onClick={() => deleteUser(u)}>Delete</button>
+                            {/* Don't allow promoting/demoting other admins */}
+                            {u.role !== "ROLE_ADMIN" && (
+                              <button
+                                style={u.role === "ROLE_EMPLOYEE" ? s.demoteBtn : t.promoteBtn}
+                                onClick={() => promoteUser(u)}
+                              >
+                                {u.role === "ROLE_EMPLOYEE" ? "Demote" : "Make Employee"}
+                              </button>
+                            )}
+                            {u.role !== "ROLE_ADMIN" && (
+                              <button style={s.deleteBtn} onClick={() => deleteUser(u)}>Delete</button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -558,6 +616,11 @@ const s = {
     borderWidth: "1px", borderStyle: "solid", borderColor: "#e2e8f0",
     borderRadius: "20px", padding: "6px 14px 6px 8px",
     fontSize: "13px", fontWeight: "500", color: "#475569",
+  },
+  roleBadge: {
+    fontSize: "10px", fontWeight: "600", padding: "2px 8px",
+    borderRadius: "20px", background: "#f1f5f9", color: "#64748b",
+    textTransform: "uppercase", letterSpacing: "0.4px",
   },
   avatar: {
     width: "24px", height: "24px", borderRadius: "50%",
@@ -665,7 +728,19 @@ const s = {
     padding: "5px 12px", borderRadius: "6px",
     borderWidth: "1px", borderStyle: "solid", borderColor: "rgba(220,38,38,0.3)",
     background: "transparent", color: "#dc2626",
-    fontSize: "12px", fontWeight: "500", cursor: "pointer",
+    fontSize: "12px", fontWeight: "500", cursor: "pointer", marginLeft: "6px",
+  },
+  demoteBtn: {
+    padding: "5px 12px", borderRadius: "6px",
+    borderWidth: "1px", borderStyle: "solid", borderColor: "rgba(217,119,6,0.3)",
+    background: "transparent", color: "#d97706",
+    fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer",
+  },
+  promoteBtn: {
+    padding: "5px 12px", borderRadius: "6px",
+    borderWidth: "1px", borderStyle: "solid", borderColor: "rgba(37,99,235,0.3)",
+    background: "transparent", color: "#2563eb",
+    fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer",
   },
   deniedPage: {
     display: "flex", alignItems: "center", justifyContent: "center",
@@ -687,6 +762,7 @@ const dm = {
   page:        { ...s.page,        background: "#0f172a" },
   pageTitle:   { ...s.pageTitle,   color: "#f1f5f9" },
   adminPill:   { ...s.adminPill,   background: "#1e293b", borderColor: "#334155", color: "#94a3b8" },
+  roleBadge:   { ...s.roleBadge,   background: "#0f172a", color: "#64748b" },
   metricCard:  { ...s.metricCard,  background: "#1e293b", borderColor: "#334155" },
   metricVal:   { ...s.metricVal,   color: "#f1f5f9" },
   card:        { ...s.card,        background: "#1e293b", borderColor: "#334155" },
@@ -699,6 +775,7 @@ const dm = {
   th:          { ...s.th,          borderBottomColor: "#334155" },
   td:          { ...s.td,          borderBottomColor: "#1e293b", color: "#94a3b8" },
   editBtn:     { ...s.editBtn,     borderColor: "#334155", color: "#f1f5f9" },
+  promoteBtn:  { ...s.promoteBtn,  borderColor: "rgba(37,99,235,0.4)", color: "#60a5fa" },
   tabBtn: {
     padding: "8px 18px", background: "transparent", color: "#94a3b8",
     border: "none", borderBottom: "2px solid transparent",
@@ -714,7 +791,6 @@ const dm = {
   deniedTitle: { ...s.deniedTitle, color: "#f1f5f9" },
 };
 
-// tab buttons for light mode (defined after `s` since they reference it)
 s.tabBtn = {
   padding: "8px 18px", background: "transparent", color: "#94a3b8",
   border: "none", borderBottom: "2px solid transparent",

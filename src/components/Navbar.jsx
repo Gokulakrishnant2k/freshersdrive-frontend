@@ -15,6 +15,9 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
   const closeMenu = () => setMenuOpen(false);
 
+  const isAdmin    = auth.role === "ROLE_ADMIN";
+  const isEmployee = auth.role === "ROLE_EMPLOYEE";
+
   return (
     <div style={styles.nav}>
       <div style={styles.topRow}>
@@ -38,8 +41,13 @@ export default function Navbar() {
             <Link to="/calendar" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/calendar") ? styles.active : {}) }}>Calendar</Link>
             <Link to="/saved-drives" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/saved-drives") ? styles.active : {}) }}>Saved</Link>
             <Link to="/contact" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/contact") ? styles.active : {}) }}>Contact</Link>
-            {auth.role === "ROLE_ADMIN" && (
-              <Link to="/admin" onClick={closeMenu} style={{ ...styles.admin, ...(isActive("/admin") ? styles.activeAdmin : {}) }}>Admin</Link>
+            {/* Admin dashboard link: visible to both Admin and Employee roles.
+                AdminDashboard.jsx itself renders an "Admin dashboard" or
+                "Employee dashboard" view depending on which role is logged in. */}
+            {(isAdmin || isEmployee) && (
+              <Link to="/admin" onClick={closeMenu} style={{ ...styles.admin, ...(isActive("/admin") ? styles.activeAdmin : {}) }}>
+                {isAdmin ? "Admin" : "Dashboard"}
+              </Link>
             )}
           </div>
         )}

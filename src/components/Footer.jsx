@@ -88,6 +88,13 @@ export default function Footer() {
         <span style={styles.copyright}>
           © {year} FreshersDrive. All rights reserved.
         </span>
+        <div style={styles.legalLinks}>
+          <a href="/freshersdrive-frontend/privacy-policy.html" style={styles.legalLink}>Privacy Policy</a>
+          <span style={styles.legalDivider}>·</span>
+          <a href="/freshersdrive-frontend/terms-of-service.html" style={styles.legalLink}>Terms of Service</a>
+          <span style={styles.legalDivider}>·</span>
+          <a href="/freshersdrive-frontend/disclaimer.html" style={styles.legalLink}>Disclaimer</a>
+        </div>
       </div>
     </footer>
   );
@@ -173,11 +180,31 @@ const styles = {
   bottomBar: {
     borderTop: "1px solid rgba(255,255,255,0.08)",
     padding: "16px 24px",
-    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
   },
 
   copyright: {
     fontSize: "12px",
     color: "#64748b",
+  },
+
+  legalLinks: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+
+  legalLink: {
+    fontSize: "12px",
+    color: "#64748b",
+    textDecoration: "none",
+  },
+
+  legalDivider: {
+    fontSize: "12px",
+    color: "#334155",
   },
 };

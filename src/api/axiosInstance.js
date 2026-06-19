@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const API_BASE_URL = "https://freshersdrive-backend.onrender.com/api";
+
 const axiosInstance = axios.create({
-  baseURL: "https://freshersdrive-backend.onrender.com/api",
+  baseURL: API_BASE_URL,
 });
 
 // REQUEST: attach token automatically

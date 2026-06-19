@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 
 export default function Contact() {
-  const { dark } = useTheme();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [focused, setFocused] = useState(null);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,128 +25,271 @@ export default function Contact() {
     setLoading(false);
   };
 
-  const t = dark ? dm : s;
-
   return (
-    <div style={t.page}>
-      <div style={t.card}>
-        <h1 style={t.title}>Contact Us</h1>
-        <p style={t.subtitle}>
-          Have questions? We're here to help you with placements & drives.
+    <div style={styles.page}>
+      {/* Background orbs */}
+      <div style={{ ...styles.orb, top: "-80px", right: "-80px", background: "rgba(99,102,241,0.18)" }} />
+      <div style={{ ...styles.orb, bottom: "-60px", left: "-60px", background: "rgba(16,185,129,0.12)", width: "320px", height: "320px" }} />
+      <div style={{ ...styles.orb, top: "40%", left: "30%", background: "rgba(192,132,252,0.08)", width: "280px", height: "280px" }} />
+
+      <div style={styles.card}>
+        {/* Brand mark */}
+        <div style={styles.brandMark}>
+          <div style={styles.brandIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <span style={styles.brandName}>FreshersDrive · Contact</span>
+        </div>
+
+        <h1 style={styles.title}>Get in touch</h1>
+        <p style={styles.subtitle}>
+          Questions about placements, drives, or anything else? We'll get back to you fast.
         </p>
 
-        <form onSubmit={handleSubmit} style={s.form}>
-          <input
-            name="name"
-            placeholder="Your Name"
-            value={form.name}
-            onChange={handleChange}
-            style={t.input}
-            required
-          />
-          <input
-            name="email"
-            placeholder="Your Email"
-            value={form.email}
-            onChange={handleChange}
-            style={t.input}
-            required
-          />
-          <textarea
-            name="message"
-            placeholder="Your Message..."
-            value={form.message}
-            onChange={handleChange}
-            style={t.textarea}
-            required
-          />
-          <button style={s.button} disabled={loading}>
-            {loading ? "Sending..." : "Send Message"}
+        <form onSubmit={handleSubmit} style={styles.form}>
+          {[
+            { name: "name",    placeholder: "Your name",    type: "text"  },
+            { name: "email",   placeholder: "Your email",   type: "email" },
+          ].map(({ name, placeholder, type }) => (
+            <div key={name} style={styles.fieldWrap}>
+              <label style={styles.label}>{placeholder}</label>
+              <input
+                name={name}
+                type={type}
+                placeholder={placeholder}
+                value={form[name]}
+                onChange={handleChange}
+                onFocus={() => setFocused(name)}
+                onBlur={() => setFocused(null)}
+                required
+                style={{
+                  ...styles.input,
+                  borderColor: focused === name ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
+                  boxShadow: focused === name ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+                }}
+              />
+            </div>
+          ))}
+
+          <div style={styles.fieldWrap}>
+            <label style={styles.label}>Your message</label>
+            <textarea
+              name="message"
+              placeholder="Tell us what's on your mind…"
+              value={form.message}
+              onChange={handleChange}
+              onFocus={() => setFocused("message")}
+              onBlur={() => setFocused(null)}
+              required
+              style={{
+                ...styles.textarea,
+                borderColor: focused === "message" ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
+                boxShadow: focused === "message" ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ ...styles.button, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          >
+            {loading ? "Sending…" : "Send message"}
           </button>
-          {success && <p style={s.success}>✔ Message sent successfully!</p>}
+
+          {success && (
+            <div style={styles.successBox}>
+              <span style={{ color: "#4ade80", fontSize: "15px" }}>✓</span>
+              Message sent! We'll be in touch soon.
+            </div>
+          )}
         </form>
+
+        {/* Info strip */}
+        <div style={styles.infoStrip}>
+          {[
+            { icon: "📧", label: "Email", value: "support@freshersdrive.in" },
+            { icon: "⏱", label: "Response", value: "Within 24 hours" },
+          ].map(({ icon, label, value }) => (
+            <div key={label} style={styles.infoItem}>
+              <span style={{ fontSize: "16px" }}>{icon}</span>
+              <div>
+                <div style={styles.infoLabel}>{label}</div>
+                <div style={styles.infoValue}>{value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-const s = {
+const styles = {
   page: {
     minHeight: "100vh",
+    background: "#0c0b2b",
     display: "flex",
-    justifyContent: "center",
     alignItems: "center",
-    background: "#f8fafc",
-    fontFamily: "Inter, Arial",
-    padding: "20px",
+    justifyContent: "center",
+    padding: "40px 20px",
+    fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
+    position: "relative",
+    overflow: "hidden",
+  },
+  orb: {
+    position: "absolute",
+    width: "400px",
+    height: "400px",
+    borderRadius: "50%",
+    filter: "blur(80px)",
+    pointerEvents: "none",
+    zIndex: 0,
   },
   card: {
+    position: "relative",
+    zIndex: 1,
     width: "100%",
-    maxWidth: "500px",
-    background: "white",
-    padding: "30px",
-    borderRadius: "16px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-    border: "1px solid #f1f5f9",
+    maxWidth: "480px",
+    background: "rgba(255,255,255,0.04)",
+    border: "0.5px solid rgba(255,255,255,0.12)",
+    borderRadius: "20px",
+    padding: "36px 32px",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+  },
+  brandMark: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "24px",
+  },
+  brandIcon: {
+    width: "28px",
+    height: "28px",
+    background: "#6366f1",
+    borderRadius: "7px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandName: {
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.5)",
+    letterSpacing: "-0.1px",
   },
   title: {
-    marginBottom: "5px",
-    fontSize: "26px",
+    fontSize: "28px",
     fontWeight: "700",
-    color: "#0f172a",
+    letterSpacing: "-1px",
+    margin: "0 0 8px",
+    background: "linear-gradient(135deg, #818cf8 0%, #c084fc 60%, #f472b6 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
   },
   subtitle: {
-    marginBottom: "20px",
-    color: "#64748b",
     fontSize: "14px",
+    color: "rgba(255,255,255,0.45)",
+    lineHeight: "1.6",
+    margin: "0 0 28px",
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
+    gap: "16px",
+  },
+  fieldWrap: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  label: {
+    fontSize: "11px",
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.35)",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
   },
   input: {
-    padding: "12px",
+    padding: "11px 14px",
     borderRadius: "10px",
-    border: "1px solid #e2e8f0",
-    outline: "none",
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.05)",
+    color: "white",
     fontSize: "14px",
-    background: "#f8fafc",
-    color: "#0f172a",
+    outline: "none",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    fontFamily: "inherit",
+    "::placeholder": { color: "rgba(255,255,255,0.25)" },
   },
   textarea: {
-    padding: "12px",
+    padding: "11px 14px",
     borderRadius: "10px",
-    border: "1px solid #e2e8f0",
-    minHeight: "120px",
-    resize: "none",
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.05)",
+    color: "white",
     fontSize: "14px",
-    background: "#f8fafc",
-    color: "#0f172a",
+    outline: "none",
+    minHeight: "120px",
+    resize: "vertical",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    fontFamily: "inherit",
   },
   button: {
-    padding: "12px",
+    padding: "13px",
     borderRadius: "10px",
     border: "none",
-    background: "#2563eb",
+    background: "#6366f1",
     color: "white",
     fontWeight: "600",
-    cursor: "pointer",
     fontSize: "14px",
+    letterSpacing: "-0.2px",
+    transition: "opacity 0.15s",
+    fontFamily: "inherit",
+    marginTop: "4px",
   },
-  success: {
-    color: "#16a34a",
-    fontSize: "13px",
-    marginTop: "10px",
+  successBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    background: "rgba(74,222,128,0.08)",
+    border: "0.5px solid rgba(74,222,128,0.3)",
+    borderRadius: "10px",
+    padding: "12px 16px",
+    fontSize: "13.5px",
+    color: "rgba(255,255,255,0.7)",
+    fontWeight: "500",
   },
-};
-
-const dm = {
-  ...s,
-  page:     { ...s.page,     background: "#0f172a" },
-  card:     { ...s.card,     background: "#1e293b", border: "1px solid #334155", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" },
-  title:    { ...s.title,    color: "#f1f5f9" },
-  subtitle: { ...s.subtitle, color: "#64748b" },
-  input:    { ...s.input,    background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" },
-  textarea: { ...s.textarea, background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" },
+  infoStrip: {
+    display: "flex",
+    gap: "16px",
+    marginTop: "28px",
+    paddingTop: "24px",
+    borderTop: "0.5px solid rgba(255,255,255,0.08)",
+  },
+  infoItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: "10px",
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.3)",
+    textTransform: "uppercase",
+    letterSpacing: "0.4px",
+  },
+  infoValue: {
+    fontSize: "12px",
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: "500",
+    marginTop: "1px",
+  },
 };

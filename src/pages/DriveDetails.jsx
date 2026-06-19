@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 
 function DriveDetails() {
   const { id } = useParams();
   const { dark } = useTheme();
+  const navigate = useNavigate();
   const [drive, setDrive] = useState(null);
 
   useEffect(() => {
@@ -14,6 +15,19 @@ function DriveDetails() {
       .then((res) => setDrive(res.data))
       .catch((err) => console.log(err));
   }, [id]);
+
+  const requireLoginThenApply = (applyLink) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      sessionStorage.setItem("postLoginRedirect", window.location.pathname);
+      sessionStorage.setItem("pendingApplyLink", applyLink);
+      navigate("/login");
+      return;
+    }
+
+    window.open(applyLink, "_blank", "noopener,noreferrer");
+  };
 
   if (!drive) {
     return (
@@ -59,12 +73,51 @@ function DriveDetails() {
               <span style={{ color: dark ? "#94a3b8" : "#64748b" }}>{label}</span>
               <b style={{ color: dark ? "#f1f5f9" : "#0f172a" }}>
                 {label === "Apply Link" && drive.applyLink
-                  ? <a href={drive.applyLink} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>Open Link</a>
+                  ? (
+                    <span
+                      onClick={() => requireLoginThenApply(drive.applyLink)}
+                      style={{ color: "#2563eb", cursor: "pointer" }}
+                    >
+                      Open Link
+                    </span>
+                  )
                   : value}
               </b>
             </div>
           ))}
         </div>
+
+        {/* JOB DESCRIPTION */}
+        {drive.jobDescription && (
+          <div style={{ ...t.card, marginTop: "20px" }}>
+            <h3 style={t.sectionTitle}>About the Role</h3>
+            <p style={{
+              color: dark ? "#94a3b8" : "#475569",
+              fontSize: "14px",
+              lineHeight: "1.8",
+              margin: 0,
+              whiteSpace: "pre-line",
+            }}>
+              {drive.jobDescription}
+            </p>
+          </div>
+        )}
+
+        {/* KEY SKILLS */}
+        {drive.keySkills && (
+          <div style={{ ...t.card, marginTop: "20px" }}>
+            <h3 style={t.sectionTitle}>Key Skills</h3>
+            <div style={s.tags}>
+              {drive.keySkills
+                .split(",")
+                .map((skill) => skill.trim())
+                .filter(Boolean)
+                .map((skill) => (
+                  <span key={skill} style={t.skillTag}>{skill}</span>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* ELIGIBILITY */}
         <div style={{ ...t.card, marginTop: "20px" }}>
@@ -83,9 +136,12 @@ function DriveDetails() {
         {/* APPLY */}
         <div style={s.applyBox}>
           {drive.applyLink ? (
-            <a href={drive.applyLink} target="_blank" rel="noreferrer">
-              <button style={s.applyBtn}>🚀 Apply Now</button>
-            </a>
+            <button
+              style={s.applyBtn}
+              onClick={() => requireLoginThenApply(drive.applyLink)}
+            >
+              🚀 Apply Now
+            </button>
           ) : (
             <button style={s.disabledBtn} disabled>Application Not Available</button>
           )}
@@ -180,6 +236,16 @@ const s = {
     fontSize: "13px",
     color: "#334155",
   },
+  // Slightly distinct style for skill tags vs eligibility tags
+  skillTag: {
+    background: "#eef2ff",
+    color: "#3730a3",
+    padding: "6px 14px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: "500",
+    border: "1px solid #c7d2fe",
+  },
   applyBox: {
     display: "flex",
     justifyContent: "center",
@@ -219,4 +285,5 @@ const dm = {
   sectionTitle: { ...s.sectionTitle, color: "#f1f5f9" },
   infoRow:      { ...s.infoRow,      borderBottom: "1px solid #334155", color: "#94a3b8" },
   tag:          { ...s.tag,          background: "#0f172a", color: "#94a3b8" },
+  skillTag:     { ...s.skillTag,     background: "#1e3a5f", color: "#93c5fd", border: "1px solid #1e40af" },
 };

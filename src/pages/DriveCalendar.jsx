@@ -54,13 +54,19 @@ function getCalendarDate(drive) {
   return drive.driveDate || drive.deadline || null;
 }
 
-// ── Status colours ────────────────────────────────────────────────────────────
+// ── Status colours (indigo/purple/pink accent system, matching Hero) ────────
 const STATUS_COLOR = {
-  UPCOMING:  { bg:"#eff6ff", color:"#1d4ed8", border:"#bfdbfe" },
-  ONGOING:   { bg:"#f0fdf4", color:"#15803d", border:"#bbf7d0" },
-  COMPLETED: { bg:"#f8fafc", color:"#64748b", border:"#e2e8f0" },
-  CANCELLED: { bg:"#fef2f2", color:"#b91c1c", border:"#fecaca" },
+  UPCOMING:  { bg:"#eef2ff", color:"#4338ca", border:"#c7d2fe", darkBg:"rgba(99,102,241,0.16)",  darkColor:"#a5b4fc", darkBorder:"rgba(99,102,241,0.35)" },
+  ONGOING:   { bg:"#f0fdf4", color:"#15803d", border:"#bbf7d0", darkBg:"rgba(16,185,129,0.14)",  darkColor:"#6ee7b7", darkBorder:"rgba(16,185,129,0.3)"  },
+  COMPLETED: { bg:"#f8fafc", color:"#64748b", border:"#e2e8f0", darkBg:"rgba(255,255,255,0.06)", darkColor:"#94a3b8", darkBorder:"rgba(255,255,255,0.14)" },
+  CANCELLED: { bg:"#fdf2fb", color:"#be185d", border:"#fbcfe8", darkBg:"rgba(244,114,182,0.14)", darkColor:"#f9a8d4", darkBorder:"rgba(244,114,182,0.3)" },
 };
+function statusStyle(status, dark) {
+  const c = STATUS_COLOR[status] || STATUS_COLOR.UPCOMING;
+  return dark
+    ? { bg: c.darkBg, color: c.darkColor, border: c.darkBorder }
+    : { bg: c.bg, color: c.color, border: c.border };
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DriveCalendar() {
@@ -221,7 +227,7 @@ export default function DriveCalendar() {
         <div style={t.toggleWrap} title={notifyOn ? "Turn off alerts" : "Turn on alerts"}>
           <span style={t.toggleLabel}>{notifyOn ? "🔔" : "🔕"} Alerts</span>
           <button
-            style={{ ...sh.toggleBtn, background: notifyOn ? "#1d4ed8" : (dark ? "#334155" : "#e2e8f0") }}
+            style={{ ...sh.toggleBtn, background: notifyOn ? "#6366f1" : (dark ? "rgba(255,255,255,0.12)" : "#e2e8f0") }}
             onClick={toggleNotify}
             disabled={notifyLoading}
             aria-label="Toggle drive email notifications"
@@ -235,9 +241,9 @@ export default function DriveCalendar() {
       {notifyMsg && (
         <div style={{
           ...sh.toast,
-          background: notifyMsg.type === "success" ? (dark ? "#14532d" : "#f0fdf4") : (dark ? "#450a0a" : "#fef2f2"),
-          color:      notifyMsg.type === "success" ? (dark ? "#86efac" : "#15803d") : (dark ? "#fca5a5" : "#b91c1c"),
-          border: `1px solid ${notifyMsg.type === "success" ? (dark ? "#166534" : "#bbf7d0") : (dark ? "#7f1d1d" : "#fecaca")}`,
+          background: notifyMsg.type === "success" ? (dark ? "rgba(16,185,129,0.14)" : "#f0fdf4") : (dark ? "rgba(244,114,182,0.14)" : "#fdf2fb"),
+          color:      notifyMsg.type === "success" ? (dark ? "#6ee7b7" : "#15803d") : (dark ? "#f9a8d4" : "#be185d"),
+          border: `1px solid ${notifyMsg.type === "success" ? (dark ? "rgba(16,185,129,0.3)" : "#bbf7d0") : (dark ? "rgba(244,114,182,0.3)" : "#fbcfe8")}`,
         }}>
           {notifyMsg.text}
         </div>
@@ -250,7 +256,7 @@ export default function DriveCalendar() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={t.calCard}>
             {/* Day-name header row */}
-            <div style={sh.calHeader}>
+            <div style={t.calHeader}>
               {DAYS.map(d => <div key={d} style={sh.dayHeader}>{d}</div>)}
             </div>
 
@@ -281,7 +287,7 @@ export default function DriveCalendar() {
                         <div style={isToday ? t.todayNum : t.dayNum}>{day}</div>
 
                         {visible.map(d => {
-                          const sc = STATUS_COLOR[d.status] || STATUS_COLOR.UPCOMING;
+                          const sc = statusStyle(d.status, dark);
                           return (
                             <div
                               key={d.id}
@@ -329,7 +335,7 @@ export default function DriveCalendar() {
                   Drives in {MONTHS[currentMonth-1]} {currentYear}
                 </div>
                 <div style={t.listSub}>
-                  {sortedDrives.length} drive{sortedDrives.length !== 1 ? "s" : ""} this month
+                  <span style={t.listCount}>{sortedDrives.length}</span> drive{sortedDrives.length !== 1 ? "s" : ""} this month
                 </div>
               </div>
               {totalListPages > 1 && (
@@ -342,19 +348,22 @@ export default function DriveCalendar() {
             {loadingCal ? (
               <div style={sh.state}>Loading drives…</div>
             ) : sortedDrives.length === 0 ? (
-              <div style={sh.emptyList}>
+              <div style={t.emptyList}>
                 <div style={sh.emptyIcon}>📭</div>
                 <div>No drives found for this month.</div>
               </div>
             ) : (
               <>
                 <div style={sh.driveList}>
-                  {pagedDrives.map(d => {
-                    const sc = STATUS_COLOR[d.status] || STATUS_COLOR.UPCOMING;
+                  {pagedDrives.map((d, i) => {
+                    const sc = statusStyle(d.status, dark);
                     return (
                       <div
                         key={d.id}
-                        style={t.driveRow}
+                        style={{
+                          ...t.driveRow,
+                          animation: `driveRowIn 0.35s cubic-bezier(0.16,1,0.3,1) ${i * 0.04}s both`,
+                        }}
                         onClick={() => setSelected(d)}
                       >
                         {/* Left: avatar + info */}
@@ -412,7 +421,7 @@ export default function DriveCalendar() {
                     {Array.from({ length: totalListPages }, (_, i) => i + 1).map(n => (
                       <button
                         key={n}
-                        style={{ ...t.pageBtn, ...(n === listPage ? sh.pageBtnActive : {}) }}
+                        style={{ ...t.pageBtn, ...(n === listPage ? t.pageBtnActive : {}) }}
                         onClick={() => goListPage(n)}
                       >
                         {n}
@@ -439,7 +448,7 @@ export default function DriveCalendar() {
           <div style={t.sideCard}>
             <div style={sh.sideHeader}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="#1d4ed8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
@@ -450,22 +459,22 @@ export default function DriveCalendar() {
             {loadingUp ? (
               <div style={sh.state}>Loading…</div>
             ) : upcoming.length === 0 ? (
-              <p style={sh.empty}>No upcoming drives.</p>
+              <p style={t.empty}>No upcoming drives.</p>
             ) : (
               upcoming.map(d => (
                 <div key={d.id} style={t.upCard} onClick={() => setSelected(d)}>
-                  <div style={sh.upDot}>{d.companyName?.charAt(0)?.toUpperCase()}</div>
+                  <div style={t.upDot}>{d.companyName?.charAt(0)?.toUpperCase()}</div>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={t.upCompany}>{d.companyName}</div>
-                    <div style={sh.upRole}>{d.jobRole}</div>
-                    <div style={sh.upDate}>
+                    <div style={t.upRole}>{d.jobRole}</div>
+                    <div style={t.upDate}>
                       🏢 {d.driveDate ? formatDate(d.driveDate) : formatDate(d.deadline)}
                     </div>
                     {d.deadline && d.driveDate && toDateKey(d.driveDate) !== toDateKey(d.deadline) && (
-                      <div style={sh.upMeta}>⏰ Apply by {formatDate(d.deadline)}</div>
+                      <div style={t.upMeta}>⏰ Apply by {formatDate(d.deadline)}</div>
                     )}
                     {d.ctcDisplay && (
-                      <div style={sh.upMeta}>💰 {d.ctcDisplay}</div>
+                      <div style={t.upMeta}>💰 {d.ctcDisplay}</div>
                     )}
                   </div>
                 </div>
@@ -476,15 +485,18 @@ export default function DriveCalendar() {
           {/* Legend */}
           <div style={t.sideCard}>
             <span style={t.sideTitle}>Legend</span>
-            <div style={{ marginTop:"10px", display:"flex", flexDirection:"column", gap:"6px" }}>
-              {Object.entries(STATUS_COLOR).map(([k,v]) => (
-                <div key={k} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                  <div style={{ width:"10px", height:"10px", borderRadius:"3px", background:v.bg, border:`2px solid ${v.border}` }} />
-                  <span style={{ fontSize:"12px", color: dark ? "#94a3b8" : "#64748b", textTransform:"capitalize" }}>
-                    {k.charAt(0) + k.slice(1).toLowerCase()}
-                  </span>
-                </div>
-              ))}
+            <div style={{ marginTop:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
+              {Object.keys(STATUS_COLOR).map(k => {
+                const sc = statusStyle(k, dark);
+                return (
+                  <div key={k} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                    <div style={{ width:"10px", height:"10px", borderRadius:"3px", background:sc.bg, border:`2px solid ${sc.border}` }} />
+                    <span style={{ fontSize:"12px", color: dark ? "#94a3b8" : "#64748b", textTransform:"capitalize" }}>
+                      {k.charAt(0) + k.slice(1).toLowerCase()}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </aside>
@@ -494,22 +506,22 @@ export default function DriveCalendar() {
       {selected && (
         <div style={sh.overlay} onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}>
           <div style={t.modal}>
-            <button style={sh.closeBtn} onClick={() => setSelected(null)}>✕</button>
+            <button style={t.closeBtn} onClick={() => setSelected(null)}>✕</button>
 
             <div style={sh.modalHeader}>
-              <div style={sh.modalDot}>{selected.companyName?.charAt(0)?.toUpperCase()}</div>
+              <div style={t.modalDot}>{selected.companyName?.charAt(0)?.toUpperCase()}</div>
               <div>
                 <h3 style={t.modalCompany}>{selected.companyName}</h3>
-                <div style={sh.modalRole}>
+                <div style={t.modalRole}>
                   {selected.jobRole}
-                  <span style={{
-                    ...sh.badge,
-                    background: STATUS_COLOR[selected.status]?.bg   || "#f1f5f9",
-                    color:      STATUS_COLOR[selected.status]?.color || "#64748b",
-                    border:     `1px solid ${STATUS_COLOR[selected.status]?.border || "#e2e8f0"}`,
-                  }}>
-                    {selected.status}
-                  </span>
+                  {(() => {
+                    const sc = statusStyle(selected.status, dark);
+                    return (
+                      <span style={{ ...sh.badge, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                        {selected.status}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -529,7 +541,7 @@ export default function DriveCalendar() {
                 ["🔖 Eligible Branches",selected.eligibleBranches|| "All Branches"],
               ].filter(([,v]) => v != null).map(([label, value]) => (
                 <div key={label} style={t.infoItem}>
-                  <div style={sh.infoLabel}>{label}</div>
+                  <div style={t.infoLabel}>{label}</div>
                   <div style={t.infoValue}>{value}</div>
                 </div>
               ))}
@@ -541,6 +553,13 @@ export default function DriveCalendar() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes driveRowIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -554,114 +573,122 @@ const sh = {
   searchIcon: { position:"absolute", left:"11px", top:"50%", transform:"translateY(-50%)", color:"#94a3b8", pointerEvents:"none" },
   toggleBtn:  { position:"relative", width:"38px", height:"20px", borderRadius:"10px", border:"none", cursor:"pointer", padding:0, transition:"background .2s", flexShrink:0 },
   toggleThumb:{ position:"absolute", top:"3px", width:"14px", height:"14px", background:"white", borderRadius:"50%", transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.2)" },
-  toast:      { margin:"12px 24px 0", padding:"8px 16px", borderRadius:"8px", fontSize:"13px", fontWeight:"600", display:"inline-block" },
+  toast:      { margin:"12px 24px 0", padding:"8px 16px", borderRadius:"10px", fontSize:"13px", fontWeight:"600", display:"inline-block" },
   layout:     { display:"flex", gap:"18px", padding:"20px 24px", maxWidth:"1400px", margin:"0 auto", alignItems:"flex-start" },
   sidebar:    { width:"280px", flexShrink:0, display:"flex", flexDirection:"column", gap:"14px", position:"sticky", top:"62px" },
   sideHeader: { display:"flex", alignItems:"center", gap:"8px", marginBottom:"14px" },
-  calHeader:  { display:"grid", gridTemplateColumns:"repeat(7,1fr)", background:"#1d4ed8" },
-  dayHeader:  { textAlign:"center", padding:"12px 0", fontSize:"12px", fontWeight:"600", color:"white", letterSpacing:"0.5px" },
   calGrid:    { display:"grid", gridTemplateColumns:"repeat(7,1fr)" },
-  chip:       { fontSize:"11px", borderRadius:"4px", padding:"2px 6px", marginBottom:"3px", cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", fontWeight:"500" },
-  upDot:      { width:"32px", height:"32px", borderRadius:"8px", background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px", fontWeight:"700", color:"#1d4ed8", flexShrink:0 },
-  upRole:     { fontSize:"11.5px", color:"#64748b", marginTop:"2px" },
-  upDate:     { fontSize:"11px",   color:"#94a3b8", marginTop:"3px" },
-  upMeta:     { fontSize:"11px",   color:"#64748b", marginTop:"2px" },
-  overlay:    { position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100 },
-  closeBtn:   { position:"absolute", top:"16px", right:"18px", background:"none", border:"none", fontSize:"20px", cursor:"pointer", color:"#94a3b8", lineHeight:1 },
+  chip:       { fontSize:"11px", borderRadius:"5px", padding:"2px 6px", marginBottom:"3px", cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", fontWeight:"500" },
   modalHeader:{ display:"flex", gap:"14px", alignItems:"flex-start", marginBottom:"20px" },
-  modalDot:   { width:"44px", height:"44px", borderRadius:"12px", background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"18px", fontWeight:"700", color:"#1d4ed8", flexShrink:0 },
-  modalRole:  { display:"flex", alignItems:"center", gap:"8px", fontSize:"13.5px", color:"#64748b", marginTop:"4px", flexWrap:"wrap" },
   badge:      { display:"inline-block", padding:"2px 10px", borderRadius:"99px", fontSize:"11px", fontWeight:"600" },
   infoGrid:   { display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px", marginBottom:"16px" },
-  infoLabel:  { fontSize:"11px", fontWeight:"700", color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:"3px" },
   state:      { padding:"40px", textAlign:"center", color:"#94a3b8", fontSize:"13.5px" },
-  empty:      { fontSize:"12px", color:"#94a3b8", marginTop:"4px", lineHeight:"1.5" },
 
   // ── List section ──
   listHeader: { display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"14px" },
   driveList:  { display:"flex", flexDirection:"column", gap:"10px" },
   rowLeft:    { display:"flex", gap:"12px", alignItems:"flex-start", flex:1, minWidth:0 },
-  rowDot:     { width:"38px", height:"38px", borderRadius:"10px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px", fontWeight:"700", flexShrink:0 },
+  rowDot:     { width:"38px", height:"38px", borderRadius:"11px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px", fontWeight:"700", flexShrink:0 },
   rowMeta:    { display:"flex", flexWrap:"wrap", gap:"10px", fontSize:"11.5px", color:"#94a3b8", marginTop:"4px" },
   rowRight:   { display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"4px", flexShrink:0, paddingLeft:"12px" },
   rowDeadline:{ fontSize:"11px", color:"#f59e0b" },
   statusBadge:{ fontSize:"10.5px", fontWeight:"600", padding:"2px 9px", borderRadius:"99px" },
-  emptyList:  { textAlign:"center", padding:"40px 20px", color:"#94a3b8", fontSize:"14px" },
   emptyIcon:  { fontSize:"32px", marginBottom:"10px" },
   pagination: { display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", marginTop:"20px", paddingBottom:"8px", flexWrap:"wrap" },
-  pageBtnActive:{ background:"#1d4ed8", borderColor:"#1d4ed8", color:"white", fontWeight:"600" },
-  pageBtnOff:   { opacity:0.35, cursor:"not-allowed" },
+  pageBtnOff: { opacity:0.35, cursor:"not-allowed" },
 };
 
 // ── LIGHT THEME ───────────────────────────────────────────────────────────────
 const ltt = {
   page:       { minHeight:"100vh", background:"#f8fafc", fontFamily:font },
-  topbar:     { position:"sticky", top:0, zIndex:50, background:"white", borderBottom:"1px solid #f1f5f9", padding:"11px 24px", display:"flex", alignItems:"center", gap:"14px", boxShadow:"0 1px 3px rgba(0,0,0,0.05)" },
+  topbar:     { position:"sticky", top:0, zIndex:50, background:"white", borderBottom:"1px solid #f1f5f9", padding:"11px 24px", display:"flex", alignItems:"center", gap:"14px", boxShadow:"0 1px 3px rgba(15,23,42,0.04)" },
   monthLabel: { fontSize:"15px", fontWeight:"700", letterSpacing:"-0.4px", color:"#0f172a", minWidth:"160px", textAlign:"center" },
-  navBtn:     { background:"white", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"5px 12px", fontSize:"18px", cursor:"pointer", color:"#374151", lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center" },
+  navBtn:     { background:"white", border:"1px solid #e2e8f0", borderRadius:"9px", padding:"5px 12px", fontSize:"18px", cursor:"pointer", color:"#374151", lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center" },
   searchInput:{ width:"100%", padding:"8px 12px 8px 32px", border:"1px solid #e2e8f0", borderRadius:"10px", fontSize:"13.5px", fontFamily:font, background:"#f8fafc", color:"#0f172a", outline:"none", boxSizing:"border-box" },
   toggleWrap: { display:"flex", alignItems:"center", gap:"8px", background:"white", border:"1px solid #e2e8f0", borderRadius:"10px", padding:"6px 12px", cursor:"pointer", userSelect:"none", flexShrink:0 },
   toggleLabel:{ fontSize:"13px", fontWeight:"600", color:"#64748b", whiteSpace:"nowrap" },
-  calCard:    { background:"white", borderRadius:"14px", border:"1px solid #f1f5f9", boxShadow:"0 1px 4px rgba(0,0,0,0.04)", overflow:"hidden" },
+  calCard:    { background:"white", borderRadius:"16px", border:"1px solid #f1f5f9", boxShadow:"0 1px 4px rgba(15,23,42,0.04)", overflow:"hidden" },
+  calHeader:  { display:"grid", gridTemplateColumns:"repeat(7,1fr)", background:"linear-gradient(135deg, #6366f1, #818cf8)" },
   cell:       { minHeight:"90px", borderRight:"1px solid #f1f5f9", borderBottom:"1px solid #f1f5f9", padding:"8px" },
   emptyCell:  { minHeight:"90px", borderRight:"1px solid #f1f5f9", borderBottom:"1px solid #f1f5f9", background:"#fafafa" },
-  todayCell:  { background:"#eff6ff" },
+  todayCell:  { background:"#eef2ff" },
   dayNum:     { fontSize:"12.5px", fontWeight:"600", color:"#64748b", width:"22px", height:"22px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"4px" },
-  todayNum:   { fontSize:"12.5px", fontWeight:"700", color:"white", background:"#1d4ed8", borderRadius:"50%", width:"22px", height:"22px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"4px" },
-  overflowChip:{ fontSize:"10.5px", color:"#1d4ed8", fontWeight:"600", padding:"1px 4px", cursor:"pointer" },
-  sideCard:   { background:"white", border:"1px solid #f1f5f9", borderRadius:"14px", padding:"16px", boxShadow:"0 1px 4px rgba(0,0,0,0.04)" },
+  todayNum:   { fontSize:"12.5px", fontWeight:"700", color:"white", background:"#6366f1", borderRadius:"50%", width:"22px", height:"22px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"4px" },
+  overflowChip:{ fontSize:"10.5px", color:"#4f46e5", fontWeight:"600", padding:"1px 4px", cursor:"pointer" },
+  sideCard:   { background:"white", border:"1px solid #f1f5f9", borderRadius:"16px", padding:"16px", boxShadow:"0 1px 4px rgba(15,23,42,0.04)" },
   sideTitle:  { fontSize:"13px", fontWeight:"700", color:"#0f172a", letterSpacing:"-0.2px" },
   upCard:     { display:"flex", gap:"10px", padding:"10px 0", borderBottom:"1px solid #f1f5f9", cursor:"pointer" },
+  upDot:      { width:"32px", height:"32px", borderRadius:"9px", background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px", fontWeight:"700", color:"#4f46e5", flexShrink:0 },
   upCompany:  { fontSize:"13px", fontWeight:"600", color:"#0f172a", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" },
-  modal:      { background:"white", borderRadius:"16px", padding:"28px 28px 24px", maxWidth:"520px", width:"90%", boxShadow:"0 8px 40px rgba(0,0,0,0.18)", position:"relative" },
-  modalCompany:{ fontSize:"18px", fontWeight:"700", color:"#0f172a", margin:0 },
-  infoItem:   { background:"#f8fafc", borderRadius:"8px", padding:"10px 12px", border:"1px solid #f1f5f9" },
+  upRole:     { fontSize:"11.5px", color:"#64748b", marginTop:"2px" },
+  upDate:     { fontSize:"11px",   color:"#94a3b8", marginTop:"3px" },
+  upMeta:     { fontSize:"11px",   color:"#64748b", marginTop:"2px" },
+  empty:      { fontSize:"12px", color:"#94a3b8", marginTop:"4px", lineHeight:"1.5" },
+  overlay:    { position:"fixed", inset:0, background:"rgba(15,15,40,0.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100, backdropFilter:"blur(2px)" },
+  closeBtn:   { position:"absolute", top:"16px", right:"18px", background:"none", border:"none", fontSize:"20px", cursor:"pointer", color:"#94a3b8", lineHeight:1 },
+  modalDot:   { width:"44px", height:"44px", borderRadius:"13px", background:"linear-gradient(135deg, #818cf8, #c084fc)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"18px", fontWeight:"700", color:"white", flexShrink:0 },
+  modalRole:  { display:"flex", alignItems:"center", gap:"8px", fontSize:"13.5px", color:"#64748b", marginTop:"4px", flexWrap:"wrap" },
+  modal:      { background:"white", borderRadius:"18px", padding:"28px 28px 24px", maxWidth:"520px", width:"90%", boxShadow:"0 12px 48px rgba(15,23,42,0.2)", position:"relative" },
+  modalCompany:{ fontSize:"18px", fontWeight:"700", color:"#0f172a", margin:0, letterSpacing:"-0.4px" },
+  infoItem:   { background:"#f8fafc", borderRadius:"10px", padding:"10px 12px", border:"1px solid #f1f5f9" },
+  infoLabel:  { fontSize:"11px", fontWeight:"700", color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:"3px" },
   infoValue:  { fontSize:"13.5px", fontWeight:"500", color:"#0f172a" },
-  descBox:    { background:"#f8fafc", borderRadius:"8px", padding:"12px", fontSize:"13.5px", color:"#475569", lineHeight:"1.6", border:"1px solid #f1f5f9" },
+  descBox:    { background:"#f8fafc", borderRadius:"10px", padding:"12px", fontSize:"13.5px", color:"#475569", lineHeight:"1.6", border:"1px solid #f1f5f9" },
+  emptyList:  { textAlign:"center", padding:"40px 20px", color:"#94a3b8", fontSize:"14px", background:"white", borderRadius:"16px", border:"1px solid #f1f5f9" },
   // list section
   listTitle:  { fontSize:"17px", fontWeight:"700", letterSpacing:"-0.4px", color:"#0f172a" },
   listSub:    { fontSize:"12.5px", color:"#94a3b8", marginTop:"3px" },
-  pageBadge:  { fontSize:"12px", color:"#64748b", background:"#f1f5f9", padding:"4px 12px", borderRadius:"99px", border:"1px solid #e2e8f0", fontWeight:"500", alignSelf:"center" },
-  driveRow:   { display:"flex", alignItems:"flex-start", justifyContent:"space-between", background:"white", border:"1px solid #f1f5f9", borderRadius:"12px", padding:"14px 16px", cursor:"pointer", transition:"box-shadow .15s", boxShadow:"0 1px 3px rgba(0,0,0,0.04)" },
+  listCount:  { fontWeight:"700", color:"#4f46e5" },
+  pageBadge:  { fontSize:"12px", color:"#64748b", background:"#eef2ff", padding:"4px 12px", borderRadius:"99px", border:"1px solid #e0e7ff", fontWeight:"500", alignSelf:"center" },
+  driveRow:   { display:"flex", alignItems:"flex-start", justifyContent:"space-between", background:"white", border:"1px solid #f1f5f9", borderRadius:"13px", padding:"14px 16px", cursor:"pointer", transition:"box-shadow .15s, transform .15s", boxShadow:"0 1px 3px rgba(15,23,42,0.04)" },
   rowCompany: { fontSize:"14px", fontWeight:"700", color:"#0f172a" },
   rowRole:    { fontSize:"12.5px", color:"#64748b", marginTop:"2px" },
   rowDate:    { fontSize:"12px", color:"#94a3b8", whiteSpace:"nowrap" },
-  pageBtn:    { padding:"7px 13px", fontSize:"13px", fontWeight:"500", fontFamily:font, border:"1px solid #e2e8f0", borderRadius:"8px", cursor:"pointer", background:"white", color:"#374151", transition:"background .15s" },
+  pageBtn:    { padding:"7px 13px", fontSize:"13px", fontWeight:"500", fontFamily:font, border:"1px solid #e2e8f0", borderRadius:"9px", cursor:"pointer", background:"white", color:"#374151", transition:"background .15s" },
+  pageBtnActive:{ background:"#6366f1", borderColor:"#6366f1", color:"white", fontWeight:"600" },
 };
 
 // ── DARK THEME ────────────────────────────────────────────────────────────────
 const dm = {
   ...ltt,
-  page:        { ...ltt.page,        background:"#0f172a" },
-  topbar:      { ...ltt.topbar,      background:"#1e293b", borderBottom:"1px solid #334155", boxShadow:"0 1px 3px rgba(0,0,0,0.3)" },
+  page:        { ...ltt.page,        background:"#0c0b2b" },
+  topbar:      { ...ltt.topbar,      background:"rgba(255,255,255,0.03)", borderBottom:"0.5px solid rgba(255,255,255,0.08)", boxShadow:"none" },
   monthLabel:  { ...ltt.monthLabel,  color:"#f1f5f9" },
-  navBtn:      { ...ltt.navBtn,      background:"#1e293b", borderColor:"#334155", color:"#94a3b8" },
-  searchInput: { ...ltt.searchInput, background:"#0f172a", borderColor:"#334155", color:"#f1f5f9" },
-  toggleWrap:  { ...ltt.toggleWrap,  background:"#1e293b", borderColor:"#334155" },
+  navBtn:      { ...ltt.navBtn,      background:"rgba(255,255,255,0.05)", borderColor:"rgba(255,255,255,0.14)", color:"#cbd5e1" },
+  searchInput: { ...ltt.searchInput, background:"rgba(255,255,255,0.05)", borderColor:"rgba(255,255,255,0.14)", color:"#f1f5f9" },
+  toggleWrap:  { ...ltt.toggleWrap,  background:"rgba(255,255,255,0.04)", borderColor:"rgba(255,255,255,0.14)" },
   toggleLabel: { ...ltt.toggleLabel, color:"#94a3b8" },
-  calCard:     { ...ltt.calCard,     background:"#1e293b", border:"1px solid #334155" },
-  cell:        { ...ltt.cell,        borderRight:"1px solid #334155", borderBottom:"1px solid #334155", background:"#1e293b" },
-  emptyCell:   { ...ltt.emptyCell,   borderRight:"1px solid #334155", borderBottom:"1px solid #334155", background:"#0f172a" },
-  todayCell:   { background:"#1e3a5f" },
+  calCard:     { ...ltt.calCard,     background:"rgba(255,255,255,0.03)", border:"0.5px solid rgba(255,255,255,0.1)", boxShadow:"none" },
+  calHeader:   { ...ltt.calHeader,   background:"linear-gradient(135deg, rgba(99,102,241,0.5), rgba(192,132,252,0.4))" },
+  cell:        { ...ltt.cell,        borderRight:"0.5px solid rgba(255,255,255,0.08)", borderBottom:"0.5px solid rgba(255,255,255,0.08)", background:"transparent" },
+  emptyCell:   { ...ltt.emptyCell,   borderRight:"0.5px solid rgba(255,255,255,0.08)", borderBottom:"0.5px solid rgba(255,255,255,0.08)", background:"rgba(0,0,0,0.12)" },
+  todayCell:   { background:"rgba(99,102,241,0.14)" },
   dayNum:      { ...ltt.dayNum,      color:"#64748b" },
   todayNum:    { ...ltt.todayNum },
-  overflowChip:{ ...ltt.overflowChip, color:"#93c5fd" },
-  sideCard:    { ...ltt.sideCard,    background:"#1e293b", border:"1px solid #334155" },
+  overflowChip:{ ...ltt.overflowChip, color:"#a5b4fc" },
+  sideCard:    { ...ltt.sideCard,    background:"rgba(255,255,255,0.03)", border:"0.5px solid rgba(255,255,255,0.1)", boxShadow:"none" },
   sideTitle:   { ...ltt.sideTitle,   color:"#f1f5f9" },
-  upCard:      { ...ltt.upCard,      borderBottom:"1px solid #334155" },
+  upCard:      { ...ltt.upCard,      borderBottom:"0.5px solid rgba(255,255,255,0.08)" },
+  upDot:       { ...ltt.upDot,       background:"rgba(129,140,248,0.15)", color:"#a5b4fc" },
   upCompany:   { ...ltt.upCompany,   color:"#f1f5f9" },
-  modal:       { ...ltt.modal,       background:"#1e293b", boxShadow:"0 8px 40px rgba(0,0,0,.5)" },
+  empty:       { ...ltt.empty,       color:"#64748b" },
+  modal:       { ...ltt.modal,       background:"#15143f", boxShadow:"0 12px 48px rgba(0,0,0,.5)" },
   modalCompany:{ ...ltt.modalCompany,color:"#f1f5f9" },
-  infoItem:    { ...ltt.infoItem,    background:"#0f172a", border:"1px solid #334155" },
+  closeBtn:    { ...ltt.closeBtn,    color:"#64748b" },
+  infoItem:    { ...ltt.infoItem,    background:"rgba(255,255,255,0.04)", border:"0.5px solid rgba(255,255,255,0.1)" },
+  infoLabel:   { ...ltt.infoLabel },
   infoValue:   { ...ltt.infoValue,   color:"#f1f5f9" },
-  descBox:     { ...ltt.descBox,     background:"#0f172a", border:"1px solid #334155", color:"#94a3b8" },
+  descBox:     { ...ltt.descBox,     background:"rgba(255,255,255,0.04)", border:"0.5px solid rgba(255,255,255,0.1)", color:"#94a3b8" },
+  emptyList:   { ...ltt.emptyList,   background:"rgba(255,255,255,0.03)", border:"0.5px solid rgba(255,255,255,0.1)", color:"#64748b" },
   // list section dark
   listTitle:   { ...ltt.listTitle,   color:"#f1f5f9" },
   listSub:     { ...ltt.listSub,     color:"#64748b" },
-  pageBadge:   { ...ltt.pageBadge,   background:"#1e293b", borderColor:"#334155", color:"#94a3b8" },
-  driveRow:    { ...ltt.driveRow,    background:"#1e293b", border:"1px solid #334155", boxShadow:"none" },
+  listCount:   { ...ltt.listCount,   color:"#a5b4fc" },
+  pageBadge:   { ...ltt.pageBadge,   background:"rgba(99,102,241,0.12)", borderColor:"rgba(99,102,241,0.3)", color:"#a5b4fc" },
+  driveRow:    { ...ltt.driveRow,    background:"rgba(255,255,255,0.03)", border:"0.5px solid rgba(255,255,255,0.1)", boxShadow:"none" },
   rowCompany:  { ...ltt.rowCompany,  color:"#f1f5f9" },
   rowRole:     { ...ltt.rowRole,     color:"#94a3b8" },
   rowDate:     { ...ltt.rowDate,     color:"#64748b" },
-  pageBtn:     { ...ltt.pageBtn,     background:"#1e293b", borderColor:"#334155", color:"#94a3b8" },
+  pageBtn:     { ...ltt.pageBtn,     background:"rgba(255,255,255,0.04)", borderColor:"rgba(255,255,255,0.14)", color:"#94a3b8" },
+  pageBtnActive:{ ...ltt.pageBtnActive },
 };

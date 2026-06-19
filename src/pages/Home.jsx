@@ -5,6 +5,7 @@ import axios from "../api/axiosInstance";
 import DriveCard from "../components/DriveCard";
 import ExpiringDrives from "./ExpiringDrives";
 import useFavorites from "../../UseFavorites";
+import Hero from "./Hero";
 
 const CATEGORIES = ["All", "IT_SOFTWARE", "CORE_ENGINEERING", "GOVERNMENT", "BANKING", "MANAGEMENT", "INTERNSHIP"];
 const PAGE_SIZE = 9;
@@ -26,11 +27,21 @@ const BRANCH_OPTIONS = [
 
 const BATCH_OPTIONS = ["2025", "2026", "2027", "2028"];
 
-const PROFILE_KEY    = "fd_user_profile";
+const PROFILE_KEY = "fd_user_profile";
 
 export default function Home() {
   const { dark, setDark } = useTheme();
   const navigate = useNavigate();
+
+  // ── Scroll refs for Hero buttons ──────────────────────────────────────────
+  const browseDrivesRef  = useRef(null);
+  const howItWorksRef    = useRef(null);
+
+  const scrollToBrowse = () =>
+    browseDrivesRef.current?.scrollIntoView({ behavior: "smooth" });
+
+  const scrollToHowItWorks = () =>
+    howItWorksRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const [drives,   setDrives]   = useState([]);
   const [search,   setSearch]   = useState("");
@@ -114,13 +125,19 @@ export default function Home() {
     setShowBanner(true);
   };
 
-  // Only the most recently saved drive is shown in the sidebar preview.
   const lastFavDrive = drives.find((d) => d.id === lastAddedId) || null;
 
   const t = dark ? dm : s;
 
   return (
     <div style={t.page}>
+
+      {/* ── HERO ── */}
+      <Hero
+        dark={dark}
+        onBrowseClick={scrollToBrowse}
+        onHowItWorksClick={scrollToHowItWorks}
+      />
 
       {/* ── TOP BAR ── */}
       <header style={t.topbar} className="fd-topbar">
@@ -377,7 +394,6 @@ export default function Home() {
 
               {!recLoading && recommended.length > 0 && (
                 <div style={s.sliderWrap} className="fd-slider-wrap">
-                  {/* Left arrow */}
                   <button
                     style={{ ...s.sliderArrow, left: "-16px" }}
                     className="fd-slider-arrow"
@@ -387,7 +403,6 @@ export default function Home() {
                     ‹
                   </button>
 
-                  {/* Scrollable track */}
                   <div ref={recTrackRef} style={t.recTrack}>
                     {recommended.map((drive) => (
                       <div key={drive.id} style={s.recCardWrap}>
@@ -401,7 +416,6 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* Right arrow */}
                   <button
                     style={{ ...s.sliderArrow, right: "-16px" }}
                     className="fd-slider-arrow"
@@ -418,7 +432,8 @@ export default function Home() {
           )}
 
           {/* ── ALL DRIVES ── */}
-          <div style={s.feedHeader}>
+          {/* ref here so "Browse drives" in Hero scrolls to this section */}
+          <div ref={browseDrivesRef} style={s.feedHeader}>
             <div>
               <div style={t.feedTitle}>Open Drives</div>
               <div style={t.feedSub}>Freshest opportunities, updated daily</div>
@@ -427,6 +442,9 @@ export default function Home() {
               {filtered.length} result{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
+
+          {/* ref here so "See how it works" in Hero scrolls to filters */}
+          <div ref={howItWorksRef} />
 
           {loading && <div style={s.state}>Loading opportunities…</div>}
 
@@ -607,7 +625,7 @@ const s = {
   },
   expiringHeader: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" },
   expiringHeaderClickable: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px", cursor: "pointer" },
-  expiringTitle:  {
+  expiringTitle: {
     fontSize: "13px", fontWeight: "700",
     letterSpacing: "-0.2px", color: "#0f172a",
   },
@@ -743,10 +761,9 @@ const s = {
   pageBtnDisabled: { opacity: 0.35, cursor: "not-allowed" },
 };
 
-// Attach light-only keys that reference s itself
-s.banner        = { background: "#eff6ff", borderBottom: "1px solid #dbeafe", padding: "14px 24px" };
-s.profileChip   = { marginTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", padding: "6px 10px" };
-s.recDivider    = { borderTop: "1px solid #e2e8f0", margin: "24px 0 20px" };
+s.banner      = { background: "#eff6ff", borderBottom: "1px solid #dbeafe", padding: "14px 24px" };
+s.profileChip = { marginTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", padding: "6px 10px" };
+s.recDivider  = { borderTop: "1px solid #e2e8f0", margin: "24px 0 20px" };
 
 // ── DARK ─────────────────────────────────────────────────────────────────────
 const dm = {
@@ -771,7 +788,7 @@ const dm = {
   bannerSelect:    { ...s.bannerSelect,    background: "#0f172a", borderColor: "#334155", color: "#f1f5f9" },
   profileChip:     { marginTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#1e3a5f", border: "1px solid #1d4ed8", borderRadius: "8px", padding: "6px 10px" },
   recDivider:      { borderTop: "1px solid #334155", margin: "24px 0 20px" },
-  recTrack:        { ...s.recTrack,        },
+  recTrack:        { ...s.recTrack },
   favItem:         { ...s.favItem,         borderBottom: "1px solid #334155" },
   favCompany:      { ...s.favCompany,      color: "#f1f5f9" },
 };

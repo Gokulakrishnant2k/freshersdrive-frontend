@@ -6,8 +6,11 @@ function ProtectedRoute({ children, roleRequired }) {
 
   if (!auth.token) return <Navigate to="/login" />;
 
-  if (roleRequired && auth.role !== roleRequired) {
-    return <Navigate to="/" />;
+  if (roleRequired) {
+    const allowedRoles = Array.isArray(roleRequired) ? roleRequired : [roleRequired];
+    if (!allowedRoles.includes(auth.role)) {
+      return <Navigate to="/" />;
+    }
   }
 
   return children;

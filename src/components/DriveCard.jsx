@@ -43,6 +43,22 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
     : daysLeft <= 7        ? "soon"
     : null;
 
+  // Require login before viewing a drive's details / applying.
+  // If not logged in, send the user to /login and remember which
+  // drive they wanted so we can take them straight there afterward.
+  const handleCardClick = () => {
+    const token = localStorage.getItem("token");
+    const target = `/drives/${drive.id}`;
+
+    if (!token) {
+      sessionStorage.setItem("postLoginRedirect", target);
+      navigate("/login");
+      return;
+    }
+
+    navigate(target);
+  };
+
   return (
     <div
       style={{
@@ -56,7 +72,7 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
             ? "0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px #1e293b"
             : "0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px #f1f5f9",
       }}
-      onClick={() => navigate(`/drives/${drive.id}`)}
+      onClick={handleCardClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

@@ -1,22 +1,32 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 
 const PAGE_SIZE = 6;
 
+const TAG_STYLES = {
+  URGENT:  { background: "rgba(239,68,68,0.15)",   color: "#fca5a5",  border: "0.5px solid rgba(239,68,68,0.35)" },
+  HIRING:  { background: "rgba(74,222,128,0.12)",  color: "#4ade80",  border: "0.5px solid rgba(74,222,128,0.3)" },
+  NEW:     { background: "rgba(129,140,248,0.15)", color: "#a5b4fc",  border: "0.5px solid rgba(129,140,248,0.35)" },
+  DEFAULT: { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)", border: "0.5px solid rgba(255,255,255,0.12)" },
+};
+
+function getTagStyle(tag) {
+  return TAG_STYLES[(tag || "").toUpperCase()] || TAG_STYLES.DEFAULT;
+}
+
 export default function Updates() {
   const { auth } = useAuth();
-  const { dark } = useTheme();
 
-  const [updates, setUpdates] = useState([]);
-  const [title,   setTitle]   = useState("");
-  const [message, setMessage] = useState("");
-  const [tag,     setTag]     = useState("NEW");
-  const [loading, setLoading] = useState(true);
-  const [posting, setPosting] = useState(false);
+  const [updates,    setUpdates]    = useState([]);
+  const [title,      setTitle]      = useState("");
+  const [message,    setMessage]    = useState("");
+  const [tag,        setTag]        = useState("NEW");
+  const [loading,    setLoading]    = useState(true);
+  const [posting,    setPosting]    = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [page, setPage] = useState(1);
+  const [page,       setPage]       = useState(1);
+  const [focused,    setFocused]    = useState(null);
 
   useEffect(() => { fetchUpdates(); }, []);
 
@@ -65,253 +75,319 @@ export default function Updates() {
     }
   };
 
-  const getTagStyle = (tag) => {
-    switch ((tag || "").toUpperCase()) {
-      case "URGENT":  return { background: "#fee2e2", color: "#dc2626" };
-      case "HIRING":  return { background: "#dcfce7", color: "#16a34a" };
-      case "NEW":     return { background: "#dbeafe", color: "#2563eb" };
-      default:        return { background: "#e2e8f0", color: "#475569" };
-    }
-  };
-
-  const totalPages = Math.max(1, Math.ceil(updates.length / PAGE_SIZE));
+  const totalPages  = Math.max(1, Math.ceil(updates.length / PAGE_SIZE));
   const pageUpdates = updates.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const t = dark ? dm : s;
+  const inputStyle = (name) => ({
+    ...s.input,
+    borderColor: focused === name ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
+    boxShadow:   focused === name ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+  });
 
   return (
-    <div style={t.page}>
-      <h1 style={t.title}>📢 Updates</h1>
+    <div style={s.page}>
+      {/* Background orbs */}
+      <div style={{ ...s.orb, top: "-80px", right: "-80px",  background: "rgba(99,102,241,0.16)" }} />
+      <div style={{ ...s.orb, bottom: "-60px", left: "-60px", background: "rgba(16,185,129,0.1)", width: "320px", height: "320px" }} />
 
-      {/* ADMIN POST PANEL */}
-      {auth.role === "ROLE_ADMIN" && (
-        <div style={t.postBox}>
-          <h3 style={t.postTitle}>Create Announcement</h3>
-
-          <input
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={t.input}
-          />
-          <textarea
-            placeholder="Message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            style={t.textarea}
-          />
-          <select
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-            style={t.input}
-          >
-            <option value="NEW">NEW</option>
-            <option value="HIRING">HIRING</option>
-            <option value="URGENT">URGENT</option>
-          </select>
-
-          <button
-            onClick={handlePost}
-            style={{ ...s.button, opacity: posting ? 0.6 : 1, cursor: posting ? "not-allowed" : "pointer" }}
-            disabled={posting}
-          >
-            {posting ? "Posting..." : "Post Update"}
-          </button>
+      <div style={s.inner}>
+        {/* Page header */}
+        <div style={s.pageHeader}>
+          <div style={s.pill}>
+            <span style={s.pillDot} />
+            <span style={s.pillText}>Live feed</span>
+          </div>
+          <h1 style={s.pageTitle}>Announcements</h1>
+          <p style={s.pageSubtitle}>Latest updates on drives, deadlines, and placement news.</p>
         </div>
-      )}
 
-      {/* FEED */}
-      <div style={s.feed}>
-        {loading ? (
-          <p style={t.stateText}>Loading updates...</p>
-        ) : updates.length === 0 ? (
-          <p style={t.stateText}>No updates yet</p>
-        ) : (
-          pageUpdates.map((u) => (
-            <div key={u.id} style={t.card}>
-              <div style={s.header}>
-                <h3 style={{ ...t.cardTitle, margin: 0 }}>{u.title}</h3>
-                <div style={s.headerRight}>
-                  <span style={{ ...s.tag, ...getTagStyle(u.tag) }}>
-                    {u.tag || "INFO"}
-                  </span>
-                  {auth.role === "ROLE_ADMIN" && (
-                    <button
-                      style={{ ...s.deleteBtn, opacity: deletingId === u.id ? 0.5 : 1 }}
-                      onClick={() => handleDelete(u.id)}
-                      disabled={deletingId === u.id}
-                      title="Delete update"
-                    >
-                      {deletingId === u.id ? "…" : "✕"}
-                    </button>
-                  )}
-                </div>
+        {/* Admin post panel */}
+        {auth.role === "ROLE_ADMIN" && (
+          <div style={s.postBox}>
+            <div style={s.postBoxHeader}>
+              <div style={s.postBoxIcon}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
               </div>
-              <p style={t.cardMessage}>{u.message}</p>
-              <small style={s.time}>
-                {u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}
-              </small>
+              <span style={s.postBoxTitle}>Post announcement</span>
             </div>
-          ))
+
+            <input
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onFocus={() => setFocused("title")}
+              onBlur={() => setFocused(null)}
+              style={inputStyle("title")}
+            />
+            <textarea
+              placeholder="Message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onFocus={() => setFocused("message")}
+              onBlur={() => setFocused(null)}
+              style={{ ...s.textarea, ...inputStyle("message") }}
+            />
+            <div style={s.postRow}>
+              <select
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                style={{ ...inputStyle("select"), ...s.select }}
+                onFocus={() => setFocused("select")}
+                onBlur={() => setFocused(null)}
+              >
+                <option value="NEW">NEW</option>
+                <option value="HIRING">HIRING</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+              <button
+                onClick={handlePost}
+                disabled={posting}
+                style={{ ...s.postBtn, opacity: posting ? 0.6 : 1, cursor: posting ? "not-allowed" : "pointer" }}
+              >
+                {posting ? "Posting…" : "Post update"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Feed */}
+        <div style={s.feed}>
+          {loading ? (
+            <div style={s.stateText}>Loading updates…</div>
+          ) : updates.length === 0 ? (
+            <div style={s.stateText}>No updates yet.</div>
+          ) : (
+            pageUpdates.map((u) => {
+              const ts = getTagStyle(u.tag);
+              return (
+                <div key={u.id} style={s.card}>
+                  <div style={s.cardHeader}>
+                    <h3 style={s.cardTitle}>{u.title}</h3>
+                    <div style={s.cardRight}>
+                      <span style={{ ...s.tag, ...ts }}>{u.tag || "INFO"}</span>
+                      {auth.role === "ROLE_ADMIN" && (
+                        <button
+                          style={{ ...s.deleteBtn, opacity: deletingId === u.id ? 0.5 : 1 }}
+                          onClick={() => handleDelete(u.id)}
+                          disabled={deletingId === u.id}
+                          title="Delete update"
+                        >
+                          {deletingId === u.id ? "…" : "✕"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p style={s.cardMessage}>{u.message}</p>
+                  <small style={s.cardTime}>
+                    {u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}
+                  </small>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Pagination */}
+        {!loading && updates.length > PAGE_SIZE && (
+          <div style={s.pagination}>
+            <button
+              style={{ ...s.pageBtn, ...(page === 1 ? s.pageBtnOff : {}) }}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              ← Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                style={{ ...s.pageBtn, ...(n === page ? s.pageBtnActive : {}) }}
+                onClick={() => setPage(n)}
+              >
+                {n}
+              </button>
+            ))}
+
+            <button
+              style={{ ...s.pageBtn, ...(page === totalPages ? s.pageBtnOff : {}) }}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next →
+            </button>
+          </div>
         )}
       </div>
-
-      {/* PAGINATION */}
-      {!loading && updates.length > PAGE_SIZE && (
-        <div style={s.pagination}>
-          <button
-            style={{ ...t.pageBtn, ...(page === 1 ? s.pageBtnDisabled : {}) }}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            ← Prev
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              style={{ ...t.pageBtn, ...(n === page ? s.pageBtnActive : {}) }}
-              onClick={() => setPage(n)}
-            >
-              {n}
-            </button>
-          ))}
-
-          <button
-            style={{ ...t.pageBtn, ...(page === totalPages ? s.pageBtnDisabled : {}) }}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next →
-          </button>
-        </div>
-      )}
     </div>
   );
 }
 
-// ── LIGHT ────────────────────────────────────────────────────────────────────
 const s = {
   page: {
-    padding: "24px 20px",
-    background: "#f8fafc",
     minHeight: "100vh",
-    fontFamily: "Inter, Arial",
-    maxWidth: "760px",
+    background: "#0c0b2b",
+    fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
+    position: "relative",
+    overflow: "hidden",
+    padding: "0 0 60px",
+  },
+  orb: {
+    position: "absolute",
+    width: "400px",
+    height: "400px",
+    borderRadius: "50%",
+    filter: "blur(90px)",
+    pointerEvents: "none",
+    zIndex: 0,
+  },
+  inner: {
+    position: "relative",
+    zIndex: 1,
+    maxWidth: "720px",
     margin: "0 auto",
+    padding: "52px 24px 0",
   },
-  title: {
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: "20px",
+
+  /* Page header */
+  pageHeader: { marginBottom: "36px" },
+  pill: {
+    display: "inline-flex", alignItems: "center", gap: "8px",
+    background: "rgba(99,102,241,0.15)",
+    border: "0.5px solid rgba(99,102,241,0.4)",
+    borderRadius: "999px", padding: "5px 14px", marginBottom: "18px",
   },
+  pillDot: {
+    display: "block", width: "7px", height: "7px",
+    borderRadius: "50%", background: "#818cf8",
+  },
+  pillText: { fontSize: "12px", color: "#a5b4fc", fontWeight: "500" },
+  pageTitle: {
+    fontSize: "36px", fontWeight: "700", letterSpacing: "-1.2px",
+    margin: "0 0 10px",
+    background: "linear-gradient(135deg, #818cf8 0%, #c084fc 60%, #f472b6 100%)",
+    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+  },
+  pageSubtitle: {
+    fontSize: "15px", color: "rgba(255,255,255,0.45)", lineHeight: "1.6", margin: 0,
+  },
+
+  /* Admin post box */
   postBox: {
-    background: "white",
-    padding: "20px",
-    borderRadius: "14px",
-    marginBottom: "20px",
-    border: "1px solid #f1f5f9",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
+    background: "rgba(255,255,255,0.04)",
+    border: "0.5px solid rgba(255,255,255,0.1)",
+    borderRadius: "16px", padding: "22px 22px 18px",
+    marginBottom: "28px",
+    display: "flex", flexDirection: "column", gap: "12px",
+    backdropFilter: "blur(12px)",
   },
-  postTitle: { fontSize: "15px", fontWeight: "600", color: "#0f172a", margin: 0 },
+  postBoxHeader: { display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" },
+  postBoxIcon: {
+    width: "26px", height: "26px", background: "#6366f1", borderRadius: "7px",
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+  },
+  postBoxTitle: { fontSize: "14px", fontWeight: "700", color: "rgba(255,255,255,0.7)", letterSpacing: "-0.2px" },
   input: {
-    width: "100%",
-    padding: "9px 12px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
+    padding: "10px 13px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "9px",
+    background: "rgba(255,255,255,0.05)",
+    color: "white",
     fontSize: "14px",
-    background: "#f8fafc",
-    color: "#0f172a",
     outline: "none",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    fontFamily: "inherit",
+    width: "100%",
     boxSizing: "border-box",
   },
   textarea: {
-    width: "100%",
-    padding: "9px 12px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    fontSize: "14px",
-    background: "#f8fafc",
-    color: "#0f172a",
-    outline: "none",
     minHeight: "90px",
     resize: "none",
+    width: "100%",
     boxSizing: "border-box",
   },
-  button: {
-    background: "#2563eb",
-    color: "white",
-    padding: "10px 20px",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "14px",
-    fontWeight: "600",
-    alignSelf: "flex-start",
-  },
-  feed: { display: "flex", flexDirection: "column", gap: "12px" },
-  stateText: { color: "#94a3b8", fontSize: "14px" },
-  card: {
-    background: "white",
-    padding: "16px",
-    borderRadius: "12px",
-    border: "1px solid #f1f5f9",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-  },
-  cardTitle:   { fontSize: "15px", fontWeight: "600", color: "#0f172a" },
-  cardMessage: { marginTop: "8px", color: "#475569", fontSize: "14px", lineHeight: "1.6" },
-  header:      { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  headerRight: { display: "flex", alignItems: "center", gap: "8px" },
-  tag:    { padding: "4px 10px", borderRadius: "999px", fontSize: "12px", fontWeight: "600" },
-  time:   { fontSize: "12px", color: "#94a3b8" },
-  deleteBtn: {
-    background: "#fef2f2",
-    border: "1px solid #fecaca",
-    color: "#dc2626",
-    width: "24px",
-    height: "24px",
-    borderRadius: "6px",
-    fontSize: "12px",
+  postRow: { display: "flex", gap: "10px", alignItems: "center" },
+  select: {
+    flex: 1,
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
-    flexShrink: 0,
+    appearance: "none",
+    WebkitAppearance: "none",
+    minWidth: 0,
   },
+  postBtn: {
+    padding: "10px 20px",
+    background: "#6366f1",
+    color: "white",
+    border: "none",
+    borderRadius: "9px",
+    fontSize: "13.5px",
+    fontWeight: "600",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap",
+    letterSpacing: "-0.1px",
+    transition: "opacity 0.15s",
+  },
+
+  /* Feed */
+  feed: { display: "flex", flexDirection: "column", gap: "12px" },
+  stateText: {
+    textAlign: "center", padding: "60px 20px",
+    color: "rgba(255,255,255,0.3)", fontSize: "14px",
+  },
+  card: {
+    background: "rgba(255,255,255,0.04)",
+    border: "0.5px solid rgba(255,255,255,0.1)",
+    borderRadius: "14px",
+    padding: "18px 20px",
+    backdropFilter: "blur(8px)",
+    transition: "border-color 0.15s",
+  },
+  cardHeader: {
+    display: "flex", justifyContent: "space-between",
+    alignItems: "flex-start", marginBottom: "8px", gap: "12px",
+  },
+  cardTitle: {
+    fontSize: "15px", fontWeight: "700",
+    color: "rgba(255,255,255,0.88)", margin: 0, letterSpacing: "-0.3px",
+  },
+  cardRight: { display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 },
+  tag: {
+    padding: "3px 10px", borderRadius: "999px",
+    fontSize: "11px", fontWeight: "700", letterSpacing: "0.2px",
+  },
+  deleteBtn: {
+    background: "rgba(239,68,68,0.1)",
+    border: "0.5px solid rgba(239,68,68,0.3)",
+    color: "#fca5a5",
+    width: "24px", height: "24px",
+    borderRadius: "6px", fontSize: "11px",
+    cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    padding: 0, flexShrink: 0,
+  },
+  cardMessage: {
+    fontSize: "14px", color: "rgba(255,255,255,0.5)",
+    lineHeight: "1.65", margin: "0 0 10px",
+  },
+  cardTime: { fontSize: "11.5px", color: "rgba(255,255,255,0.25)", fontWeight: "500" },
+
+  /* Pagination */
   pagination: {
     display: "flex", alignItems: "center", justifyContent: "center",
-    gap: "6px", marginTop: "24px", paddingBottom: "8px", flexWrap: "wrap",
+    gap: "6px", marginTop: "28px", flexWrap: "wrap",
   },
   pageBtn: {
-    padding: "7px 13px", fontSize: "13px", fontWeight: "500",
-    fontFamily: "inherit", letterSpacing: "-0.1px",
-    border: "1px solid #e2e8f0",
+    padding: "7px 14px", fontSize: "13px", fontWeight: "500",
+    fontFamily: "inherit", border: "0.5px solid rgba(255,255,255,0.12)",
     borderRadius: "8px", cursor: "pointer",
-    background: "white", color: "#374151",
+    background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)",
+    transition: "background 0.15s",
   },
   pageBtnActive: {
-    background: "#2563eb", borderColor: "#2563eb",
-    color: "white", fontWeight: "600",
+    background: "#6366f1", borderColor: "#6366f1",
+    color: "white", fontWeight: "700",
   },
-  pageBtnDisabled: { opacity: 0.35, cursor: "not-allowed" },
-};
-
-// ── DARK ─────────────────────────────────────────────────────────────────────
-const dm = {
-  ...s,
-  page:        { ...s.page,        background: "#0f172a" },
-  title:       { ...s.title,       color: "#f1f5f9" },
-  postBox:     { ...s.postBox,     background: "#1e293b", border: "1px solid #334155", boxShadow: "none" },
-  postTitle:   { ...s.postTitle,   color: "#f1f5f9" },
-  input:       { ...s.input,       background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" },
-  textarea:    { ...s.textarea,    background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" },
-  stateText:   { ...s.stateText,   color: "#475569" },
-  card:        { ...s.card,        background: "#1e293b", border: "1px solid #334155", boxShadow: "none" },
-  cardTitle:   { ...s.cardTitle,   color: "#f1f5f9" },
-  cardMessage: { ...s.cardMessage, color: "#94a3b8" },
-  pageBtn:     { ...s.pageBtn,     background: "#1e293b", borderColor: "#334155", color: "#94a3b8" },
+  pageBtnOff: { opacity: 0.3, cursor: "not-allowed" },
 };

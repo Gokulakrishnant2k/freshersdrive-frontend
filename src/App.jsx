@@ -22,6 +22,11 @@ import SavedDrives from "./pages/SavedDrives";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
+// Legal Pages
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Disclaimer from "./pages/Disclaimer";
+
 function App() {
   return (
     <ThemeProvider>
@@ -45,12 +50,18 @@ function App() {
           <Route path="/saved-drives" element={<SavedDrives />} />
           <Route path="/calendar" element={<DriveCalendar />} />
 
+          {/* Legal Pages */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/disclaimer" element={<Disclaimer />} />
+
           <Route path="/admin" element={<AdminDashboard />} />
 
+          {/* Admin or Employee only */}
           <Route
             path="/add-drive"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute roleRequired={["ROLE_ADMIN", "ROLE_EMPLOYEE"]}>
                 <AddDrive />
               </ProtectedRoute>
             }
