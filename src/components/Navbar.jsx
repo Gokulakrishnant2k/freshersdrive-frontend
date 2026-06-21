@@ -1,11 +1,26 @@
+// src/components/Navbar.jsx
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { INK, MUTED, HAIRLINE, STATUS_INK, ACCENTS, getAccent } from "../utils/ticketTheme";
 
 const socialLinks = {
   instagram: "https://instagram.com/your_handle_here",
   youtube:   "https://youtube.com/@your_channel_here",
 };
+
+// Same deterministic accent the rest of the site would compute for
+// "FreshersDrive" if it were ever shown as a company tile — keeps the
+// brand's own color in step with the livery system everywhere else.
+const BRAND_ACCENT = getAccent("FreshersDrive");
+
+const NAV_ITEMS = [
+  { to: "/",             label: "Drives" },
+  { to: "/Updates",      label: "Updates" },
+  { to: "/calendar",     label: "Calendar" },
+  { to: "/saved-drives", label: "Saved" },
+  { to: "/contact",      label: "Contact" },
+];
 
 export default function Navbar() {
   const { auth, logout } = useAuth();
@@ -19,15 +34,28 @@ export default function Navbar() {
   const isEmployee = auth.role === "ROLE_EMPLOYEE";
 
   return (
-    <div style={styles.nav}>
+    <div style={styles.nav} className="fd-navbar">
+      <style>{STYLE_BLOCK}</style>
+
+      {/* Livery stripe — same role as the accent bar on every ticket stub */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: BRAND_ACCENT }} />
+
       <div style={styles.topRow}>
         <Link to="/" style={styles.logo} onClick={closeMenu}>
-          FreshersDrive
+          <span style={{ ...styles.logoMark, background: BRAND_ACCENT }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="6" width="20" height="12" rx="3" stroke="#fff" strokeWidth="2" />
+              <circle cx="2.5" cy="12" r="2" fill={INK} />
+              <circle cx="21.5" cy="12" r="2" fill={INK} />
+            </svg>
+          </span>
+          <span style={styles.logoText}>FreshersDrive</span>
         </Link>
         <button
           className="fd-navbar-toggle"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
+          style={styles.toggleBtn}
         >
           {menuOpen ? "✕" : "☰"}
         </button>
@@ -36,16 +64,27 @@ export default function Navbar() {
       <div className={`fd-navbar-panel${menuOpen ? " open" : ""}`} style={styles.panel}>
         {auth.user && (
           <div className="fd-navbar-links" style={styles.links}>
-            <Link to="/" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/") ? styles.active : {}) }}>Drives</Link>
-            <Link to="/Updates" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/Updates") ? styles.active : {}) }}>Updates</Link>
-            <Link to="/calendar" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/calendar") ? styles.active : {}) }}>Calendar</Link>
-            <Link to="/saved-drives" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/saved-drives") ? styles.active : {}) }}>Saved</Link>
-            <Link to="/contact" onClick={closeMenu} style={{ ...styles.link, ...(isActive("/contact") ? styles.active : {}) }}>Contact</Link>
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={closeMenu}
+                className="fd-nav-link-hover"
+                style={{ ...styles.link, ...(isActive(item.to) ? styles.active : {}) }}
+              >
+                {isActive(item.to) && <span style={{ ...styles.activeDot, background: BRAND_ACCENT }} />}
+                {item.label}
+              </Link>
+            ))}
             {/* Admin dashboard link: visible to both Admin and Employee roles.
                 AdminDashboard.jsx itself renders an "Admin dashboard" or
                 "Employee dashboard" view depending on which role is logged in. */}
             {(isAdmin || isEmployee) && (
-              <Link to="/admin" onClick={closeMenu} style={{ ...styles.admin, ...(isActive("/admin") ? styles.activeAdmin : {}) }}>
+              <Link
+                to="/admin"
+                onClick={closeMenu}
+                style={{ ...styles.admin, ...(isActive("/admin") ? styles.activeAdmin : {}) }}
+              >
                 {isAdmin ? "Admin" : "Dashboard"}
               </Link>
             )}
@@ -54,15 +93,15 @@ export default function Navbar() {
 
         <div className="fd-navbar-right" style={styles.right}>
           <div className="fd-navbar-social" style={styles.socialRow}>
-            <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" style={styles.socialIcon} aria-label="Instagram" title="Instagram">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="fd-nav-social-icon" style={styles.socialIcon} aria-label="Instagram" title="Instagram">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </a>
-            <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" style={styles.socialIcon} aria-label="YouTube" title="YouTube">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="fd-nav-social-icon" style={styles.socialIcon} aria-label="YouTube" title="YouTube">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
                 <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
               </svg>
@@ -71,16 +110,24 @@ export default function Navbar() {
 
           {!auth.user ? (
             <>
-              <Link style={styles.link} to="/login" onClick={closeMenu}>Login</Link>
-              <Link style={styles.primary} to="/register" onClick={closeMenu}>Register</Link>
+              <Link className="fd-nav-link-hover" style={styles.link} to="/login" onClick={closeMenu}>Login</Link>
+              <Link
+                style={{ ...styles.primary, background: BRAND_ACCENT, boxShadow: `0 8px 18px ${BRAND_ACCENT}40` }}
+                to="/register"
+                onClick={closeMenu}
+              >
+                Register
+              </Link>
             </>
           ) : (
             <>
               <div style={styles.userBox}>
-                <span style={styles.avatar}>👤</span>
+                <span style={{ ...styles.avatar, background: BRAND_ACCENT + "22", color: BRAND_ACCENT }}>
+                  {auth.user.name?.charAt(0)?.toUpperCase() || "?"}
+                </span>
                 <span style={styles.user}>{auth.user.name}</span>
               </div>
-              <button style={styles.logout} onClick={() => { closeMenu(); logout(); }}>
+              <button className="fd-nav-logout" style={styles.logout} onClick={() => { closeMenu(); logout(); }}>
                 Logout
               </button>
             </>
@@ -94,27 +141,99 @@ export default function Navbar() {
 /* ================= STYLES ================= */
 const styles = {
   nav: {
+    position: "sticky", top: 0, zIndex: 100,
     display: "flex", flexDirection: "column",
     padding: "12px 24px",
-    background: "rgba(15, 23, 42, 0.92)",
-    backdropFilter: "blur(12px)",
-    color: "white", position: "sticky", top: 0, zIndex: 100,
+    background: INK,
+    color: "#fff",
     boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
   },
   topRow: { display: "flex", alignItems: "center", justifyContent: "space-between" },
   panel: { display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1, marginLeft: "24px" },
-  links: { display: "flex", alignItems: "center", gap: "14px" },
+  links: { display: "flex", alignItems: "center", gap: "4px" },
   right: { display: "flex", alignItems: "center", gap: "12px" },
-  socialRow: { display: "flex", alignItems: "center", gap: "6px", paddingRight: "8px", marginRight: "4px", borderRight: "1px solid rgba(255,255,255,0.12)" },
-  socialIcon: { display: "flex", alignItems: "center", justifyContent: "center", width: "28px", height: "28px", borderRadius: "8px", color: "#94a3b8", background: "rgba(255,255,255,0.05)" },
-  logo: { fontWeight: "800", fontSize: "18px", color: "#38bdf8", textDecoration: "none", letterSpacing: "0.6px" },
-  link: { color: "#cbd5e1", textDecoration: "none", fontSize: "14px", padding: "6px 10px", borderRadius: "8px" },
-  active: { color: "#38bdf8", fontWeight: "600" },
-  admin: { color: "#fbbf24", textDecoration: "none", fontSize: "14px", padding: "6px 10px", borderRadius: "8px", fontWeight: "600" },
-  activeAdmin: { background: "rgba(251, 191, 36, 0.12)" },
-  primary: { background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "white", padding: "7px 12px", borderRadius: "10px", textDecoration: "none", fontSize: "14px" },
-  logout: { background: "#ef4444", color: "white", border: "none", padding: "7px 12px", borderRadius: "10px", cursor: "pointer" },
-  userBox: { display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "10px", background: "rgba(255,255,255,0.08)" },
-  avatar: { fontSize: "14px" },
-  user: { fontSize: "13px", color: "#e2e8f0" },
+  socialRow: {
+    display: "flex", alignItems: "center", gap: "6px",
+    paddingRight: "10px", marginRight: "6px",
+    borderRight: `1px solid ${HAIRLINE.dark}`,
+  },
+  socialIcon: {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "28px", height: "28px", borderRadius: "8px",
+    color: MUTED.dark, background: "rgba(255,255,255,0.05)",
+    border: "1px solid transparent",
+  },
+  logo: { display: "flex", alignItems: "center", gap: "9px", textDecoration: "none" },
+  logoMark: {
+    width: "28px", height: "28px", borderRadius: "8px",
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+  },
+  logoText: {
+    fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
+    fontWeight: 700, fontSize: "19px", color: "#fff",
+    letterSpacing: "0.3px", textTransform: "uppercase",
+  },
+  toggleBtn: {
+    background: "rgba(255,255,255,0.06)", border: `1px solid ${HAIRLINE.dark}`,
+    color: "#fff", borderRadius: "8px", width: "34px", height: "34px",
+    fontSize: "15px", cursor: "pointer",
+  },
+  link: {
+    display: "flex", alignItems: "center", gap: "6px",
+    color: MUTED.dark, textDecoration: "none",
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: "12px", fontWeight: 600, letterSpacing: "0.4px",
+    textTransform: "uppercase",
+    padding: "8px 11px", borderRadius: "8px",
+  },
+  active: { color: "#fff" },
+  activeDot: { width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0 },
+  admin: {
+    color: ACCENTS[6], // Signal Amber
+    textDecoration: "none",
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: "12px", fontWeight: 700, letterSpacing: "0.4px",
+    textTransform: "uppercase",
+    padding: "8px 11px", borderRadius: "8px",
+  },
+  activeAdmin: { background: ACCENTS[6] + "1A" },
+  primary: {
+    color: "#fff", padding: "8px 16px", borderRadius: "9px",
+    textDecoration: "none", fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: "12px", fontWeight: 700, letterSpacing: "0.4px",
+  },
+  logout: {
+    background: STATUS_INK.urgent, color: "#fff", border: "none",
+    padding: "8px 14px", borderRadius: "9px", cursor: "pointer",
+    fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", fontWeight: 700,
+  },
+  userBox: {
+    display: "flex", alignItems: "center", gap: "8px",
+    padding: "5px 11px 5px 5px", borderRadius: "99px",
+    background: "rgba(255,255,255,0.06)", border: `1px solid ${HAIRLINE.dark}`,
+  },
+  avatar: {
+    width: "24px", height: "24px", borderRadius: "50%",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: "11px", fontWeight: 700, flexShrink: 0,
+  },
+  user: { fontSize: "12.5px", color: "#e7ecf5", fontWeight: 600 },
 };
+
+const STYLE_BLOCK = `
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+.fd-navbar a:focus-visible,
+.fd-navbar button:focus-visible {
+  outline: 2px solid #1C7ED6;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.fd-navbar .fd-nav-link-hover:hover { color: #fff; }
+.fd-navbar .fd-nav-social-icon:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+.fd-navbar .fd-nav-logout:hover { filter: brightness(1.1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-navbar * { transition: none !important; }
+}
+`;
