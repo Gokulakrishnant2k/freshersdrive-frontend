@@ -1,35 +1,113 @@
+// src/pages/ExpiringDrives.jsx
+//
+// Redesigned to speak the same boarding-pass language as DriveCard:
+// a livery-accented stub, monospace data, and a small barcode echo —
+// instead of the generic slate/amber card it was before.
 import { useEffect, useState, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import {
+  PAPER,
+  PAPER_TEXT,
+  MUTED,
+  HAIRLINE,
+  STATUS_INK,
+  CATEGORY_LABELS,
+  getAccent,
+  barcodeBars,
+} from "../utils/ticketTheme";
 
 const SLIDE_INTERVAL = 5000; // 5 seconds
 
 function ExpItem({ drive, daysLeft, dark }) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const urgent = daysLeft <= 2;
-  const t = dark ? dm : s;
+
+  const accent = getAccent(drive.companyName);
+  const statusInk = daysLeft <= 2 ? STATUS_INK.urgent : STATUS_INK.soon;
+  const bars = barcodeBars(String(drive.id ?? drive.companyName ?? "x"), 14);
+
+  const paper = dark ? PAPER.dark : PAPER.light;
+  const text = dark ? PAPER_TEXT.dark : PAPER_TEXT.light;
+  const muted = dark ? MUTED.dark : MUTED.light;
+  const hairline = dark ? HAIRLINE.dark : HAIRLINE.light;
 
   return (
     <div
-      style={{
-        ...t.item,
-        borderColor: hovered
-          ? (dark ? "#475569" : "#cbd5e1")
-          : (dark ? "#334155" : "#f1f5f9"),
-      }}
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(`/drives/${drive.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(`/drives/${drive.id}`);
+        }
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{
+        position: "relative",
+        background: paper,
+        border: `1px solid ${hovered ? accent + "60" : hairline}`,
+        borderLeft: `4px solid ${accent}`,
+        borderRadius: 10,
+        padding: "10px 12px 10px 11px",
+        cursor: "pointer",
+        transition: "border-color 0.15s ease, transform 0.15s ease",
+        transform: hovered ? "translateX(2px)" : "translateX(0)",
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      }}
     >
-      <div style={s.itemTop}>
-        <div>
-          <div style={t.itemCompany}>{drive.companyName}</div>
-          <div style={t.itemRole}>{drive.jobRole}</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{
+            fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
+            fontSize: 14.5, fontWeight: 700, letterSpacing: "0.1px",
+            color: text, textTransform: "uppercase",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {drive.companyName}
+          </div>
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 10.5, color: muted, marginTop: 2,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {drive.jobRole}
+          </div>
         </div>
-        <span style={urgent ? s.badgeUrgent : s.badgeSoon}>
-          {daysLeft === 0 ? "Today" : `${daysLeft}d`}
+
+        <span style={{
+          flexShrink: 0,
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 10.5, fontWeight: 700,
+          color: statusInk,
+          background: statusInk + "16",
+          border: `1px solid ${statusInk}33`,
+          borderRadius: 99, padding: "2px 8px",
+          letterSpacing: "0.3px",
+        }}>
+          {daysLeft === 0 ? "TODAY" : `${daysLeft}D LEFT`}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 1.2, height: 9, flexShrink: 0 }}>
+          {bars.map((w, i) => (
+            <span key={i} style={{
+              width: w, height: i % 4 === 0 ? 9 : 6,
+              background: dark ? "#3a4666" : "#cbd3e1",
+              display: "inline-block",
+            }} />
+          ))}
+        </div>
+        <span style={{
+          fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5,
+          color: muted, letterSpacing: "0.3px",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
+          {CATEGORY_LABELS[drive.category] || drive.category || "—"}
         </span>
       </div>
     </div>
@@ -61,7 +139,6 @@ export default function ExpiringDrives() {
       .catch((err) => console.error("ExpiringDrives:", err));
   }, []);
 
-  // Auto-advance slideshow
   useEffect(() => {
     if (drives.length <= 1 || paused) return;
     timerRef.current = setInterval(() => {
@@ -71,172 +148,89 @@ export default function ExpiringDrives() {
   }, [drives.length, paused]);
 
   if (drives.length === 0) {
-    return <p style={s.empty}>No drives expiring this week</p>;
+    return (
+      <p style={{
+        fontSize: 12.5,
+        color: dark ? MUTED.dark : MUTED.light,
+        textAlign: "center",
+        padding: "10px 4px",
+        lineHeight: 1.6,
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      }}>
+        Nothing closing this week — the board is clear.
+      </p>
+    );
   }
 
   const drive    = drives[current];
-  const daysLeft = Math.ceil(
-    (new Date(drive.deadline) - new Date()) / (1000 * 60 * 60 * 24)
-  );
-  const progress = ((SLIDE_INTERVAL - 0) / SLIDE_INTERVAL) * 100; // kept for bar width
+  const daysLeft = Math.ceil((new Date(drive.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+  const accent   = getAccent(drive.companyName);
+  const hairline = dark ? HAIRLINE.dark : HAIRLINE.light;
 
   return (
-    <div
-      style={s.wrapper}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* Slide */}
-      <ExpItem key={drive.id} drive={drive} daysLeft={daysLeft} dark={dark} />
+    <>
+      <style>{STYLE_BLOCK}</style>
+      <div
+        className="exp-wrap"
+        style={{ display: "flex", flexDirection: "column", gap: 10 }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <ExpItem key={drive.id} drive={drive} daysLeft={daysLeft} dark={dark} />
 
-      {/* Progress bar */}
-      {!paused && (
-        <div style={s.progressTrack}>
-          <div
-            key={`${current}-${paused}`}
-            style={s.progressBar}
-          />
-        </div>
-      )}
-
-      {/* Dot indicators + counter */}
-      <div style={s.controls}>
-        <div style={s.dots}>
-          {drives.map((_, i) => (
-            <button
-              key={i}
-              style={{ ...s.dot, ...(i === current ? s.dotActive : {}) }}
-              onClick={() => { setCurrent(i); clearInterval(timerRef.current); }}
-              aria-label={`Go to slide ${i + 1}`}
+        {!paused && (
+          <div style={{ height: 3, background: hairline, borderRadius: 99, overflow: "hidden" }}>
+            <div
+              key={`${current}-${paused}`}
+              className="exp-progress-bar"
+              style={{
+                height: "100%",
+                borderRadius: 99,
+                width: "0%",
+                background: accent,
+                animation: `expProgress ${SLIDE_INTERVAL}ms linear forwards`,
+              }}
             />
-          ))}
+          </div>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+            {drives.map((d, i) => (
+              <button
+                key={i}
+                className="exp-dot"
+                onClick={() => { setCurrent(i); clearInterval(timerRef.current); }}
+                aria-label={`Go to slide ${i + 1}`}
+                style={{
+                  width: i === current ? 16 : 6, height: 6, borderRadius: 99,
+                  background: i === current ? getAccent(d.companyName) : (dark ? "#3a4666" : "#cbd3e1"),
+                  border: 0, padding: 0, cursor: "pointer",
+                  transition: "background 0.2s ease, width 0.2s ease",
+                }}
+              />
+            ))}
+          </div>
+          <span style={{
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5,
+            color: dark ? MUTED.dark : MUTED.light, fontVariantNumeric: "tabular-nums",
+          }}>
+            {current + 1} / {drives.length}
+          </span>
         </div>
-        <span style={dark ? dm.counter : s.counter}>
-          {current + 1} / {drives.length}
-        </span>
       </div>
-    </div>
+    </>
   );
 }
 
-// ── STYLES ───────────────────────────────────────────────────────────────────
-const s = {
-  empty: {
-    fontSize: "13px",
-    color: "#94a3b8",
-    textAlign: "center",
-    padding: "8px 0",
-  },
-  wrapper: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-  item: {
-    padding: "10px 12px",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "#f1f5f9",
-    borderRadius: "10px",
-    cursor: "pointer",
-    background: "#fafafa",
-    transition: "border-color 0.15s",
-  },
-  itemTop: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: "8px",
-  },
-  itemCompany: {
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#0f172a",
-  },
-  itemRole: {
-    fontSize: "12px",
-    color: "#64748b",
-    marginTop: "1px",
-  },
-  badgeSoon: {
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "#92400e",
-    background: "#fffbeb",
-    padding: "2px 8px",
-    borderRadius: "99px",
-    flexShrink: 0,
-  },
-  badgeUrgent: {
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "#b91c1c",
-    background: "#fef2f2",
-    padding: "2px 8px",
-    borderRadius: "99px",
-    flexShrink: 0,
-  },
-  progressTrack: {
-    height: "3px",
-    background: "#e2e8f0",
-    borderRadius: "99px",
-    overflow: "hidden",
-  },
-  progressBar: {
-    height: "100%",
-    background: "#b45309",
-    borderRadius: "99px",
-    width: "0%",
-    animation: `slideProgress ${SLIDE_INTERVAL}ms linear forwards`,
-  },
-  controls: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dots: {
-    display: "flex",
-    gap: "5px",
-    flexWrap: "wrap",
-  },
-  dot: {
-    width: "6px",
-    height: "6px",
-    borderRadius: "99px",
-    background: "#cbd5e1",
-    borderWidth: 0,
-    padding: 0,
-    cursor: "pointer",
-    transition: "background 0.2s, width 0.2s",
-  },
-  dotActive: {
-    background: "#b45309",
-    width: "16px",
-  },
-  counter: {
-    fontSize: "11px",
-    color: "#94a3b8",
-    fontVariantNumeric: "tabular-nums",
-  },
-};
+const STYLE_BLOCK = `
+@keyframes expProgress { from { width: 0% } to { width: 100% } }
+.exp-dot:focus-visible { outline: 2px solid #1C7ED6; outline-offset: 2px; border-radius: 99px; }
 
-// Inject keyframe animation once
-if (typeof document !== "undefined" && !document.getElementById("expiry-anim")) {
-  const style = document.createElement("style");
-  style.id = "expiry-anim";
-  style.textContent = `
-    @keyframes slideProgress {
-      from { width: 0% }
-      to   { width: 100% }
-    }
-  `;
-  document.head.appendChild(style);
+@media (prefers-reduced-motion: reduce) {
+  .exp-wrap, .exp-wrap * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
-
-const dm = {
-  ...s,
-  item:        { ...s.item,        background: "#1e293b" },
-  itemCompany: { ...s.itemCompany, color: "#f1f5f9" },
-  itemRole:    { ...s.itemRole,    color: "#94a3b8" },
-  counter:     { ...s.counter,     color: "#64748b" },
-};
+`;

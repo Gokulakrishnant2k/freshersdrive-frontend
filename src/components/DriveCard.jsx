@@ -1,51 +1,44 @@
+// src/components/DriveCard.jsx
+//
+// Unchanged visually — only the constants/helpers it used to define
+// locally now come from the shared ticketTheme module so ExpiringDrives
+// (and anything else) can speak the exact same visual language.
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const CATEGORY_LABELS = {
-  IT_SOFTWARE:      "IT · Software",
-  CORE_ENGINEERING: "Core · Engg",
-  GOVERNMENT:       "Government",
-  BANKING:          "Banking",
-  MANAGEMENT:       "Management",
-  INTERNSHIP:       "Internship",
-  OFF_CAMPUS:       "Off Campus",
-};
-
-const GRADIENTS = [
-  ["#6366f1", "#8b5cf6"],
-  ["#0ea5e9", "#6366f1"],
-  ["#10b981", "#0ea5e9"],
-  ["#f59e0b", "#ef4444"],
-  ["#ec4899", "#8b5cf6"],
-  ["#14b8a6", "#6366f1"],
-  ["#f97316", "#ec4899"],
-];
-
-function getGradient(name = "") {
-  return GRADIENTS[name.charCodeAt(0) % GRADIENTS.length];
-}
+import {
+  INK,
+  PAGE_BG,
+  CATEGORY_LABELS,
+  STATUS_INK,
+  getAccent,
+  barcodeBars,
+} from "../utils/ticketTheme";
 
 export default function DriveCard({ drive, dark, favorites = new Set(), onToggleFav }) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const [g1, g2] = getGradient(drive.companyName);
 
+  const accent = getAccent(drive.companyName);
   const isFav = favorites.has(drive.id);
+  const pageBg = dark ? PAGE_BG.dark : PAGE_BG.light;
 
   const daysLeft = drive.deadline
     ? Math.ceil((new Date(drive.deadline) - new Date()) / (1000 * 60 * 60 * 24))
     : null;
 
   const urgency =
-    daysLeft === null      ? null
-    : daysLeft <= 0        ? "closed"
-    : daysLeft <= 2        ? "urgent"
-    : daysLeft <= 7        ? "soon"
-    : null;
+    daysLeft === null ? null :
+    daysLeft <= 0      ? "closed" :
+    daysLeft <= 2       ? "urgent" :
+    daysLeft <= 7        ? "soon" : null;
+
+  const stamp =
+    urgency === "urgent" ? { text: "FINAL CALL",   ink: STATUS_INK.urgent } :
+    urgency === "soon"   ? { text: "CLOSING SOON", ink: STATUS_INK.soon } :
+    urgency === "closed" ? { text: "CLOSED",       ink: STATUS_INK.closed } :
+    null;
 
   // Require login before viewing a drive's details / applying.
-  // If not logged in, send the user to /login and remember which
-  // drive they wanted so we can take them straight there afterward.
   const handleCardClick = () => {
     const token = localStorage.getItem("token");
     const target = `/drives/${drive.id}`;
@@ -55,267 +48,295 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
       navigate("/login");
       return;
     }
-
     navigate(target);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
+  const bars = barcodeBars(String(drive.id ?? drive.companyName ?? "x"));
+
   return (
-    <div
-      style={{
-        ...card(dark),
-        transform: hovered ? "translateY(-4px) scale(1.01)" : "translateY(0) scale(1)",
-        boxShadow: hovered
-          ? dark
-            ? `0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px #334155`
-            : `0 20px 40px rgba(99,102,241,0.15), 0 0 0 1px #e0e7ff`
-          : dark
-            ? "0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px #1e293b"
-            : "0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px #f1f5f9",
-      }}
-      onClick={handleCardClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* GRADIENT HEADER BAND */}
-      <div style={{
-        background: `linear-gradient(135deg, ${g1}, ${g2})`,
-        borderRadius: "14px 14px 0 0",
-        padding: "18px 18px 28px",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Decorative circles */}
+    <>
+      <style>{STYLE_BLOCK}</style>
+      <div
+        className="pp-ticket"
+        role="button"
+        tabIndex={0}
+        aria-label={`View ${drive.jobRole ?? "role"} at ${drive.companyName ?? "this company"}`}
+        onClick={handleCardClick}
+        onKeyDown={handleKeyDown}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          position: "relative",
+          cursor: "pointer",
+          fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+          transform: hovered ? "translateY(-5px)" : "translateY(0)",
+          filter: [
+            urgency === "closed" ? "grayscale(0.45)" : "",
+            hovered
+              ? dark
+                ? "drop-shadow(0 22px 34px rgba(0,0,0,0.55))"
+                : "drop-shadow(0 18px 30px rgba(16,26,48,0.18))"
+              : dark
+                ? "drop-shadow(0 2px 6px rgba(0,0,0,0.4))"
+                : "drop-shadow(0 2px 8px rgba(16,26,48,0.07))",
+          ].filter(Boolean).join(" "),
+          transition: "transform 0.25s ease, filter 0.25s ease",
+        }}
+      >
+        {/* ── STUB ── */}
         <div style={{
-          position: "absolute", top: "-20px", right: "-20px",
-          width: "90px", height: "90px", borderRadius: "50%",
-          background: "rgba(255,255,255,0.08)",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "-30px", right: "30px",
-          width: "60px", height: "60px", borderRadius: "50%",
-          background: "rgba(255,255,255,0.06)",
-        }} />
-
-        {/* Company initial */}
-        <div style={{
-          width: "46px", height: "46px", borderRadius: "14px",
-          background: "rgba(255,255,255,0.2)",
-          backdropFilter: "blur(10px)",
-          border: "1.5px solid rgba(255,255,255,0.3)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "20px", fontWeight: "800", color: "white",
-          letterSpacing: "-1px", marginBottom: "12px",
+          background: INK,
+          borderRadius: "16px 16px 0 0",
+          overflow: "hidden",
+          position: "relative",
+          padding: "20px 18px 18px",
         }}>
-          {drive.companyName?.charAt(0)?.toUpperCase()}
-        </div>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 5, background: accent }} />
 
-        <div style={{
-          fontSize: "16px", fontWeight: "800",
-          color: "white", letterSpacing: "-0.5px",
-          lineHeight: "1.2", textShadow: "0 1px 3px rgba(0,0,0,0.2)",
-        }}>
-          {drive.companyName}
-        </div>
-        <div style={{
-          fontSize: "12.5px", color: "rgba(255,255,255,0.8)",
-          marginTop: "4px", fontWeight: "500", letterSpacing: "-0.1px",
-        }}>
-          {drive.jobRole}
-        </div>
-
-        {/* Status pill */}
-        {drive.status === "ACTIVE" && (
-          <div style={{
-            position: "absolute", top: "16px", right: "16px",
-            background: "rgba(255,255,255,0.2)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            borderRadius: "99px", padding: "3px 10px",
-            fontSize: "11px", fontWeight: "700",
-            color: "white", letterSpacing: "0.2px",
-            display: "flex", alignItems: "center", gap: "5px",
-          }}>
-            <span style={{
-              width: "6px", height: "6px", borderRadius: "50%",
-              background: "#4ade80",
-              boxShadow: "0 0 6px #4ade80",
-            }} />
-            LIVE
-          </div>
-        )}
-
-        {/* ── HEART / FAVORITE BUTTON ── */}
-        {onToggleFav && (
-          <button
-            style={{
-              position: "absolute",
-              bottom: "14px",
-              right: "16px",
-              background: isFav ? "rgba(239,68,68,0.9)" : "rgba(255,255,255,0.18)",
-              backdropFilter: "blur(8px)",
-              border: isFav ? "1.5px solid rgba(239,68,68,0.6)" : "1.5px solid rgba(255,255,255,0.35)",
-              borderRadius: "50%",
-              width: "30px", height: "30px",
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 11,
+              background: accent,
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer",
-              transition: "background 0.18s, transform 0.15s",
-              padding: 0,
-              zIndex: 3,
-            }}
-            title={isFav ? "Remove from saved" : "Save drive"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFav(drive.id);
-            }}
-          >
-            <svg
-              width="14" height="14"
-              viewBox="0 0 24 24"
-              fill={isFav ? "white" : "none"}
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* PULL-UP CARD BODY */}
-      <div style={{
-        background: dark ? "#1e293b" : "white",
-        borderRadius: "16px",
-        marginTop: "-14px",
-        padding: "16px 18px 18px",
-        position: "relative",
-        zIndex: 1,
-      }}>
-
-        {/* META PILLS */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px" }}>
-          {drive.location && (
-            <span style={pill(dark)}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              {drive.location}
-            </span>
-          )}
-          {drive.ctcDisplay && (
-            <span style={{ ...pill(dark), color: "#059669", background: dark ? "#022c22" : "#f0fdf4", border: `1px solid ${dark ? "#064e3b" : "#bbf7d0"}` }}>
-              ₹ {drive.ctcDisplay}
-            </span>
-          )}
-          {drive.jobType && (
-            <span style={{ ...pill(dark), color: "#7c3aed", background: dark ? "#2e1065" : "#faf5ff", border: `1px solid ${dark ? "#4c1d95" : "#e9d5ff"}` }}>
-              {drive.jobType}
-            </span>
-          )}
-        </div>
-
-        {/* CATEGORY + CGPA ROW */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-          <span style={{
-            fontSize: "11px", fontWeight: "700",
-            letterSpacing: "0.3px", textTransform: "uppercase",
-            color: dark ? "#94a3b8" : "#94a3b8",
-          }}>
-            {CATEGORY_LABELS[drive.category] || drive.category || "—"}
-          </span>
-          {drive.minCgpa && (
-            <span style={{
-              fontSize: "11.5px", fontWeight: "700",
-              color: "#f59e0b",
-              background: dark ? "#1c1400" : "#fffbeb",
-              border: "1px solid #fde68a",
-              padding: "2px 9px", borderRadius: "99px",
+              fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
+              fontSize: 20, fontWeight: 800, color: "#fff",
+              flexShrink: 0,
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.25)",
             }}>
-              ★ {drive.minCgpa}+ CGPA
-            </span>
+              {(drive.companyName || "?").charAt(0).toUpperCase()}
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
+                fontSize: 21, fontWeight: 700, color: "#fff",
+                textTransform: "uppercase", letterSpacing: "0.3px",
+                lineHeight: 1.05,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {drive.companyName}
+              </div>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11.5, color: "rgba(255,255,255,0.65)",
+                marginTop: 4, letterSpacing: "0.2px",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {drive.jobRole}
+              </div>
+            </div>
+
+            {drive.status === "ACTIVE" && (
+              <span style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.25)",
+                borderRadius: 99, padding: "3px 9px",
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10.5, fontWeight: 700, color: "#fff",
+                letterSpacing: "0.5px", flexShrink: 0,
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: "#4ade80", boxShadow: "0 0 6px #4ade80",
+                }} />
+                LIVE
+              </span>
+            )}
+          </div>
+
+          {onToggleFav && (
+            <button
+              type="button"
+              title={isFav ? "Remove from saved" : "Save this ticket"}
+              aria-pressed={isFav}
+              onClick={(e) => { e.stopPropagation(); onToggleFav(drive.id); }}
+              onKeyDown={(e) => e.stopPropagation()}
+              style={{
+                position: "absolute", bottom: 14, right: 16,
+                width: 28, height: 28, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", padding: 0,
+                background: isFav ? accent : "rgba(255,255,255,0.1)",
+                border: isFav ? `1px solid ${accent}` : "1px solid rgba(255,255,255,0.3)",
+                color: "#fff",
+                transition: "background 0.18s, transform 0.15s",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24"
+                fill={isFav ? "currentColor" : "none"} stroke="currentColor"
+                strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
           )}
         </div>
 
-        {/* FOOTER */}
+        {/* ── PERFORATION ── */}
+        <div style={{ position: "relative", height: 14, background: INK }}>
+          <div style={{
+            position: "absolute", left: 16, right: 16, top: "50%",
+            borderTop: "2px dashed rgba(255,255,255,0.18)",
+          }} />
+          <div style={{
+            position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
+            width: 7, height: 7, borderRadius: "50%", background: pageBg,
+          }} />
+          <div style={{
+            position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+            width: 7, height: 7, borderRadius: "50%", background: pageBg,
+          }} />
+        </div>
+
+        {/* ── BODY ── */}
         <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingTop: "14px",
-          borderTop: `1px solid ${dark ? "#334155" : "#f1f5f9"}`,
+          background: dark ? "#161f33" : "#fbfcfe",
+          borderRadius: "0 0 16px 16px",
+          padding: "16px 18px 16px",
+          position: "relative",
+          overflow: "hidden",
         }}>
-          <div>
-            {urgency === "urgent" && (
-              <span style={deadlineBadge("#b91c1c", "#fef2f2", "#fecaca", dark)}>
-                🔥 {daysLeft}d left
-              </span>
+          {stamp && (
+            <div style={{
+              position: "absolute", top: 12, right: -6,
+              transform: "rotate(8deg)",
+              border: `1.5px solid ${stamp.ink}`,
+              color: stamp.ink,
+              borderRadius: 6,
+              padding: "3px 10px",
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10.5, fontWeight: 700,
+              letterSpacing: "1px",
+              opacity: 0.9,
+            }}>
+              {stamp.text}
+            </div>
+          )}
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))",
+            gap: "12px 10px",
+            marginBottom: 14,
+            paddingRight: stamp ? 70 : 0,
+          }}>
+            {drive.location && (
+              <Field dark={dark} label="LOCATION" value={drive.location} />
             )}
-            {urgency === "soon" && (
-              <span style={deadlineBadge("#92400e", "#fffbeb", "#fde68a", dark)}>
-                ⏳ {daysLeft}d left
-              </span>
+            {drive.jobType && (
+              <Field dark={dark} label="ROLE TYPE" value={drive.jobType} />
             )}
-            {urgency === "closed" && (
-              <span style={deadlineBadge("#64748b", "#f8fafc", "#e2e8f0", dark)}>
-                Closed
-              </span>
+            {drive.ctcDisplay && (
+              <Field dark={dark} label="PACKAGE" value={`₹${drive.ctcDisplay}`} color={accent} />
             )}
-            {!urgency && drive.deadline && (
-              <span style={{ fontSize: "12px", color: dark ? "#64748b" : "#94a3b8", fontWeight: "500" }}>
-                {new Date(drive.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-              </span>
+            {drive.minCgpa && (
+              <Field dark={dark} label="MIN. CGPA" value={`★ ${drive.minCgpa}+`} />
+            )}
+            {drive.deadline && (
+              <Field
+                dark={dark}
+                label="DEADLINE"
+                value={
+                  urgency === "urgent" || urgency === "soon"
+                    ? (daysLeft === 0 ? "Today" : `${daysLeft}d left`)
+                    : new Date(drive.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                }
+                color={urgency === "urgent" || urgency === "soon" ? stamp.ink : undefined}
+              />
             )}
           </div>
 
           <div style={{
-            display: "flex", alignItems: "center", gap: "5px",
-            fontSize: "12.5px", fontWeight: "700",
-            color: g1,
-            letterSpacing: "-0.2px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            paddingTop: 12,
+            borderTop: `1px solid ${dark ? "#2a3550" : "#e7ebf2"}`,
           }}>
-            View role
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 1.5, height: 14, flexShrink: 0 }}>
+                {bars.map((w, i) => (
+                  <span key={i} style={{
+                    width: w, height: i % 5 === 0 ? 14 : 9,
+                    background: dark ? "#3a4666" : "#cbd3e1",
+                    display: "inline-block",
+                  }} />
+                ))}
+              </div>
+              <span style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10.5, fontWeight: 600,
+                color: dark ? "#7c8aa8" : "#8993ab",
+                letterSpacing: "0.3px",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {CATEGORY_LABELS[drive.category] || drive.category || "—"}
+              </span>
+            </div>
+
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 12, fontWeight: 700, color: accent,
+              letterSpacing: "0.2px", paddingLeft: 10,
+              transform: hovered ? "translateX(2px)" : "translateX(0)",
+              transition: "transform 0.18s ease",
+            }}>
+              View role
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </div>
           </div>
         </div>
+      </div>
+    </>
+  );
+}
+
+function Field({ dark, label, value, color }) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: 9.5, fontWeight: 700,
+        letterSpacing: "0.6px",
+        color: dark ? "#7c8aa8" : "#8993ab",
+        marginBottom: 3,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 13, fontWeight: 700,
+        color: color || (dark ? "#e7ecf5" : "#19223a"),
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>
+        {value}
       </div>
     </div>
   );
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function card(dark) {
-  return {
-    borderRadius: "16px",
-    cursor: "pointer",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    overflow: "hidden",
-    fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
-    background: dark ? "#1e293b" : "white",
-  };
+const STYLE_BLOCK = `
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+.pp-ticket:focus-visible {
+  outline: 2.5px solid #1C7ED6;
+  outline-offset: 3px;
+  border-radius: 16px;
 }
 
-function pill(dark) {
-  return {
-    display: "inline-flex", alignItems: "center", gap: "4px",
-    fontSize: "11.5px", fontWeight: "600",
-    padding: "3px 9px", borderRadius: "99px",
-    letterSpacing: "-0.1px",
-    color: dark ? "#94a3b8" : "#475569",
-    background: dark ? "#0f172a" : "#f8fafc",
-    border: `1px solid ${dark ? "#334155" : "#e2e8f0"}`,
-  };
+@media (prefers-reduced-motion: reduce) {
+  .pp-ticket, .pp-ticket * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
-
-function deadlineBadge(color, bg, border, dark) {
-  return {
-    fontSize: "11.5px", fontWeight: "700",
-    color, padding: "3px 9px", borderRadius: "99px",
-    background: dark ? "#0f172a" : bg,
-    border: `1px solid ${dark ? "#334155" : border}`,
-  };
-}
+`;
