@@ -389,6 +389,7 @@ function AdminDashboard() {
                   <option value="BANKING">Banking</option>
                   <option value="MANAGEMENT">Management</option>
                   <option value="INTERNSHIP">Internship</option>
+                  <option value="OTHERS">Others</option>
                 </select>
               </div>
 

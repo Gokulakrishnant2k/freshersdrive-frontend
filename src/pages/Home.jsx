@@ -8,7 +8,7 @@ import useFavorites from "../../UseFavorites";
 import Hero from "./Hero";
 import Logo from "../components/Logo";
 
-const CATEGORIES = ["All", "IT_SOFTWARE", "CORE_ENGINEERING", "GOVERNMENT", "BANKING", "MANAGEMENT", "INTERNSHIP"];
+const CATEGORIES = ["All", "IT_SOFTWARE", "CORE_ENGINEERING", "GOVERNMENT", "BANKING", "MANAGEMENT", "INTERNSHIP","OTHERS"];
 const PAGE_SIZE = 9;
 
 const CATEGORY_LABELS = {
@@ -19,6 +19,7 @@ const CATEGORY_LABELS = {
   BANKING:          "Banking",
   MANAGEMENT:       "Management",
   INTERNSHIP:       "Internship",
+  OTHERS:          "Others",
 };
 
 // Maps the labels used in Hero's category card to the enum values used

@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../components/Logo";
 
-// "Drives" scrolls to the in-page browse section (handled via onBrowseClick).
-// Companies/Resources route to real pages — adjust `to` if your router uses
-// different paths.
 const NAV_LINKS = [
   { label: "Drives", type: "scroll" },
   { label: "Companies", type: "route", to: "/companies" },
@@ -70,6 +67,60 @@ const STYLE_BLOCK = `
   .fd-signin-btn:hover {
     background: rgba(255,255,255,0.16) !important;
     border-color: rgba(255,255,255,0.32) !important;
+  }
+
+  @keyframes fd-run-track {
+    0%   { left: 0%; }
+    62%  { left: calc(100% - 54px); }
+    72%  { left: calc(100% - 54px); }
+    100% { left: 0%; }
+  }
+  @keyframes fd-run-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+  @keyframes fd-leg-l {
+    0%, 100% { transform: rotate(28deg); }
+    50%      { transform: rotate(-28deg); }
+  }
+  @keyframes fd-leg-r {
+    0%, 100% { transform: rotate(-28deg); }
+    50%      { transform: rotate(28deg); }
+  }
+  @keyframes fd-arm-l {
+    0%, 100% { transform: rotate(-32deg); }
+    50%      { transform: rotate(32deg); }
+  }
+  @keyframes fd-arm-r {
+    0%, 100% { transform: rotate(32deg); }
+    50%      { transform: rotate(-32deg); }
+  }
+  @keyframes fd-card-pulse {
+    0%, 55%   { transform: scale(1); }
+    64%       { transform: scale(1.18); }
+    72%       { transform: scale(1); }
+    100%      { transform: scale(1); }
+  }
+  @keyframes fd-burst {
+    0%, 60%  { opacity: 0; transform: scale(0.5); }
+    68%      { opacity: 1; transform: scale(1.15); }
+    78%      { opacity: 1; transform: scale(1); }
+    92%, 100%{ opacity: 0; transform: scale(0.9); }
+  }
+  .fd-run-figure {
+    animation: fd-run-track 4.4s ease-in-out infinite, fd-run-bob 0.32s ease-in-out infinite;
+  }
+  .fd-run-leg-l { animation: fd-leg-l 0.32s ease-in-out infinite; transform-origin: 12px 2px; }
+  .fd-run-leg-r { animation: fd-leg-r 0.32s ease-in-out infinite; transform-origin: 12px 2px; }
+  .fd-run-arm-l { animation: fd-arm-l 0.32s ease-in-out infinite; transform-origin: 12px 2px; }
+  .fd-run-arm-r { animation: fd-arm-r 0.32s ease-in-out infinite; transform-origin: 12px 2px; }
+  .fd-offer-card { animation: fd-card-pulse 4.4s ease-in-out infinite; }
+  .fd-burst { animation: fd-burst 4.4s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fd-run-figure, .fd-run-leg-l, .fd-run-leg-r, .fd-run-arm-l, .fd-run-arm-r, .fd-offer-card, .fd-burst {
+      animation: none !important;
+    }
   }
 `;
 
@@ -207,9 +258,6 @@ function FloatCard({ className, style, children, visible }) {
   );
 }
 
-// Interactive category browser — replaces the old "TCS NQT" card.
-// Clicking a chip calls onCategoryClick(label) so you can wire it to
-// filter/navigate to that category on your drives page.
 function CategoryCard({ visible, onCategoryClick }) {
   const [active, setActive] = useState(null);
 
@@ -245,12 +293,9 @@ function CategoryCard({ visible, onCategoryClick }) {
   );
 }
 
-// A real, working mini-signup card instead of a fabricated testimonial.
-// Wire `onNotifyMe` up to your actual email-capture endpoint — this just
-// handles the local UI state (input, validation, success state).
 function NotifyCard({ visible, onNotifyMe }) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | submitting | done
+  const [status, setStatus] = useState("idle");
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -307,6 +352,77 @@ function NotifyCard({ visible, onNotifyMe }) {
         </form>
       )}
     </FloatCard>
+  );
+}
+
+// Central illustration: a running figure crosses the track left-to-right,
+// reaches the offer card at the finish, taps it, and it bursts into a
+// checkmark. Loops continuously via CSS animation — no JS timers needed.
+function RunningToOffer() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "relative",
+        height: 86,
+        margin: "0 0 32px",
+        maxWidth: 520,
+      }}
+    >
+      <div style={{
+        position: "absolute", left: 0, right: 0, bottom: 14,
+        borderBottom: "1px dashed rgba(255,255,255,0.12)",
+      }} />
+
+      <div style={{
+        position: "absolute", right: 0, top: 6,
+        display: "flex", flexDirection: "column", alignItems: "center",
+      }}>
+        <div className="fd-offer-card" style={{
+          width: 52, height: 52, borderRadius: 12,
+          background: "rgba(99,102,241,0.16)",
+          border: "0.5px solid rgba(129,140,248,0.45)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          position: "relative",
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <div className="fd-burst" style={{
+            position: "absolute", inset: 0, borderRadius: 12,
+            background: "rgba(52,211,153,0.22)", border: "0.5px solid rgba(52,211,153,0.6)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+        </div>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 5, letterSpacing: "0.3px" }}>
+          your offer
+        </span>
+      </div>
+
+      <div className="fd-run-figure" style={{ position: "absolute", bottom: 14, width: 26, height: 50 }}>
+        <svg width="26" height="50" viewBox="0 0 26 50" fill="none">
+          <circle cx="13" cy="7" r="6" fill="#f0997b" />
+          <rect x="6" y="14" width="14" height="18" rx="6" fill="#7f77dd" />
+          <g className="fd-run-arm-l">
+            <rect x="6" y="14" width="5" height="16" rx="2.5" fill="#534ab7" />
+          </g>
+          <g className="fd-run-arm-r">
+            <rect x="15" y="14" width="5" height="16" rx="2.5" fill="#534ab7" />
+          </g>
+          <g className="fd-run-leg-l">
+            <rect x="8" y="30" width="5" height="18" rx="2.5" fill="#26215c" />
+          </g>
+          <g className="fd-run-leg-r">
+            <rect x="13" y="30" width="5" height="18" rx="2.5" fill="#26215c" />
+          </g>
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -439,9 +555,12 @@ export default function Hero({ onBrowseClick, onHowItWorksClick, onNotifyMe, onC
           <span style={{ color: "#fff" }}>We&apos;ll handle the rest.</span>
         </h1>
 
-        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, margin: "0 0 32px", maxWidth: 400 }}>
+        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 400 }}>
           Every open drive, every company, in one place. Pick your shot — we&apos;ll help you land it.
         </p>
+
+        {/* Running-to-offer illustration */}
+        <RunningToOffer />
 
         {/* Stats */}
         <div style={{
