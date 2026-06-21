@@ -5,6 +5,7 @@ import { API_BASE_URL } from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { DARK, LIGHT } from "../theme/tokens";
+import Logo from "../components/Logo";
 
 // The left brand panel mirrors Hero: it stays permanently dark regardless
 // of the site-wide light/dark toggle, since it's the same "brand spotlight"
@@ -54,15 +55,7 @@ function Login() {
         <div aria-hidden="true" style={s.leftOrb2} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={s.brandMark}>
-            <div style={s.brandIcon}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-            </div>
-            <span style={s.brandName}>FreshersDrive</span>
-          </div>
+          <Logo size={32} textSize={16} />
 
           <div style={{ marginTop: "2.5rem" }}>
             <div style={s.tagline}>Your career journey starts here</div>
@@ -207,12 +200,6 @@ function buildStyles(tk) {
       width: "260px", height: "260px", borderRadius: "50%",
       background: "rgba(192,132,252,0.1)", filter: "blur(80px)", pointerEvents: "none",
     },
-    brandMark: { display: "flex", alignItems: "center", gap: "10px" },
-    brandIcon: {
-      width: "36px", height: "36px", background: DARK.accent, borderRadius: "8px",
-      display: "flex", alignItems: "center", justifyContent: "center",
-    },
-    brandName: { fontSize: "16px", fontWeight: "700", color: "#ffffff", letterSpacing: "-0.3px" },
     tagline: {
       fontSize: "26px", fontWeight: "700", color: "#ffffff",
       lineHeight: "1.3", letterSpacing: "-0.5px", marginBottom: "12px",
@@ -295,4 +282,4 @@ function buildStyles(tk) {
     footerText: { textAlign: "center", fontSize: "13px", color: tk.textMuted, margin: 0 },
     footerLink: { color: tk.accentLight, fontWeight: "500", cursor: "pointer" },
   };
-} 
+}

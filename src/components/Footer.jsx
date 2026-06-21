@@ -62,7 +62,7 @@ export default function Footer() {
           <div style={styles.colTitle}>Follow us</div>
 
           <div style={styles.socialRow} className="fd-footer-social">
-            
+            <a
               href={socialLinks.instagram}
               target="_blank"
               rel="noopener noreferrer"
@@ -78,7 +78,7 @@ export default function Footer() {
               </svg>
             </a>
 
-            
+            <a
               href={socialLinks.youtube}
               target="_blank"
               rel="noopener noreferrer"

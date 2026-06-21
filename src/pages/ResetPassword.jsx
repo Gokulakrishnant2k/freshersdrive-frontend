@@ -208,6 +208,7 @@ const s = {
     border: "1px solid #e2e8f0", borderRadius: "8px",
     fontSize: "14px", background: "white", color: "#0f172a",
     outline: "none", boxSizing: "border-box",
+    colorScheme: "light",
   },
   btn: {
     width: "100%", padding: "11px",
@@ -224,5 +225,5 @@ const dm = {
   title: { ...s.title, color: "#f1f5f9" },
   sub:   { ...s.sub,   color: "#64748b" },
   label: { ...s.label, color: "#94a3b8" },
-  input: { ...s.input, background: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" },
+  input: { ...s.input, background: "#1e293b", border: "1px solid #334155", color: "#f1f5f9", colorScheme: "dark" },
 };

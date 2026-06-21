@@ -24,6 +24,11 @@ function AdminDashboard() {
   const [userError, setUserError] = useState(null);
   const [userSearch, setUserSearch] = useState("");
 
+  // ── AI Discovery tab state ──────────────────────────────────────────────
+  const [pendingDrives, setPendingDrives] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingError, setPendingError] = useState(null);
+
   const emptyForm = {
     companyName: "",
     jobRole: "",
@@ -47,7 +52,10 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchDrives();
-    if (isAdmin) fetchUsers();
+    if (isAdmin) {
+      fetchUsers();
+      fetchPendingDrives();
+    }
   }, []);
 
   const fetchDrives = async () => {
@@ -97,6 +105,45 @@ function AdminDashboard() {
     } catch (err) {
       console.error("PUT /admin/users/role →", err.response ?? err);
       setUserError(err.response?.data?.message || "Failed to update role.");
+    }
+  };
+
+  const fetchPendingDrives = async () => {
+    setPendingLoading(true);
+    try {
+      const res = await axios.get("/admin/drives/pending");
+      setPendingDrives(res.data);
+    } catch (err) {
+      console.error("Failed to fetch pending drives:", err);
+      setPendingError("Failed to load pending drives.");
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const approvePendingDrive = async (drive) => {
+    if (!window.confirm(`Approve "${drive.companyName} - ${drive.jobRole}"? This makes it publicly visible.`)) return;
+    setPendingError(null);
+    try {
+      await axios.post(`/admin/drives/pending/${drive.id}/approve`);
+      setPendingDrives((prev) => prev.filter((d) => d.id !== drive.id));
+      // Refresh the main drives list too, since the approved drive now shows there
+      fetchDrives();
+    } catch (err) {
+      console.error("POST /admin/drives/pending/approve →", err.response ?? err);
+      setPendingError(err.response?.data?.message || "Failed to approve drive.");
+    }
+  };
+
+  const rejectPendingDrive = async (drive) => {
+    if (!window.confirm(`Reject "${drive.companyName} - ${drive.jobRole}"? It will stay hidden permanently.`)) return;
+    setPendingError(null);
+    try {
+      await axios.post(`/admin/drives/pending/${drive.id}/reject`);
+      setPendingDrives((prev) => prev.filter((d) => d.id !== drive.id));
+    } catch (err) {
+      console.error("POST /admin/drives/pending/reject →", err.response ?? err);
+      setPendingError(err.response?.data?.message || "Failed to reject drive.");
     }
   };
 
@@ -258,6 +305,14 @@ function AdminDashboard() {
             onClick={() => setTab("users")}
           >
             Users {users.length > 0 ? `(${users.length})` : ""}
+          </button>
+        )}
+        {isAdmin && (
+          <button
+            style={tab === "discovery" ? t.tabBtnActive : t.tabBtn}
+            onClick={() => setTab("discovery")}
+          >
+            AI Discovery {pendingDrives.length > 0 ? `(${pendingDrives.length})` : ""}
           </button>
         )}
       </div>
@@ -582,6 +637,99 @@ function AdminDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        </>
+      )}
+
+      {/* AI Discovery tab — admin only */}
+      {tab === "discovery" && isAdmin && (
+        <>
+          {pendingError && (
+            <div style={s.errorBanner}>
+              <span>⚠️ {pendingError}</span>
+              <button style={s.errorClose} onClick={() => setPendingError(null)}>✕</button>
+            </div>
+          )}
+
+          <div style={t.card}>
+            <div style={s.cardHeader}>
+              <h2 style={t.cardTitle}>Pending AI-discovered drives</h2>
+              <span style={t.countBadge}>{pendingDrives.length} awaiting review</span>
+            </div>
+            <p style={{ color: "#94a3b8", fontSize: "13px", marginTop: "-8px", marginBottom: "16px" }}>
+              These were found automatically by the discovery scheduler and are not visible
+              on the public site until approved. Double-check details before approving,
+              especially deadlines marked "guessed."
+            </p>
+
+            {pendingLoading ? (
+              <p style={{ color: "#94a3b8", fontSize: "14px" }}>Loading...</p>
+            ) : pendingDrives.length === 0 ? (
+              <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+                No pending drives right now. New ones appear here automatically when the
+                discovery job finds something.
+              </p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      {["Company", "Role", "Location", "Deadline", "Source", "Apply link", "Actions"].map((h) => (
+                        <th key={h} style={t.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingDrives.map((d) => (
+                      <tr key={d.id}>
+                        <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>
+                          {d.companyName}
+                        </td>
+                        <td style={t.td}>{d.jobRole}</td>
+                        <td style={t.td}>{d.location || "—"}</td>
+                        <td style={t.td}>
+                          {d.deadline || "—"}
+                          {d.deadlineGuessed && (
+                            <span style={{
+                              ...s.badge,
+                              background: "#fef9c3", color: "#92400e",
+                              marginLeft: "6px", fontSize: "10px",
+                            }}>
+                              guessed
+                            </span>
+                          )}
+                        </td>
+                        <td style={t.td}>
+                          <span style={{
+                            ...s.badge,
+                            background: d.source === "AI_SEARCH" ? "#eff6ff" : "#f0fdf4",
+                            color:      d.source === "AI_SEARCH" ? "#1d4ed8" : "#15803d",
+                          }}>
+                            {d.source === "AI_SEARCH" ? "Web search" : "Known page"}
+                          </span>
+                        </td>
+                        <td style={t.td}>
+                          {d.applyLink ? (
+                            <a href={d.applyLink} target="_blank" rel="noopener noreferrer"
+                               style={{ color: "#2563eb", fontSize: "12px" }}>
+                              View source
+                            </a>
+                          ) : "—"}
+                        </td>
+                        <td style={t.td}>
+                          <button style={t.promoteBtn} onClick={() => approvePendingDrive(d)}>
+                            Approve
+                          </button>
+                          <button style={s.deleteBtn} onClick={() => rejectPendingDrive(d)}>
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </>
       )}

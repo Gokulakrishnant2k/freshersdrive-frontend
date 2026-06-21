@@ -1,15 +1,77 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import Logo from "../components/Logo";
+
+// "Drives" scrolls to the in-page browse section (handled via onBrowseClick).
+// Companies/Resources route to real pages — adjust `to` if your router uses
+// different paths.
+const NAV_LINKS = [
+  { label: "Drives", type: "scroll" },
+  { label: "Companies", type: "route", to: "/companies" },
+  { label: "Resources", type: "route", to: "/resources" },
+];
 
 const TICKER_MESSAGES = [
-  "412 students placed this month",
-  "38 new drives added today",
-  "TCS, Infosys, Cognizant hiring now",
-  "Next deadline: tomorrow 11:59 PM",
+  "412 placed this month",
+  "38 new drives today",
+  "TCS, Infosys, Cognizant — hiring now",
+  "Deadline tomorrow, 11:59 PM",
 ];
 
 const TRUST_COMPANIES = [
   "TCS", "Infosys", "Wipro", "Cognizant", "Capgemini", "HCLTech", "Accenture",
 ];
+
+const CATEGORIES = [
+  { label: "IT Services", icon: "💻" },
+  { label: "Core Engineering", icon: "⚙️" },
+  { label: "Internships", icon: "🎓" },
+  { label: "Government", icon: "🏛️" },
+];
+
+const STYLE_BLOCK = `
+  .fd-trust-chip {
+    transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    cursor: pointer;
+  }
+  .fd-trust-chip:hover {
+    color: rgba(255,255,255,0.85) !important;
+    border-color: rgba(129,140,248,0.5) !important;
+    transform: translateY(-1px);
+  }
+  .fd-focus:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+  .fd-notify-input:focus {
+    outline: none;
+    border-color: rgba(129,140,248,0.6) !important;
+    background: rgba(255,255,255,0.08) !important;
+  }
+  .fd-cat-chip {
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+  }
+  .fd-cat-chip:hover {
+    background: rgba(129,140,248,0.18) !important;
+    border-color: rgba(129,140,248,0.5) !important;
+    transform: translateY(-1px);
+  }
+  .fd-nav-link {
+    transition: color 0.18s ease;
+  }
+  .fd-nav-link:hover {
+    color: rgba(255,255,255,0.85) !important;
+  }
+  .fd-signin-btn {
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .fd-signin-btn:hover {
+    background: rgba(255,255,255,0.16) !important;
+    border-color: rgba(255,255,255,0.32) !important;
+  }
+`;
 
 function useCountUp(target, durationMs = 1200) {
   const [value, setValue] = useState(0);
@@ -145,7 +207,110 @@ function FloatCard({ className, style, children, visible }) {
   );
 }
 
-export default function Hero({ onBrowseClick, onHowItWorksClick }) {
+// Interactive category browser — replaces the old "TCS NQT" card.
+// Clicking a chip calls onCategoryClick(label) so you can wire it to
+// filter/navigate to that category on your drives page.
+function CategoryCard({ visible, onCategoryClick }) {
+  const [active, setActive] = useState(null);
+
+  return (
+    <FloatCard visible={visible} style={{ top: 96, right: 40, minWidth: 190 }}>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        Pick your path
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.label}
+            type="button"
+            className="fd-cat-chip fd-focus"
+            onClick={() => {
+              setActive(cat.label);
+              onCategoryClick?.(cat.label);
+            }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: active === cat.label ? "rgba(129,140,248,0.18)" : "rgba(255,255,255,0.04)",
+              border: `0.5px solid ${active === cat.label ? "rgba(129,140,248,0.5)" : "rgba(255,255,255,0.1)"}`,
+              borderRadius: 7, padding: "6px 9px", fontFamily: "inherit",
+              fontSize: 12, color: "#fff", textAlign: "left",
+            }}
+          >
+            <span style={{ fontSize: 13 }}>{cat.icon}</span>
+            {cat.label}
+          </button>
+        ))}
+      </div>
+    </FloatCard>
+  );
+}
+
+// A real, working mini-signup card instead of a fabricated testimonial.
+// Wire `onNotifyMe` up to your actual email-capture endpoint — this just
+// handles the local UI state (input, validation, success state).
+function NotifyCard({ visible, onNotifyMe }) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | submitting | done
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValidEmail || status === "submitting") return;
+    setStatus("submitting");
+    try {
+      if (onNotifyMe) await onNotifyMe(email);
+      setStatus("done");
+    } catch {
+      setStatus("idle");
+    }
+  };
+
+  return (
+    <FloatCard visible={visible} style={{ bottom: 100, right: 60, minWidth: 230 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={{ color: "#a5b4fc", fontSize: 14 }}>🔔</span>
+        <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>Don&apos;t miss your shot</span>
+      </div>
+
+      {status === "done" ? (
+        <div style={{ fontSize: 11.5, color: "#34d399" }}>
+          Done. We&apos;ll ping you the moment a new drive lands.
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "flex", gap: 6 }}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@college.edu"
+            className="fd-notify-input"
+            style={{
+              flex: 1, minWidth: 0, fontSize: 11.5, color: "#fff",
+              background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.18)",
+              borderRadius: 7, padding: "7px 9px", fontFamily: "inherit",
+            }}
+          />
+          <button
+            type="submit"
+            className="fd-focus"
+            disabled={!isValidEmail || status === "submitting"}
+            style={{
+              fontSize: 11.5, fontWeight: 600, color: "#fff",
+              background: isValidEmail ? "#6366f1" : "rgba(99,102,241,0.35)",
+              border: "none", borderRadius: 7, padding: "7px 11px",
+              cursor: isValidEmail ? "pointer" : "default", whiteSpace: "nowrap",
+            }}
+          >
+            {status === "submitting" ? "…" : "Notify me"}
+          </button>
+        </form>
+      )}
+    </FloatCard>
+  );
+}
+
+export default function Hero({ onBrowseClick, onHowItWorksClick, onNotifyMe, onCategoryClick }) {
   const [tickerIndex, setTickerIndex] = useState(0);
   const [tickerVisible, setTickerVisible] = useState(true);
   const [showCard1, setShowCard1] = useState(false);
@@ -192,35 +357,53 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
       minHeight: 520,
       padding: 0,
     }}>
+      <style>{STYLE_BLOCK}</style>
       <ParticleCanvas />
 
       <div style={{ position: "relative", zIndex: 2, padding: "52px 48px 60px" }}>
 
         {/* Nav */}
         <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 44 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 28, height: 28, background: "#6366f1", borderRadius: 7,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8l3 3 7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", letterSpacing: "-0.2px" }}>
-              FreshersDrive
-            </span>
-          </div>
+          <Logo size={28} textSize={14} />
+
           <div style={{ display: "flex", gap: 20 }}>
-            {["Drives", "Companies", "Resources"].map((l) => (
-              <a key={l} style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none", cursor: "pointer" }}>{l}</a>
-            ))}
+            {NAV_LINKS.map((item) =>
+              item.type === "scroll" ? (
+                <a
+                  key={item.label}
+                  className="fd-focus fd-nav-link"
+                  role="link"
+                  tabIndex={0}
+                  onClick={onBrowseClick}
+                  onKeyDown={(e) => { if (e.key === "Enter") onBrowseClick?.(); }}
+                  style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none", cursor: "pointer" }}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  className="fd-focus fd-nav-link"
+                  style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none", cursor: "pointer" }}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
           </div>
-          <button style={{
-            fontSize: 12, fontWeight: 500, color: "#fff",
-            background: "rgba(255,255,255,0.1)", border: "0.5px solid rgba(255,255,255,0.2)",
-            borderRadius: 8, padding: "6px 14px", cursor: "pointer",
-          }}>Sign in</button>
+          <Link
+            to="/login"
+            className="fd-focus fd-signin-btn"
+            style={{
+              fontSize: 12, fontWeight: 500, color: "#fff",
+              background: "rgba(255,255,255,0.1)", border: "0.5px solid rgba(255,255,255,0.2)",
+              borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+              textDecoration: "none", display: "inline-block",
+            }}
+          >
+            Sign in
+          </Link>
         </nav>
 
         {/* Pill */}
@@ -250,14 +433,14 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             backgroundClip: "text",
           }}>
-            Land your first job,
+            Bet on yourself.
           </span>
           <br />
-          <span style={{ color: "#fff" }}>faster than ever.</span>
+          <span style={{ color: "#fff" }}>We&apos;ll handle the rest.</span>
         </h1>
 
         <p style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, margin: "0 0 32px", maxWidth: 400 }}>
-          FreshersDrive tracks every campus drive so you don&apos;t have to. One feed, zero FOMO.
+          Every open drive, every company, in one place. Pick your shot — we&apos;ll help you land it.
         </p>
 
         {/* Stats */}
@@ -267,9 +450,9 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
           borderRadius: 14, padding: "16px 0", width: "fit-content", marginBottom: 36,
         }}>
           {[
-            { value: drivesTracked, label: "drives tracked", color: "#60a5fa" },
-            { value: offersLanded,  label: "offers landed",  color: "#c084fc" },
-            { value: colleges,      label: "colleges",       color: "#34d399" },
+            { value: drivesTracked, label: "open drives", color: "#60a5fa" },
+            { value: offersLanded,  label: "offers won",  color: "#c084fc" },
+            { value: colleges,      label: "campuses",    color: "#34d399" },
           ].map((s, i) => (
             <div key={s.label} style={{ display: "flex", alignItems: "center" }}>
               {i > 0 && <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.1)" }} />}
@@ -288,15 +471,17 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
         {/* Buttons */}
         <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
           <button
+            className="fd-focus"
             onClick={onBrowseClick}
             style={{
               background: "#6366f1", color: "#fff", border: "none", borderRadius: 10,
               padding: "13px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer", letterSpacing: "-0.2px",
             }}
           >
-            Browse drives
+            See open drives
           </button>
           <button
+            className="fd-focus"
             onClick={onHowItWorksClick}
             style={{
               background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.8)",
@@ -308,14 +493,14 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
           </button>
         </div>
 
-        {/* Trust strip */}
+        {/* Trust strip — interactive on hover */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
-            Hiring now
+            Hiring this week
           </span>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {TRUST_COMPANIES.map((name) => (
-              <span key={name} style={{
+              <span key={name} className="fd-trust-chip" style={{
                 fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.28)",
                 letterSpacing: "-0.2px", border: "0.5px solid rgba(255,255,255,0.1)",
                 borderRadius: 6, padding: "4px 10px",
@@ -327,17 +512,8 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
         </div>
       </div>
 
-      {/* Float card 1 — TCS NQT */}
-      <FloatCard visible={showCard1} style={{ top: 96, right: 40, minWidth: 170 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-          <div style={{
-            background: "#1d4ed8", color: "#bfdbfe", fontSize: 11, fontWeight: 700,
-            width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-          }}>T</div>
-          <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>TCS NQT</span>
-        </div>
-        <div style={{ fontSize: 11, color: "#fbbf24" }}>Closes in 2 days</div>
-      </FloatCard>
+      {/* Float card 1 — interactive category browser */}
+      <CategoryCard visible={showCard1} onCategoryClick={onCategoryClick} />
 
       {/* Float card 2 — live counter */}
       <FloatCard visible={showCard2} style={{ top: 200, right: 44, background: "rgba(99,102,241,0.12)", border: "0.5px solid rgba(99,102,241,0.3)" }}>
@@ -345,14 +521,8 @@ export default function Hero({ onBrowseClick, onHowItWorksClick }) {
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>applications today</div>
       </FloatCard>
 
-      {/* Float card 3 — offer accepted */}
-      <FloatCard visible={showCard3} style={{ bottom: 100, right: 60, minWidth: 200 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-          <span style={{ color: "#34d399", fontSize: 15 }}>✓</span>
-          <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>Offer accepted at Cognizant</span>
-        </div>
-        <div style={{ fontSize: 11, color: "#34d399" }}>Priya R. — CSE, Anna University</div>
-      </FloatCard>
+      {/* Float card 3 — real, working email-notify signup */}
+      <NotifyCard visible={showCard3} onNotifyMe={onNotifyMe} />
     </section>
   );
 }
