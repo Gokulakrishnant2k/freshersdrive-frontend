@@ -1,7 +1,13 @@
 import { useState } from "react";
 import axios from "../api/axiosInstance";
+import { useTheme } from "../context/ThemeContext";
+import { DARK, LIGHT } from "../theme/tokens";
 
 export default function Contact() {
+  const { dark } = useTheme();
+  const tk = dark ? DARK : LIGHT;
+  const styles = buildStyles(tk);
+
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -28,9 +34,9 @@ export default function Contact() {
   return (
     <div style={styles.page}>
       {/* Background orbs */}
-      <div style={{ ...styles.orb, top: "-80px", right: "-80px", background: "rgba(99,102,241,0.18)" }} />
-      <div style={{ ...styles.orb, bottom: "-60px", left: "-60px", background: "rgba(16,185,129,0.12)", width: "320px", height: "320px" }} />
-      <div style={{ ...styles.orb, top: "40%", left: "30%", background: "rgba(192,132,252,0.08)", width: "280px", height: "280px" }} />
+      <div style={{ ...styles.orb, top: "-80px", right: "-80px", background: tk.orb1 }} />
+      <div style={{ ...styles.orb, bottom: "-60px", left: "-60px", background: tk.orb2, width: "320px", height: "320px" }} />
+      <div style={{ ...styles.orb, top: "40%", left: "30%", background: tk.orb3, width: "280px", height: "280px" }} />
 
       <div style={styles.card}>
         {/* Brand mark */}
@@ -51,8 +57,8 @@ export default function Contact() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           {[
-            { name: "name",    placeholder: "Your name",    type: "text"  },
-            { name: "email",   placeholder: "Your email",   type: "email" },
+            { name: "name",  placeholder: "Your name",  type: "text"  },
+            { name: "email", placeholder: "Your email", type: "email" },
           ].map(({ name, placeholder, type }) => (
             <div key={name} style={styles.fieldWrap}>
               <label style={styles.label}>{placeholder}</label>
@@ -67,8 +73,8 @@ export default function Contact() {
                 required
                 style={{
                   ...styles.input,
-                  borderColor: focused === name ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
-                  boxShadow: focused === name ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+                  borderColor: focused === name ? tk.accentLight : tk.glassBorder,
+                  boxShadow: focused === name ? `0 0 0 3px ${tk.accent}26` : "none",
                 }}
               />
             </div>
@@ -86,8 +92,8 @@ export default function Contact() {
               required
               style={{
                 ...styles.textarea,
-                borderColor: focused === "message" ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
-                boxShadow: focused === "message" ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+                borderColor: focused === "message" ? tk.accentLight : tk.glassBorder,
+                boxShadow: focused === "message" ? `0 0 0 3px ${tk.accent}26` : "none",
               }}
             />
           </div>
@@ -102,7 +108,7 @@ export default function Contact() {
 
           {success && (
             <div style={styles.successBox}>
-              <span style={{ color: "#4ade80", fontSize: "15px" }}>✓</span>
+              <span style={{ color: tk.success, fontSize: "15px" }}>✓</span>
               Message sent! We'll be in touch soon.
             </div>
           )}
@@ -128,168 +134,169 @@ export default function Contact() {
   );
 }
 
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#0c0b2b",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "40px 20px",
-    fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
-    position: "relative",
-    overflow: "hidden",
-  },
-  orb: {
-    position: "absolute",
-    width: "400px",
-    height: "400px",
-    borderRadius: "50%",
-    filter: "blur(80px)",
-    pointerEvents: "none",
-    zIndex: 0,
-  },
-  card: {
-    position: "relative",
-    zIndex: 1,
-    width: "100%",
-    maxWidth: "480px",
-    background: "rgba(255,255,255,0.04)",
-    border: "0.5px solid rgba(255,255,255,0.12)",
-    borderRadius: "20px",
-    padding: "36px 32px",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
-  },
-  brandMark: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    marginBottom: "24px",
-  },
-  brandIcon: {
-    width: "28px",
-    height: "28px",
-    background: "#6366f1",
-    borderRadius: "7px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandName: {
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.5)",
-    letterSpacing: "-0.1px",
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "700",
-    letterSpacing: "-1px",
-    margin: "0 0 8px",
-    background: "linear-gradient(135deg, #818cf8 0%, #c084fc 60%, #f472b6 100%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-  },
-  subtitle: {
-    fontSize: "14px",
-    color: "rgba(255,255,255,0.45)",
-    lineHeight: "1.6",
-    margin: "0 0 28px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  fieldWrap: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  label: {
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.35)",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-  },
-  input: {
-    padding: "11px 14px",
-    borderRadius: "10px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)",
-    color: "white",
-    fontSize: "14px",
-    outline: "none",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-    fontFamily: "inherit",
-    "::placeholder": { color: "rgba(255,255,255,0.25)" },
-  },
-  textarea: {
-    padding: "11px 14px",
-    borderRadius: "10px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)",
-    color: "white",
-    fontSize: "14px",
-    outline: "none",
-    minHeight: "120px",
-    resize: "vertical",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-    fontFamily: "inherit",
-  },
-  button: {
-    padding: "13px",
-    borderRadius: "10px",
-    border: "none",
-    background: "#6366f1",
-    color: "white",
-    fontWeight: "600",
-    fontSize: "14px",
-    letterSpacing: "-0.2px",
-    transition: "opacity 0.15s",
-    fontFamily: "inherit",
-    marginTop: "4px",
-  },
-  successBox: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    background: "rgba(74,222,128,0.08)",
-    border: "0.5px solid rgba(74,222,128,0.3)",
-    borderRadius: "10px",
-    padding: "12px 16px",
-    fontSize: "13.5px",
-    color: "rgba(255,255,255,0.7)",
-    fontWeight: "500",
-  },
-  infoStrip: {
-    display: "flex",
-    gap: "16px",
-    marginTop: "28px",
-    paddingTop: "24px",
-    borderTop: "0.5px solid rgba(255,255,255,0.08)",
-  },
-  infoItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: "10px",
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.3)",
-    textTransform: "uppercase",
-    letterSpacing: "0.4px",
-  },
-  infoValue: {
-    fontSize: "12px",
-    color: "rgba(255,255,255,0.55)",
-    fontWeight: "500",
-    marginTop: "1px",
-  },
-};
+function buildStyles(tk) {
+  return {
+    page: {
+      minHeight: "100vh",
+      background: tk.bg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 20px",
+      fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+      position: "relative",
+      overflow: "hidden",
+    },
+    orb: {
+      position: "absolute",
+      width: "400px",
+      height: "400px",
+      borderRadius: "50%",
+      filter: "blur(80px)",
+      pointerEvents: "none",
+      zIndex: 0,
+    },
+    card: {
+      position: "relative",
+      zIndex: 1,
+      width: "100%",
+      maxWidth: "480px",
+      background: tk.glass,
+      border: `0.5px solid ${tk.glassBorder}`,
+      borderRadius: "20px",
+      padding: "36px 32px",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      boxShadow: tk.shadow,
+    },
+    brandMark: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      marginBottom: "24px",
+    },
+    brandIcon: {
+      width: "28px",
+      height: "28px",
+      background: tk.accent,
+      borderRadius: "7px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    brandName: {
+      fontSize: "13px",
+      fontWeight: "600",
+      color: tk.textSecondary,
+      letterSpacing: "-0.1px",
+    },
+    title: {
+      fontSize: "28px",
+      fontWeight: "700",
+      letterSpacing: "-1px",
+      margin: "0 0 8px",
+      background: tk.gradient,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+    },
+    subtitle: {
+      fontSize: "14px",
+      color: tk.textSecondary,
+      lineHeight: "1.6",
+      margin: "0 0 28px",
+    },
+    form: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "16px",
+    },
+    fieldWrap: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+    },
+    label: {
+      fontSize: "11px",
+      fontWeight: "600",
+      color: tk.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    },
+    input: {
+      padding: "11px 14px",
+      borderRadius: "10px",
+      border: `1px solid ${tk.glassBorder}`,
+      background: tk.inputBg,
+      color: tk.text,
+      fontSize: "14px",
+      outline: "none",
+      transition: "border-color 0.15s, box-shadow 0.15s",
+      fontFamily: "inherit",
+    },
+    textarea: {
+      padding: "11px 14px",
+      borderRadius: "10px",
+      border: `1px solid ${tk.glassBorder}`,
+      background: tk.inputBg,
+      color: tk.text,
+      fontSize: "14px",
+      outline: "none",
+      minHeight: "120px",
+      resize: "vertical",
+      transition: "border-color 0.15s, box-shadow 0.15s",
+      fontFamily: "inherit",
+    },
+    button: {
+      padding: "13px",
+      borderRadius: "10px",
+      border: "none",
+      background: tk.accent,
+      color: "white",
+      fontWeight: "600",
+      fontSize: "14px",
+      letterSpacing: "-0.2px",
+      transition: "opacity 0.15s",
+      fontFamily: "inherit",
+      marginTop: "4px",
+    },
+    successBox: {
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      background: tk.successBg,
+      border: `0.5px solid ${tk.successBorder}`,
+      borderRadius: "10px",
+      padding: "12px 16px",
+      fontSize: "13.5px",
+      color: tk.textSecondary,
+      fontWeight: "500",
+    },
+    infoStrip: {
+      display: "flex",
+      gap: "16px",
+      marginTop: "28px",
+      paddingTop: "24px",
+      borderTop: `0.5px solid ${tk.divider}`,
+    },
+    infoItem: {
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      flex: 1,
+    },
+    infoLabel: {
+      fontSize: "10px",
+      fontWeight: "700",
+      color: tk.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: "0.4px",
+    },
+    infoValue: {
+      fontSize: "12px",
+      color: tk.textSecondary,
+      fontWeight: "500",
+      marginTop: "1px",
+    },
+  };
+}

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axiosInstance";
+import { useTheme } from "../context/ThemeContext";
+import { DARK, LIGHT } from "../theme/tokens";
 
 const FIELDS = [
   { name: "name",      placeholder: "Full name",   type: "text",     col: "full" },
@@ -16,6 +18,10 @@ const FIELDS = [
 
 export default function Register() {
   const navigate = useNavigate();
+  const { dark } = useTheme();
+  const tk = dark ? DARK : LIGHT;
+  const s = buildStyles(tk);
+
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     degree: "", branch: "", cgpa: "",
@@ -46,9 +52,9 @@ export default function Register() {
   return (
     <div style={s.page}>
       {/* Background orbs */}
-      <div style={{ ...s.orb, top: "-100px", right: "-100px", background: "rgba(99,102,241,0.2)" }} />
-      <div style={{ ...s.orb, bottom: "-80px", left: "-80px", background: "rgba(16,185,129,0.12)", width: "340px", height: "340px" }} />
-      <div style={{ ...s.orb, top: "35%", left: "20%", background: "rgba(192,132,252,0.07)", width: "300px", height: "300px" }} />
+      <div style={{ ...s.orb, top: "-100px", right: "-100px", background: tk.orb1 }} />
+      <div style={{ ...s.orb, bottom: "-80px", left: "-80px", background: tk.orb2, width: "340px", height: "340px" }} />
+      <div style={{ ...s.orb, top: "35%", left: "20%", background: tk.orb3, width: "300px", height: "300px" }} />
 
       <div style={s.card}>
         {/* Brand */}
@@ -83,8 +89,8 @@ export default function Register() {
                   required={["name", "email", "password"].includes(name)}
                   style={{
                     ...s.input,
-                    borderColor: focused === name ? "rgba(99,102,241,0.7)" : "rgba(255,255,255,0.1)",
-                    boxShadow: focused === name ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+                    borderColor: focused === name ? tk.accentLight : tk.glassBorder,
+                    boxShadow: focused === name ? `0 0 0 3px ${tk.accent}26` : "none",
                   }}
                 />
               </div>
@@ -111,136 +117,138 @@ export default function Register() {
   );
 }
 
-const s = {
-  page: {
-    minHeight: "100vh",
-    background: "#0c0b2b",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "40px 20px",
-    fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
-    position: "relative",
-    overflow: "hidden",
-  },
-  orb: {
-    position: "absolute",
-    width: "420px",
-    height: "420px",
-    borderRadius: "50%",
-    filter: "blur(90px)",
-    pointerEvents: "none",
-    zIndex: 0,
-  },
-  card: {
-    position: "relative",
-    zIndex: 1,
-    width: "100%",
-    maxWidth: "560px",
-    background: "rgba(255,255,255,0.04)",
-    border: "0.5px solid rgba(255,255,255,0.12)",
-    borderRadius: "20px",
-    padding: "36px 32px",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
-  },
-  brandMark: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    marginBottom: "22px",
-  },
-  brandIcon: {
-    width: "28px",
-    height: "28px",
-    background: "#6366f1",
-    borderRadius: "7px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandName: {
-    fontSize: "14px",
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.6)",
-    letterSpacing: "-0.2px",
-  },
-  title: {
-    fontSize: "26px",
-    fontWeight: "700",
-    letterSpacing: "-1px",
-    margin: "0 0 6px",
-    background: "linear-gradient(135deg, #818cf8 0%, #c084fc 60%, #f472b6 100%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-  },
-  subtitle: {
-    fontSize: "14px",
-    color: "rgba(255,255,255,0.4)",
-    margin: "0 0 24px",
-  },
-  errorBox: {
-    background: "rgba(239,68,68,0.1)",
-    border: "0.5px solid rgba(239,68,68,0.4)",
-    color: "#fca5a5",
-    borderRadius: "10px",
-    padding: "10px 14px",
-    fontSize: "13px",
-    marginBottom: "16px",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
-    marginBottom: "20px",
-  },
-  label: {
-    display: "block",
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.3)",
-    textTransform: "uppercase",
-    letterSpacing: "0.4px",
-    marginBottom: "5px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px 13px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: "9px",
-    background: "rgba(255,255,255,0.05)",
-    color: "white",
-    fontSize: "14px",
-    outline: "none",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-    fontFamily: "inherit",
-    boxSizing: "border-box",
-  },
-  button: {
-    width: "100%",
-    padding: "13px",
-    background: "#6366f1",
-    color: "white",
-    border: "none",
-    borderRadius: "10px",
-    fontSize: "14px",
-    fontWeight: "600",
-    letterSpacing: "-0.2px",
-    marginBottom: "16px",
-    fontFamily: "inherit",
-    transition: "opacity 0.15s",
-  },
-  footerText: {
-    textAlign: "center",
-    fontSize: "13px",
-    color: "rgba(255,255,255,0.35)",
-    margin: 0,
-  },
-  footerLink: {
-    color: "#818cf8",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-};
+function buildStyles(tk) {
+  return {
+    page: {
+      minHeight: "100vh",
+      background: tk.bg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 20px",
+      fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+      position: "relative",
+      overflow: "hidden",
+    },
+    orb: {
+      position: "absolute",
+      width: "420px",
+      height: "420px",
+      borderRadius: "50%",
+      filter: "blur(90px)",
+      pointerEvents: "none",
+      zIndex: 0,
+    },
+    card: {
+      position: "relative",
+      zIndex: 1,
+      width: "100%",
+      maxWidth: "560px",
+      background: tk.glass,
+      border: `0.5px solid ${tk.glassBorder}`,
+      borderRadius: "20px",
+      padding: "36px 32px",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      boxShadow: tk.shadow,
+    },
+    brandMark: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      marginBottom: "22px",
+    },
+    brandIcon: {
+      width: "28px",
+      height: "28px",
+      background: tk.accent,
+      borderRadius: "7px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    brandName: {
+      fontSize: "14px",
+      fontWeight: "700",
+      color: tk.textSecondary,
+      letterSpacing: "-0.2px",
+    },
+    title: {
+      fontSize: "26px",
+      fontWeight: "700",
+      letterSpacing: "-1px",
+      margin: "0 0 6px",
+      background: tk.gradient,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+    },
+    subtitle: {
+      fontSize: "14px",
+      color: tk.textMuted,
+      margin: "0 0 24px",
+    },
+    errorBox: {
+      background: tk.errorBg,
+      border: `0.5px solid ${tk.errorBorder}`,
+      color: tk.error,
+      borderRadius: "10px",
+      padding: "10px 14px",
+      fontSize: "13px",
+      marginBottom: "16px",
+    },
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "12px",
+      marginBottom: "20px",
+    },
+    label: {
+      display: "block",
+      fontSize: "11px",
+      fontWeight: "600",
+      color: tk.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: "0.4px",
+      marginBottom: "5px",
+    },
+    input: {
+      width: "100%",
+      padding: "10px 13px",
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: "9px",
+      background: tk.inputBg,
+      color: tk.text,
+      fontSize: "14px",
+      outline: "none",
+      transition: "border-color 0.15s, box-shadow 0.15s",
+      fontFamily: "inherit",
+      boxSizing: "border-box",
+    },
+    button: {
+      width: "100%",
+      padding: "13px",
+      background: tk.accent,
+      color: "white",
+      border: "none",
+      borderRadius: "10px",
+      fontSize: "14px",
+      fontWeight: "600",
+      letterSpacing: "-0.2px",
+      marginBottom: "16px",
+      fontFamily: "inherit",
+      transition: "opacity 0.15s",
+    },
+    footerText: {
+      textAlign: "center",
+      fontSize: "13px",
+      color: tk.textMuted,
+      margin: 0,
+    },
+    footerLink: {
+      color: tk.accentLight,
+      fontWeight: "600",
+      cursor: "pointer",
+    },
+  };
+}
