@@ -30,7 +30,7 @@ export default function Logo({ size = 26, textSize = 17, textColor = "#ffffff" }
         letterSpacing: "0.4px",
         textTransform: "uppercase",
       }}>
-        FreshersDrive
+        FresherSpot
       </span>
     </div>
   );
