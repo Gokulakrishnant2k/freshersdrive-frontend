@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../api/axiosInstance";
 import DriveCard from "../components/DriveCard";
 import ExpiringDrives from "./ExpiringDrives";
-import useFavorites from "../../UseFavorites";
+import useFavorites from "../UseFavorites";
 import Hero from "./Hero";
 import Logo from "../components/Logo";
 

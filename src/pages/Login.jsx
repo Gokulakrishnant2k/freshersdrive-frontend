@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axiosInstance";
@@ -7,10 +8,40 @@ import { useTheme } from "../context/ThemeContext";
 import { DARK, LIGHT } from "../theme/tokens";
 import Logo from "../components/Logo";
 
-// The left brand panel mirrors Hero: it stays permanently dark regardless
-// of the site-wide light/dark toggle, since it's the same "brand spotlight"
-// surface, not a content surface. The right form panel is fully theme-aware.
 const STAT_COLORS = ["#60a5fa", "#c084fc", "#34d399", "#f472b6"];
+
+const STYLE_BLOCK = `
+  .fd-focus:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .fd-login-linklike {
+    background: none; border: none; padding: 0; margin: 0;
+    font-family: inherit; cursor: pointer;
+  }
+
+  @media (max-width: 860px) {
+    .fd-login-page { flex-direction: column !important; min-height: auto !important; }
+    .fd-login-left {
+      width: 100% !important;
+      padding: 2.25rem 1.5rem 2rem !important;
+      flex: none !important;
+    }
+    .fd-login-orb1 { width: 200px !important; height: 200px !important; }
+    .fd-login-orb2 { width: 180px !important; height: 180px !important; }
+    .fd-login-tagline { font-size: 22px !important; }
+    .fd-login-stats { margin-top: 1.5rem !important; }
+    .fd-login-right { padding: 2rem 1.25rem !important; }
+    .fd-login-card { padding: 26px 20px !important; }
+  }
+
+  @media (max-width: 420px) {
+    .fd-login-right { padding: 1.5rem 1rem !important; }
+    .fd-login-card { padding: 22px 16px !important; border-radius: 16px !important; }
+    .fd-login-stats { gap: 8px !important; }
+  }
+`;
 
 function Login() {
   const navigate = useNavigate();
@@ -48,23 +79,26 @@ function Login() {
   };
 
   return (
-    <div style={s.page}>
-      {/* LEFT PANEL — permanently dark, matches Hero */}
-      <div style={s.left}>
-        <div aria-hidden="true" style={s.leftOrb1} />
-        <div aria-hidden="true" style={s.leftOrb2} />
+    <div style={s.page} className="fd-login-page">
+      <style>{STYLE_BLOCK}</style>
+
+      {/* LEFT PANEL — permanently dark, matches Hero. Shrinks to a
+          compact top banner on mobile instead of squeezing beside the form. */}
+      <div style={s.left} className="fd-login-left">
+        <div aria-hidden="true" style={s.leftOrb1} className="fd-login-orb1" />
+        <div aria-hidden="true" style={s.leftOrb2} className="fd-login-orb2" />
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <Logo size={32} textSize={16} />
 
           <div style={{ marginTop: "2.5rem" }}>
-            <div style={s.tagline}>Your career journey starts here</div>
+            <div style={s.tagline} className="fd-login-tagline">Your career journey starts here</div>
             <p style={s.leftSub}>
               Connect with top companies actively hiring freshers and early-career professionals.
             </p>
           </div>
 
-          <div style={s.statsGrid}>
+          <div style={s.statsGrid} className="fd-login-stats">
             {[
               { num: "1,200+", label: "Active drives" },
               { num: "340+",   label: "Companies"     },
@@ -81,8 +115,8 @@ function Login() {
       </div>
 
       {/* RIGHT PANEL — theme-aware */}
-      <div style={s.right}>
-        <div style={s.formCard}>
+      <div style={s.right} className="fd-login-right">
+        <div style={s.formCard} className="fd-login-card">
           <div style={s.adminBadge}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
               stroke={tk.accentLight} strokeWidth="2.5">
@@ -94,12 +128,13 @@ function Login() {
           <h1 style={s.formTitle}>Welcome back</h1>
           <p style={s.formSub}>Sign in to manage drives and announcements</p>
 
-          {error && <div style={s.errorBox}>{error}</div>}
+          {error && <div style={s.errorBox} role="alert">{error}</div>}
 
           <form onSubmit={handleLogin}>
             <div style={s.field}>
-              <label style={s.label}>Email address</label>
+              <label style={s.label} htmlFor="login-email">Email address</label>
               <input
+                id="login-email"
                 type="email"
                 placeholder="admin@company.com"
                 value={email}
@@ -117,12 +152,18 @@ function Login() {
 
             <div style={s.field}>
               <div style={s.labelRow}>
-                <label style={s.label}>Password</label>
-                <span onClick={() => navigate("/forgot-password")} style={s.forgotLink}>
+                <label style={s.label} htmlFor="login-password">Password</label>
+                <button
+                  type="button"
+                  className="fd-login-linklike fd-focus"
+                  onClick={() => navigate("/forgot-password")}
+                  style={s.forgotLink}
+                >
                   Forgot password?
-                </span>
+                </button>
               </div>
               <input
+                id="login-password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -141,6 +182,7 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
+              className="fd-focus"
               style={{ ...s.primaryBtn, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -153,7 +195,7 @@ function Login() {
             <hr style={s.dividerLine} />
           </div>
 
-          <button onClick={handleGoogleLogin} style={s.googleBtn}>
+          <button onClick={handleGoogleLogin} className="fd-focus" style={s.googleBtn}>
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -165,9 +207,14 @@ function Login() {
 
           <p style={s.footerText}>
             Don't have an account?{" "}
-            <span onClick={() => navigate("/register")} style={s.footerLink}>
+            <button
+              type="button"
+              className="fd-login-linklike fd-focus"
+              onClick={() => navigate("/register")}
+              style={s.footerLink}
+            >
               Register
-            </span>
+            </button>
           </p>
         </div>
       </div>
@@ -181,9 +228,8 @@ function buildStyles(tk) {
   return {
     page: { display: "flex", minHeight: "100vh", fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif" },
 
-    /* LEFT — permanently dark brand panel (matches Hero) */
     left: {
-      width: "44%",
+      width: "44%", boxSizing: "border-box",
       background: DARK.bg,
       position: "relative",
       overflow: "hidden",
@@ -214,13 +260,12 @@ function buildStyles(tk) {
     statNum:   { fontSize: "22px", fontWeight: "700" },
     statLabel: { fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" },
 
-    /* RIGHT — theme-aware */
     right: {
-      flex: 1, display: "flex", alignItems: "center",
+      flex: 1, boxSizing: "border-box", display: "flex", alignItems: "center",
       justifyContent: "center", padding: "2rem", background: tk.bg,
     },
     formCard: {
-      width: "100%", maxWidth: "380px",
+      width: "100%", maxWidth: "380px", boxSizing: "border-box",
       background: tk.glass,
       border: `0.5px solid ${tk.glassBorder}`,
       borderRadius: "20px",
@@ -253,7 +298,7 @@ function buildStyles(tk) {
     label: { display: "block", fontSize: "13px", fontWeight: "500", color: tk.textSecondary, marginBottom: "6px" },
     forgotLink: {
       fontSize: "12px", color: tk.accentLight, fontWeight: "500",
-      cursor: "pointer", textDecoration: "none",
+      textDecoration: "none",
     },
     input: {
       width: "100%", padding: "10px 14px",
@@ -280,6 +325,6 @@ function buildStyles(tk) {
       cursor: "pointer", marginBottom: "1.5rem", fontFamily: "inherit",
     },
     footerText: { textAlign: "center", fontSize: "13px", color: tk.textMuted, margin: 0 },
-    footerLink: { color: tk.accentLight, fontWeight: "500", cursor: "pointer" },
+    footerLink: { color: tk.accentLight, fontWeight: "500" },
   };
 }

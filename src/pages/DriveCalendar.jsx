@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "../context/ThemeContext"; // ← pulls dark from context
+import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 
 const MONTHS = [
@@ -9,7 +9,6 @@ const MONTHS = [
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const PAGE_SIZE = 4;
 
-// ── Mock data (only fields that real API returns) ────────────────────────────
 function getMockDrives(year, month) {
   const y = year, m = String(month).padStart(2,"0");
   return [
@@ -22,7 +21,6 @@ function getMockDrives(year, month) {
   ];
 }
 
-// ── Date helpers ─────────────────────────────────────────────────────────────
 function parseDate(raw) {
   if (!raw) return null;
   if (Array.isArray(raw)) {
@@ -54,7 +52,6 @@ function getCalendarDate(drive) {
   return drive.driveDate || drive.deadline || null;
 }
 
-// ── Status colours (indigo/purple/pink accent system, matching Hero) ────────
 const STATUS_COLOR = {
   UPCOMING:  { bg:"#eef2ff", color:"#4338ca", border:"#c7d2fe", darkBg:"rgba(99,102,241,0.16)",  darkColor:"#a5b4fc", darkBorder:"rgba(99,102,241,0.35)" },
   ONGOING:   { bg:"#f0fdf4", color:"#15803d", border:"#bbf7d0", darkBg:"rgba(16,185,129,0.14)",  darkColor:"#6ee7b7", darkBorder:"rgba(16,185,129,0.3)"  },
@@ -68,9 +65,7 @@ function statusStyle(status, dark) {
     : { bg: c.bg, color: c.color, border: c.border };
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export default function DriveCalendar() {
-  // ✅ Pull dark from ThemeContext — no prop needed
   const { dark } = useTheme();
 
   const today = new Date();
@@ -85,13 +80,12 @@ export default function DriveCalendar() {
   const [notifyOn,      setNotifyOn]      = useState(true);
   const [notifyLoading, setNotifyLoading] = useState(false);
   const [notifyMsg,     setNotifyMsg]     = useState(null);
-  const [listPage,      setListPage]      = useState(1);   // ← paginated list
+  const [listPage,      setListPage]      = useState(1);
   const searchRef = useRef(null);
   const listRef   = useRef(null);
 
   useEffect(() => { loadCalendar(); }, [currentYear, currentMonth]);
   useEffect(() => { loadUpcoming(); fetchNotifyPref(); }, []);
-  // Reset list page when month changes
   useEffect(() => { setListPage(1); }, [currentYear, currentMonth, search]);
 
   async function loadCalendar() {
@@ -170,7 +164,6 @@ export default function DriveCalendar() {
     }, 300);
   }
 
-  // ── Calendar grid calculations ────────────────────────────────────────────
   const firstDay    = new Date(currentYear, currentMonth - 1, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
@@ -182,8 +175,6 @@ export default function DriveCalendar() {
     driveMap[key].push(d);
   });
 
-  // ── Paginated list (bottom section) ───────────────────────────────────────
-  // Sort drives by driveDate ascending so earliest appears first
   const sortedDrives = [...drives].sort((a, b) => {
     const ka = toDateKey(getCalendarDate(a)) || "";
     const kb = toDateKey(getCalendarDate(b)) || "";
@@ -194,7 +185,6 @@ export default function DriveCalendar() {
 
   function goListPage(n) {
     setListPage(n);
-    // Smooth scroll to list section
     setTimeout(() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
@@ -204,14 +194,14 @@ export default function DriveCalendar() {
     <div style={t.page}>
 
       {/* ── TOP BAR ── */}
-      <div style={t.topbar}>
-        <div style={sh.monthNav}>
+      <div style={t.topbar} className="fd-cal-topbar">
+        <div style={sh.monthNav} className="fd-cal-month-nav">
           <button style={t.navBtn} onClick={() => changeMonth(-1)}>‹</button>
-          <span style={t.monthLabel}>{MONTHS[currentMonth-1]} {currentYear}</span>
+          <span style={t.monthLabel} className="fd-cal-month-label">{MONTHS[currentMonth-1]} {currentYear}</span>
           <button style={t.navBtn} onClick={() => changeMonth(1)}>›</button>
         </div>
 
-        <div style={sh.searchWrap}>
+        <div style={sh.searchWrap} className="fd-cal-search-wrap">
           <svg style={sh.searchIcon} width="14" height="14" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -224,7 +214,7 @@ export default function DriveCalendar() {
           />
         </div>
 
-        <div style={t.toggleWrap} title={notifyOn ? "Turn off alerts" : "Turn on alerts"}>
+        <div style={t.toggleWrap} className="fd-cal-toggle-wrap" title={notifyOn ? "Turn off alerts" : "Turn on alerts"}>
           <span style={t.toggleLabel}>{notifyOn ? "🔔" : "🔕"} Alerts</span>
           <button
             style={{ ...sh.toggleBtn, background: notifyOn ? "#6366f1" : (dark ? "rgba(255,255,255,0.12)" : "#e2e8f0") }}
@@ -250,24 +240,22 @@ export default function DriveCalendar() {
       )}
 
       {/* ── MAIN LAYOUT ── */}
-      <div style={sh.layout}>
+      <div style={sh.layout} className="fd-cal-layout">
 
         {/* ── CALENDAR ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={t.calCard}>
-            {/* Day-name header row */}
             <div style={t.calHeader}>
               {DAYS.map(d => <div key={d} style={sh.dayHeader}>{d}</div>)}
             </div>
 
-            {/* Grid */}
             <div style={sh.calGrid}>
               {loadingCal ? (
                 <div style={{ ...sh.state, gridColumn:"1/-1" }}>Loading calendar…</div>
               ) : (
                 <>
                   {Array.from({ length: firstDay }, (_,i) => (
-                    <div key={`e${i}`} style={t.emptyCell} />
+                    <div key={`e${i}`} style={t.emptyCell} className="fd-cal-empty-cell" />
                   ))}
 
                   {Array.from({ length: daysInMonth }, (_,i) => {
@@ -283,7 +271,7 @@ export default function DriveCalendar() {
                     const overflow  = dayDrives.length - MAX_CHIPS;
 
                     return (
-                      <div key={day} style={{ ...t.cell, ...(isToday ? t.todayCell : {}) }}>
+                      <div key={day} style={{ ...t.cell, ...(isToday ? t.todayCell : {}) }} className="fd-cal-cell">
                         <div style={isToday ? t.todayNum : t.dayNum}>{day}</div>
 
                         {visible.map(d => {
@@ -310,7 +298,6 @@ export default function DriveCalendar() {
                           <div
                             style={t.overflowChip}
                             onClick={() => {
-                              // Jump to the list page that contains the first overflow drive
                               const idx = sortedDrives.findIndex(x => x.id === dayDrives[MAX_CHIPS].id);
                               if (idx >= 0) goListPage(Math.floor(idx / PAGE_SIZE) + 1);
                             }}
@@ -328,7 +315,6 @@ export default function DriveCalendar() {
 
           {/* ── DRIVE LIST (bottom of calendar) ── */}
           <div ref={listRef} style={{ marginTop: "24px" }}>
-            {/* Section header */}
             <div style={sh.listHeader}>
               <div>
                 <div style={t.listTitle}>
@@ -364,9 +350,9 @@ export default function DriveCalendar() {
                           ...t.driveRow,
                           animation: `driveRowIn 0.35s cubic-bezier(0.16,1,0.3,1) ${i * 0.04}s both`,
                         }}
+                        className="fd-drive-row"
                         onClick={() => setSelected(d)}
                       >
-                        {/* Left: avatar + info */}
                         <div style={sh.rowLeft}>
                           <div style={{ ...sh.rowDot, background: sc.bg, color: sc.color }}>
                             {d.companyName?.charAt(0)?.toUpperCase()}
@@ -382,8 +368,7 @@ export default function DriveCalendar() {
                           </div>
                         </div>
 
-                        {/* Right: dates + status */}
-                        <div style={sh.rowRight}>
+                        <div style={sh.rowRight} className="fd-drive-row-right">
                           <div style={t.rowDate}>
                             🏢 {d.driveDate ? formatDate(d.driveDate) : formatDate(d.deadline)}
                           </div>
@@ -407,7 +392,6 @@ export default function DriveCalendar() {
                   })}
                 </div>
 
-                {/* Pagination */}
                 {totalListPages > 1 && (
                   <div style={sh.pagination}>
                     <button
@@ -443,8 +427,7 @@ export default function DriveCalendar() {
         </div>
 
         {/* ── SIDEBAR ── */}
-        <aside style={sh.sidebar}>
-          {/* Upcoming drives */}
+        <aside style={sh.sidebar} className="fd-cal-sidebar">
           <div style={t.sideCard}>
             <div style={sh.sideHeader}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -482,7 +465,6 @@ export default function DriveCalendar() {
             )}
           </div>
 
-          {/* Legend */}
           <div style={t.sideCard}>
             <span style={t.sideTitle}>Legend</span>
             <div style={{ marginTop:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
@@ -505,7 +487,7 @@ export default function DriveCalendar() {
       {/* ── MODAL ── */}
       {selected && (
         <div style={sh.overlay} onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}>
-          <div style={t.modal}>
+          <div style={t.modal} className="fd-modal">
             <button style={t.closeBtn} onClick={() => setSelected(null)}>✕</button>
 
             <div style={sh.modalHeader}>
@@ -526,7 +508,7 @@ export default function DriveCalendar() {
               </div>
             </div>
 
-            <div style={sh.infoGrid}>
+            <div style={sh.infoGrid} className="fd-modal-info-grid">
               {[
                 ["🏢 Drive Date",
                   selected.driveDate ? formatDate(selected.driveDate) : formatDate(selected.deadline)
@@ -559,17 +541,44 @@ export default function DriveCalendar() {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+
+        @media (max-width: 900px) {
+          .fd-cal-layout { flex-direction: column !important; }
+          .fd-cal-sidebar { width: 100% !important; position: static !important; top: auto !important; }
+        }
+
+        @media (max-width: 760px) {
+          .fd-cal-topbar { flex-wrap: wrap; padding: 10px 14px !important; }
+          .fd-cal-month-nav { order: 1; }
+          .fd-cal-toggle-wrap { order: 2; margin-left: auto; }
+          .fd-cal-search-wrap { order: 3; flex: 1 1 100% !important; margin-top: 8px; }
+          .fd-cal-month-label { min-width: 0 !important; }
+        }
+
+        @media (max-width: 560px) {
+          .fd-drive-row { flex-direction: column !important; align-items: flex-start !important; gap: 8px; }
+          .fd-drive-row-right { align-items: flex-start !important; padding-left: 0 !important; }
+        }
+
+        @media (max-width: 480px) {
+          .fd-cal-cell, .fd-cal-empty-cell { min-height: 64px !important; padding: 5px !important; }
+          .fd-cal-layout { padding: 14px !important; }
+        }
+
+        @media (max-width: 420px) {
+          .fd-modal-info-grid { grid-template-columns: 1fr !important; }
+          .fd-modal { padding: 22px 18px 18px !important; width: 94% !important; }
+        }
       `}</style>
     </div>
   );
 }
 
-// ── SHARED (theme-independent) styles ────────────────────────────────────────
 const font = "'Inter','SF Pro Display',system-ui,-apple-system,sans-serif";
 
 const sh = {
   monthNav:   { display:"flex", alignItems:"center", gap:"10px" },
-  searchWrap: { flex:1, position:"relative" },
+  searchWrap: { flex:1, position:"relative", minWidth:0 },
   searchIcon: { position:"absolute", left:"11px", top:"50%", transform:"translateY(-50%)", color:"#94a3b8", pointerEvents:"none" },
   toggleBtn:  { position:"relative", width:"38px", height:"20px", borderRadius:"10px", border:"none", cursor:"pointer", padding:0, transition:"background .2s", flexShrink:0 },
   toggleThumb:{ position:"absolute", top:"3px", width:"14px", height:"14px", background:"white", borderRadius:"50%", transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.2)" },
@@ -577,6 +586,7 @@ const sh = {
   layout:     { display:"flex", gap:"18px", padding:"20px 24px", maxWidth:"1400px", margin:"0 auto", alignItems:"flex-start" },
   sidebar:    { width:"280px", flexShrink:0, display:"flex", flexDirection:"column", gap:"14px", position:"sticky", top:"62px" },
   sideHeader: { display:"flex", alignItems:"center", gap:"8px", marginBottom:"14px" },
+  dayHeader:  { padding:"10px 4px", textAlign:"center", fontSize:"11px", fontWeight:"700", color:"#ffffff", textTransform:"uppercase", letterSpacing:"0.5px" },
   calGrid:    { display:"grid", gridTemplateColumns:"repeat(7,1fr)" },
   chip:       { fontSize:"11px", borderRadius:"5px", padding:"2px 6px", marginBottom:"3px", cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", fontWeight:"500" },
   modalHeader:{ display:"flex", gap:"14px", alignItems:"flex-start", marginBottom:"20px" },
@@ -584,7 +594,6 @@ const sh = {
   infoGrid:   { display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px", marginBottom:"16px" },
   state:      { padding:"40px", textAlign:"center", color:"#94a3b8", fontSize:"13.5px" },
 
-  // ── List section ──
   listHeader: { display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"14px" },
   driveList:  { display:"flex", flexDirection:"column", gap:"10px" },
   rowLeft:    { display:"flex", gap:"12px", alignItems:"flex-start", flex:1, minWidth:0 },
@@ -598,7 +607,6 @@ const sh = {
   pageBtnOff: { opacity:0.35, cursor:"not-allowed" },
 };
 
-// ── LIGHT THEME ───────────────────────────────────────────────────────────────
 const ltt = {
   page:       { minHeight:"100vh", background:"#f8fafc", fontFamily:font },
   topbar:     { position:"sticky", top:0, zIndex:50, background:"white", borderBottom:"1px solid #f1f5f9", padding:"11px 24px", display:"flex", alignItems:"center", gap:"14px", boxShadow:"0 1px 3px rgba(15,23,42,0.04)" },
@@ -635,7 +643,6 @@ const ltt = {
   infoValue:  { fontSize:"13.5px", fontWeight:"500", color:"#0f172a" },
   descBox:    { background:"#f8fafc", borderRadius:"10px", padding:"12px", fontSize:"13.5px", color:"#475569", lineHeight:"1.6", border:"1px solid #f1f5f9" },
   emptyList:  { textAlign:"center", padding:"40px 20px", color:"#94a3b8", fontSize:"14px", background:"white", borderRadius:"16px", border:"1px solid #f1f5f9" },
-  // list section
   listTitle:  { fontSize:"17px", fontWeight:"700", letterSpacing:"-0.4px", color:"#0f172a" },
   listSub:    { fontSize:"12.5px", color:"#94a3b8", marginTop:"3px" },
   listCount:  { fontWeight:"700", color:"#4f46e5" },
@@ -648,7 +655,6 @@ const ltt = {
   pageBtnActive:{ background:"#6366f1", borderColor:"#6366f1", color:"white", fontWeight:"600" },
 };
 
-// ── DARK THEME ────────────────────────────────────────────────────────────────
 const dm = {
   ...ltt,
   page:        { ...ltt.page,        background:"#0c0b2b" },
@@ -680,7 +686,6 @@ const dm = {
   infoValue:   { ...ltt.infoValue,   color:"#f1f5f9" },
   descBox:     { ...ltt.descBox,     background:"rgba(255,255,255,0.04)", border:"0.5px solid rgba(255,255,255,0.1)", color:"#94a3b8" },
   emptyList:   { ...ltt.emptyList,   background:"rgba(255,255,255,0.03)", border:"0.5px solid rgba(255,255,255,0.1)", color:"#64748b" },
-  // list section dark
   listTitle:   { ...ltt.listTitle,   color:"#f1f5f9" },
   listSub:     { ...ltt.listSub,     color:"#64748b" },
   listCount:   { ...ltt.listCount,   color:"#a5b4fc" },
