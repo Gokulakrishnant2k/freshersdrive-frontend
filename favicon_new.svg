@@ -1,12 +1,12 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="64" y2="64">
-      <stop offset="0" stop-color="#4F46E5"/>
-      <stop offset="1" stop-color="#9333EA"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <path d="M32 15 L53 25 L32 35 L11 25 Z" fill="#ffffff"/>
-  <rect x="29" y="35" width="6" height="11" rx="2" fill="#ffffff"/>
-  <circle cx="32" cy="47.5" r="3.2" fill="#ffffff"/>
+  <!-- Background: exact brand color #0CA678 -->
+  <rect width="64" height="64" rx="14" fill="#0CA678"/>
+  <!-- Ticket body: scaled up from Logo.jsx viewBox 0 0 24 24 → 0 0 64 64 -->
+  <!-- Original: rect x=2 y=6 w=20 h=12 rx=3 → scale factor ~2.4 -->
+  <rect x="5" y="15" width="54" height="32" rx="8"
+    fill="none" stroke="#ffffff" stroke-width="5"/>
+  <!-- Left notch: cx=2.5 cy=12 r=2 → scaled -->
+  <circle cx="5" cy="31" r="6" fill="#101a30"/>
+  <!-- Right notch: cx=21.5 cy=12 r=2 → scaled -->
+  <circle cx="59" cy="31" r="6" fill="#101a30"/>
 </svg>
