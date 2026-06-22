@@ -1,12 +1,8 @@
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background: exact brand color #0CA678 -->
-  <rect width="64" height="64" rx="14" fill="#0CA678"/>
-  <!-- Ticket body: scaled up from Logo.jsx viewBox 0 0 24 24 → 0 0 64 64 -->
-  <!-- Original: rect x=2 y=6 w=20 h=12 rx=3 → scale factor ~2.4 -->
-  <rect x="5" y="15" width="54" height="32" rx="8"
-    fill="none" stroke="#ffffff" stroke-width="5"/>
-  <!-- Left notch: cx=2.5 cy=12 r=2 → scaled -->
-  <circle cx="5" cy="31" r="6" fill="#101a30"/>
-  <!-- Right notch: cx=21.5 cy=12 r=2 → scaled -->
-  <circle cx="59" cy="31" r="6" fill="#101a30"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+  <rect width="34" height="34" rx="7" fill="#6366F1"></rect>
+
+  <rect x="6" y="9" width="22" height="16" rx="3" fill="none" stroke="#FFFFFF" stroke-width="2"></rect>
+
+  <circle cx="6" cy="17" r="2" fill="#0C0B2B"></circle>
+  <circle cx="28" cy="17" r="2" fill="#0C0B2B"></circle>
 </svg>
