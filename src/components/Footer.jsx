@@ -8,13 +8,13 @@ const socialLinks = {
   youtube: "https://youtube.com/@your_channel_here",
 };
 
-// Same deterministic accent Navbar computes for "FreshersDrive" — keeps
+// Same deterministic accent Navbar computes for "FresherSpot" — keeps
 // both pieces of chrome in step without sharing extra state.
-const BRAND_ACCENT = getAccent("FreshersDrive");
+const BRAND_ACCENT = getAccent("FresherSpot");
 
 export default function Footer() {
   const year = new Date().getFullYear();
-  const bars = barcodeBars(`freshersdrive-${year}`, 26);
+  const bars = barcodeBars(`FresherSpot-${year}`, 26);
 
   return (
     <footer style={styles.footer} className="fd-footer">
@@ -40,7 +40,7 @@ export default function Footer() {
                 <circle cx="21.5" cy="12" r="2" fill={INK} />
               </svg>
             </span>
-            <span style={styles.logo}>FreshersDrive</span>
+            <span style={styles.logo}>FresherSpot</span>
           </div>
           <p style={styles.tagline}>
             Placement drive tracker for freshers — find drives, track deadlines,
@@ -107,7 +107,7 @@ export default function Footer() {
             ))}
           </div>
           <span style={styles.copyright}>
-            © {year} FreshersDrive. All rights reserved.
+            © {year} FresherSpot. All rights reserved.
           </span>
         </div>
 

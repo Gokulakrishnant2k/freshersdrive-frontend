@@ -47,7 +47,7 @@ export default function Contact() {
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <span style={styles.brandName}>FreshersDrive · Contact</span>
+          <span style={styles.brandName}>FresherSpot · Contact</span>
         </div>
 
         <h1 style={styles.title}>Get in touch</h1>
@@ -117,7 +117,7 @@ export default function Contact() {
         {/* Info strip */}
         <div style={styles.infoStrip}>
           {[
-            { icon: "📧", label: "Email", value: "support@freshersdrive.in" },
+            { icon: "📧", label: "Email", value: "support@FresherSpot.in" },
             { icon: "⏱", label: "Response", value: "Within 24 hours" },
           ].map(({ icon, label, value }) => (
             <div key={label} style={styles.infoItem}>

@@ -6,16 +6,16 @@ export default function TermsOfService() {
       breadcrumb="Terms of Service"
       title="Terms of Service"
       meta="Effective Date: June 19, 2026  ·  Last updated: June 19, 2026"
-      footerNote="These Terms of Service apply to the FreshersDrive website only."
+      footerNote="These Terms of Service apply to the FresherSpot website only."
     >
       <p style={legalText.p}>
-        By accessing or using <strong style={legalText.strong}>FreshersDrive</strong> ("the Site"), you
+        By accessing or using <strong style={legalText.strong}>FresherSpot</strong> ("the Site"), you
         agree to be bound by these Terms of Service. If you do not agree, please do not use the Site.
       </p>
 
-      <Section heading="1. About FreshersDrive">
+      <Section heading="1. About FresherSpot">
         <p style={legalText.p}>
-          FreshersDrive is a free job aggregator that indexes publicly available job and internship
+          FresherSpot is a free job aggregator that indexes publicly available job and internship
           opportunities for freshers. We collect basic listing information (company name, role,
           location, eligibility, deadline, and source link) from official career pages and other public
           sources and display it in one place for convenience.
@@ -36,7 +36,7 @@ export default function TermsOfService() {
 
       <Section heading="3. No Affiliation with Companies">
         <p style={legalText.p}>
-          FreshersDrive is not affiliated with, endorsed by, or partnered with any company whose job
+          FresherSpot is not affiliated with, endorsed by, or partnered with any company whose job
           listings appear on this Site. All company names, logos, and trademarks are the property of
           their respective owners.
         </p>
@@ -62,7 +62,7 @@ export default function TermsOfService() {
 
       <Section heading="6. Intellectual Property">
         <p style={legalText.p}>
-          The design, layout, and original text content of FreshersDrive are owned by the site operator.
+          The design, layout, and original text content of FresherSpot are owned by the site operator.
           Job listing data (titles, locations, eligibility criteria) is factual information derived from
           public sources and is not claimed as original content.
         </p>
@@ -77,7 +77,7 @@ export default function TermsOfService() {
 
       <Section heading="8. Limitation of Liability">
         <p style={legalText.p}>
-          To the fullest extent permitted by law, FreshersDrive and its operator shall not be liable for
+          To the fullest extent permitted by law, FresherSpot and its operator shall not be liable for
           any direct, indirect, incidental, or consequential damages arising from your use of the Site
           or reliance on any information provided here.
         </p>
