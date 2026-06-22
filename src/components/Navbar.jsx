@@ -10,9 +10,9 @@ const socialLinks = {
 };
 
 // Same deterministic accent the rest of the site would compute for
-// "FreshersDrive" if it were ever shown as a company tile — keeps the
+// "FresherSpot" if it were ever shown as a company tile — keeps the
 // brand's own color in step with the livery system everywhere else.
-const BRAND_ACCENT = getAccent("FreshersDrive");
+const BRAND_ACCENT = getAccent("FresherSpot");
 
 const NAV_ITEMS = [
   { to: "/",             label: "Drives" },
@@ -49,7 +49,7 @@ export default function Navbar() {
               <circle cx="21.5" cy="12" r="2" fill={INK} />
             </svg>
           </span>
-          <span style={styles.logoText}>FreshersDrive</span>
+          <span style={styles.logoText}>FresherSpot</span>
         </Link>
         <button
           className="fd-navbar-toggle"
