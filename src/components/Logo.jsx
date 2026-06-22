@@ -1,7 +1,7 @@
 // src/components/Logo.jsx
 import { INK, getAccent } from "../utils/ticketTheme";
 
-const BRAND_ACCENT = getAccent("FreshersDrive");
+const BRAND_ACCENT = getAccent("FresherSpot");
 
 export default function Logo({ size = 26, textSize = 17, textColor = "#ffffff" }) {
   return (

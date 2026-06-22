@@ -9,14 +9,14 @@ export default function Disclaimer() {
       footerNote="This disclaimer is subject to change. Last updated June 19, 2026."
     >
       <Callout>
-        FreshersDrive aggregates publicly available job and internship listings for informational
+        FresherSpot aggregates publicly available job and internship listings for informational
         purposes only. We are not affiliated with any company or recruiter. Always verify job details on
         the official source before applying.
       </Callout>
 
       <Section heading="General">
         <p style={legalText.p}>
-          The information provided on <strong style={legalText.strong}>FreshersDrive</strong> is
+          The information provided on <strong style={legalText.strong}>FresherSpot</strong> is
           aggregated from publicly available sources including company career pages, official portals,
           and public job boards. While we make every effort to ensure listings are accurate and current,
           we cannot guarantee completeness, accuracy, or timeliness of the information displayed.

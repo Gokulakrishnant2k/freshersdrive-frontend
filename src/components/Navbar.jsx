@@ -3,15 +3,15 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { INK, MUTED, HAIRLINE, STATUS_INK, ACCENTS, getAccent } from "../utils/ticketTheme";
+import Logo from "./Logo";
 
 const socialLinks = {
   instagram: "https://instagram.com/your_handle_here",
   youtube:   "https://youtube.com/@your_channel_here",
 };
 
-// Same deterministic accent the rest of the site would compute for
-// "FresherSpot" if it were ever shown as a company tile — keeps the
-// brand's own color in step with the livery system everywhere else.
+// Kept for the livery stripe and Register button — not used for the logo
+// mark anymore (Logo.jsx owns that).
 const BRAND_ACCENT = getAccent("FresherSpot");
 
 const NAV_ITEMS = [
@@ -37,19 +37,12 @@ export default function Navbar() {
     <div style={styles.nav} className="fd-navbar">
       <style>{STYLE_BLOCK}</style>
 
-      {/* Livery stripe — same role as the accent bar on every ticket stub */}
+      {/* Livery stripe */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: BRAND_ACCENT }} />
 
       <div style={styles.topRow}>
-        <Link to="/" style={styles.logo} onClick={closeMenu}>
-          <span style={{ ...styles.logoMark, background: BRAND_ACCENT }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="6" width="20" height="12" rx="3" stroke="#fff" strokeWidth="2" />
-              <circle cx="2.5" cy="12" r="2" fill={INK} />
-              <circle cx="21.5" cy="12" r="2" fill={INK} />
-            </svg>
-          </span>
-          <span style={styles.logoText}>FresherSpot</span>
+        <Link to="/" style={styles.logoLink} onClick={closeMenu}>
+          <Logo size={28} textSize={19} />
         </Link>
         <button
           className="fd-navbar-toggle"
@@ -76,9 +69,7 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            {/* Admin dashboard link: visible to both Admin and Employee roles.
-                AdminDashboard.jsx itself renders an "Admin dashboard" or
-                "Employee dashboard" view depending on which role is logged in. */}
+            {/* Admin dashboard link: visible to both Admin and Employee roles */}
             {(isAdmin || isEmployee) && (
               <Link
                 to="/admin"
@@ -149,6 +140,7 @@ const styles = {
     boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
   },
   topRow: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+  logoLink: { display: "flex", alignItems: "center", textDecoration: "none" },
   panel: { display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1, marginLeft: "24px" },
   links: { display: "flex", alignItems: "center", gap: "4px" },
   right: { display: "flex", alignItems: "center", gap: "12px" },
@@ -162,16 +154,6 @@ const styles = {
     width: "28px", height: "28px", borderRadius: "8px",
     color: MUTED.dark, background: "rgba(255,255,255,0.05)",
     border: "1px solid transparent",
-  },
-  logo: { display: "flex", alignItems: "center", gap: "9px", textDecoration: "none" },
-  logoMark: {
-    width: "28px", height: "28px", borderRadius: "8px",
-    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-  },
-  logoText: {
-    fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
-    fontWeight: 700, fontSize: "19px", color: "#fff",
-    letterSpacing: "0.3px", textTransform: "uppercase",
   },
   toggleBtn: {
     background: "rgba(255,255,255,0.06)", border: `1px solid ${HAIRLINE.dark}`,
@@ -189,7 +171,7 @@ const styles = {
   active: { color: "#fff" },
   activeDot: { width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0 },
   admin: {
-    color: ACCENTS[6], // Signal Amber
+    color: ACCENTS[6],
     textDecoration: "none",
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "12px", fontWeight: 700, letterSpacing: "0.4px",

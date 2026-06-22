@@ -1,16 +1,13 @@
 // src/components/Footer.jsx
 import { Link } from "react-router-dom";
-import { INK, MUTED, HAIRLINE, getAccent, barcodeBars } from "../utils/ticketTheme";
+import { INK, MUTED, HAIRLINE, barcodeBars } from "../utils/ticketTheme";
+import Logo from "./Logo";
 
 // ── Social links — replace placeholders with real URLs when ready ──────────
 const socialLinks = {
   instagram: "https://instagram.com/your_handle_here",
   youtube: "https://youtube.com/@your_channel_here",
 };
-
-// Same deterministic accent Navbar computes for "FresherSpot" — keeps
-// both pieces of chrome in step without sharing extra state.
-const BRAND_ACCENT = getAccent("FresherSpot");
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -20,8 +17,7 @@ export default function Footer() {
     <footer style={styles.footer} className="fd-footer">
       <style>{STYLE_BLOCK}</style>
 
-      {/* Perforation — the same tear-stub motif from every ticket, here
-          marking the bottom edge of the page itself. */}
+      {/* Perforation — tear-stub motif marking the bottom edge of the page */}
       <div style={styles.perfWrap}>
         <div style={styles.perfLine} />
         <div style={styles.perfNotchLeft} />
@@ -32,16 +28,7 @@ export default function Footer() {
 
         {/* Brand */}
         <div style={styles.brandCol}>
-          <div style={styles.logoRow}>
-            <span style={{ ...styles.logoMark, background: BRAND_ACCENT }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="6" width="20" height="12" rx="3" stroke="#fff" strokeWidth="2" />
-                <circle cx="2.5" cy="12" r="2" fill={INK} />
-                <circle cx="21.5" cy="12" r="2" fill={INK} />
-              </svg>
-            </span>
-            <span style={styles.logo}>FresherSpot</span>
-          </div>
+          <Logo size={26} textSize={17} />
           <p style={styles.tagline}>
             Placement drive tracker for freshers — find drives, track deadlines,
             never miss an opportunity.
@@ -168,17 +155,6 @@ const styles = {
     flexDirection: "column",
     gap: "12px",
     maxWidth: "320px",
-  },
-
-  logoRow: { display: "flex", alignItems: "center", gap: "9px" },
-  logoMark: {
-    width: "26px", height: "26px", borderRadius: "7px",
-    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-  },
-  logo: {
-    fontFamily: "'Big Shoulders Display', 'Inter', sans-serif",
-    fontWeight: "700", fontSize: "17px", color: "#fff",
-    letterSpacing: "0.4px", textTransform: "uppercase",
   },
 
   tagline: {
