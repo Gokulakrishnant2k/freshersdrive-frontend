@@ -64,7 +64,7 @@ export default function LegalPageShell({ breadcrumb, title, meta, footerNote, ch
                 <path d="M3 8l3 3 7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            FreshersDrive
+            FresherSpot
           </Link>
           <span style={styles.crumbSep}>/</span>
           <span style={styles.crumb}>{breadcrumb}</span>

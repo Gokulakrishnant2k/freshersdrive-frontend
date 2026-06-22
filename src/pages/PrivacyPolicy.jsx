@@ -6,15 +6,15 @@ export default function PrivacyPolicy() {
       breadcrumb="Privacy Policy"
       title="Privacy Policy"
       meta="Effective Date: June 19, 2026  ·  Last updated: June 19, 2026"
-      footerNote="This policy applies only to FreshersDrive and does not cover third-party websites linked from our platform."
+      footerNote="This policy applies only to FresherSpot and does not cover third-party websites linked from our platform."
     >
       <p style={legalText.p}>
-        Welcome to <strong style={legalText.strong}>FreshersDrive</strong> ("we", "our", "us"). This
+        Welcome to <strong style={legalText.strong}>FresherSpot</strong> ("we", "our", "us"). This
         Privacy Policy explains how we handle information when you visit our website.
       </p>
 
       <Section heading="1. Information We Collect">
-        <p style={legalText.p}>FreshersDrive is a job aggregator. We may collect:</p>
+        <p style={legalText.p}>FresherSpot is a job aggregator. We may collect:</p>
         <ul style={legalText.ul}>
           <li>Basic usage data (pages visited, time spent) through analytics tools if enabled.</li>
           <li>
@@ -39,7 +39,7 @@ export default function PrivacyPolicy() {
 
       <Section heading="3. Third-Party Links">
         <p style={legalText.p}>
-          FreshersDrive contains links to company career pages and other third-party websites. Once you
+          FresherSpot contains links to company career pages and other third-party websites. Once you
           leave our site, you are subject to the privacy policies of those websites.
         </p>
       </Section>
