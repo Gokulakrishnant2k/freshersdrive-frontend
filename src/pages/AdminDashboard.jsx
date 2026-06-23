@@ -3,7 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 10;
 
 // ─── Responsive helper ────────────────────────────────────────────────────────
 const useIsMobile = () => {
@@ -60,7 +60,7 @@ function Pagination({ total, page, pageSize, onChange }) {
 }
 
 const paginBtn = {
-  padding: "5px 12px", borderRadius: "6px", border: "1px solid #e2e8f0",
+  padding: "5px 12px", borderRadius: "6px", border: "1px solid #334155",
   background: "transparent", color: "#64748b", fontSize: "12px",
   fontWeight: "500", cursor: "pointer",
 };
@@ -107,7 +107,7 @@ function AdminDashboard() {
   const [editSaving, setEditSaving]     = useState(false);
 
   const [rejectionStatus, setRejectionStatus] = useState({
-    used: 0, remaining: 5, onCooldown: false, cooldownMinutesLeft: 0,
+    used: 0, remaining: 10, onCooldown: false, cooldownMinutesLeft: 0,
   });
 
   const emptyForm = {
@@ -238,13 +238,16 @@ function AdminDashboard() {
   const openEdit = (drive) => {
     setEditingDrive(drive);
     setEditFields({
-      companyName:     drive.companyName     || "",
-      jobRole:         drive.jobRole         || "",
-      location:        drive.location        || "",
-      deadline:        drive.deadline        || "",
-      ctcDisplay:      drive.ctcDisplay      || "",
-      eligibleBatches: drive.eligibleBatches || "",
-      applyLink:       drive.applyLink       || "",
+      companyName:          drive.companyName          || "",
+      jobRole:              drive.jobRole              || "",
+      location:             drive.location             || "",
+      deadline:             drive.deadline             || "",
+      ctcDisplay:           drive.ctcDisplay           || "",
+      eligibleBatches:      drive.eligibleBatches      || "",
+      applyLink:            drive.applyLink            || "",
+      autoExpireAfter30Days: drive.autoExpireAfter30Days !== undefined
+                              ? drive.autoExpireAfter30Days
+                              : true,
     });
   };
 
@@ -385,63 +388,90 @@ function AdminDashboard() {
   const pagedPending  = pendingDrives.slice((pendingPage - 1) * PAGE_SIZE, pendingPage * PAGE_SIZE);
   const pagedRejected = rejectedDrives.slice((rejectedPage - 1) * PAGE_SIZE, rejectedPage * PAGE_SIZE);
 
-  // reset user page when search changes
   const handleUserSearch = (v) => { setUserSearch(v); setUserPage(1); };
 
   // ── Deadline badge helper ───────────────────────────────────────────────
   const deadlineBadge = (deadline) => {
-    if (!deadline) return { label: "—", color: "#94a3b8", bg: "transparent", border: "transparent" };
+    if (!deadline) return { label: "—", color: "#94a3b8", bg: dark ? "#1e293b" : "transparent", border: "transparent" };
     const diff = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    if (diff < 0)  return { label: deadline, color: "#b91c1c", bg: "#fef2f2",  border: "#fecaca" };
-    if (diff <= 3) return { label: `${deadline} (${diff}d)`, color: "#b45309", bg: "#fffbeb", border: "#fde68a" };
-    if (diff <= 7) return { label: `${deadline} (${diff}d)`, color: "#0369a1", bg: "#f0f9ff", border: "#bae6fd" };
-    return         { label: deadline, color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" };
+    if (diff < 0)  return { label: deadline, color: "#f87171", bg: dark ? "#450a0a" : "#fef2f2", border: dark ? "#7f1d1d" : "#fecaca" };
+    if (diff <= 3) return { label: `${deadline} (${diff}d)`, color: "#fbbf24", bg: dark ? "#422006" : "#fffbeb", border: dark ? "#78350f" : "#fde68a" };
+    if (diff <= 7) return { label: `${deadline} (${diff}d)`, color: "#38bdf8", bg: dark ? "#0c2a3e" : "#f0f9ff", border: dark ? "#0369a1" : "#bae6fd" };
+    return         { label: deadline, color: "#4ade80", bg: dark ? "#052e16" : "#f0fdf4", border: dark ? "#14532d" : "#bbf7d0" };
   };
 
   const tabs = [
-    ...(isAdmin ? [{ key: "drives",    label: "Drives" }] : []),
-    ...(isAdmin ? [{ key: "users",     label: `Users${users.length > 0 ? ` (${users.length})` : ""}` }] : []),
+    { key: "drives",    label: "Drives" },
+    ...(isAdmin ? [{ key: "users", label: `Users${users.length > 0 ? ` (${users.length})` : ""}` }] : []),
     { key: "discovery", label: `AI Discovery${pendingDrives.length > 0 ? ` (${pendingDrives.length})` : ""}` },
   ];
 
+  // ── Theme-aware colors ──────────────────────────────────────────────────
+  const cardBg     = dark ? "#1e293b" : "#ffffff";
+  const cardBorder = dark ? "#334155" : "#e2e8f0";
+  const textPrimary   = dark ? "#f1f5f9" : "#0f172a";
+  const textSecondary = dark ? "#94a3b8" : "#64748b";
+  const inputBg    = dark ? "#0f172a" : "#f8fafc";
+  const inputBorder= dark ? "#475569" : "#e2e8f0";
+  const inputColor = dark ? "#f1f5f9" : "#0f172a";
+  const pageBg     = dark ? "#0f172a" : "#f8fafc";
+  const rowHover   = dark ? "#263044" : "#f8fafc";
+
   return (
-    <div style={{ ...t.page, padding: isMobile ? "16px 12px" : "24px 20px" }}>
+    <div style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', system-ui, sans-serif", background: pageBg, minHeight: "100vh", padding: isMobile ? "16px 12px" : "24px 20px" }}>
 
       {/* ── Edit modal ────────────────────────────────────────────────────── */}
       {editingDrive && (
-        <div style={modalOverlay}>
-          <div style={{ ...modalBox, width: isMobile ? "95vw" : "520px" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "16px" }}>
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "24px", width: isMobile ? "95vw" : "520px", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>
+              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: textPrimary }}>
                 Edit drive
               </h3>
-              <button onClick={() => setEditingDrive(null)} style={closeBtnStyle}>✕</button>
+              <button onClick={() => setEditingDrive(null)} style={{ background: "transparent", border: "none", fontSize: "18px", cursor: "pointer", color: textSecondary }}>✕</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
               {[
-                { key: "companyName",     label: "Company name"         },
-                { key: "jobRole",         label: "Job role"             },
-                { key: "location",        label: "Location"             },
-                { key: "deadline",        label: "Deadline (YYYY-MM-DD)"},
-                { key: "ctcDisplay",      label: "CTC / Salary"         },
-                { key: "eligibleBatches", label: "Eligible batches"     },
-                { key: "applyLink",       label: "Apply link"           },
+                { key: "companyName",     label: "Company name"          },
+                { key: "jobRole",         label: "Job role"              },
+                { key: "location",        label: "Location"              },
+                { key: "deadline",        label: "Deadline (YYYY-MM-DD)" },
+                { key: "ctcDisplay",      label: "CTC / Salary"          },
+                { key: "eligibleBatches", label: "Eligible batches"      },
+                { key: "applyLink",       label: "Apply link"            },
               ].map(({ key, label }) => (
                 <div key={key} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                  <label style={{ fontSize: "11px", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>
                     {label}
                   </label>
                   <input
-                    style={{ ...t.input, fontSize: "13px" }}
+                    style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }}
                     value={editFields[key] || ""}
                     onChange={e => setEditFields({ ...editFields, [key]: e.target.value })}
                   />
                 </div>
               ))}
             </div>
+
+            {/* Auto-expire toggle */}
+            <div style={{ marginTop: "16px", padding: "12px 14px", background: dark ? "#0f172a" : "#f8fafc", borderRadius: "8px", border: `1px solid ${cardBorder}` }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={editFields.autoExpireAfter30Days !== false}
+                  onChange={e => setEditFields({ ...editFields, autoExpireAfter30Days: e.target.checked })}
+                  style={{ width: "16px", height: "16px", accentColor: "#2563eb" }}
+                />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: textPrimary }}>Auto-delete after 30 days of expiry</div>
+                  <div style={{ fontSize: "11px", color: textSecondary, marginTop: "2px" }}>Drive will be removed 30 days after its deadline passes</div>
+                </div>
+              </label>
+            </div>
+
             <div style={{ display: "flex", gap: "8px", marginTop: "18px", justifyContent: "flex-end" }}>
-              <button onClick={() => setEditingDrive(null)} style={t.cancelBtn}>Cancel</button>
-              <button onClick={saveEdit} disabled={editSaving} style={{ ...s.primaryBtn, opacity: editSaving ? 0.6 : 1 }}>
+              <button onClick={() => setEditingDrive(null)} style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${cardBorder}`, borderRadius: "6px", fontSize: "12px", color: textSecondary, cursor: "pointer" }}>Cancel</button>
+              <button onClick={saveEdit} disabled={editSaving} style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer", opacity: editSaving ? 0.6 : 1 }}>
                 {editSaving ? "Saving…" : "Save changes"}
               </button>
             </div>
@@ -450,30 +480,48 @@ function AdminDashboard() {
       )}
 
       {/* ── TOP BAR ──────────────────────────────────────────────────────── */}
-      <div style={{ ...s.topBar, flexWrap: isMobile ? "wrap" : "nowrap", gap: isMobile ? "10px" : "0" }}>
-        <div style={s.topLeft}>
-          <div style={s.brandIcon}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: isMobile ? "wrap" : "nowrap", gap: isMobile ? "10px" : "0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ width: "34px", height: "34px", background: "#2563eb", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
           </div>
           <div>
-            <div style={t.pageTitle}>{isAdmin ? "Admin dashboard" : "Employee dashboard"}</div>
-            <div style={s.pageSub}>Manage drives</div>
+            <div style={{ fontSize: "17px", fontWeight: "700", color: textPrimary, letterSpacing: "-0.3px" }}>{isAdmin ? "Admin dashboard" : "Employee dashboard"}</div>
+            <div style={{ fontSize: "12px", color: textSecondary, marginTop: "1px" }}>Manage drives</div>
           </div>
         </div>
-        <div style={t.adminPill}>
-          <div style={s.avatar}>{isAdmin ? "A" : "E"}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "20px", padding: "6px 14px 6px 8px", fontSize: "13px", fontWeight: "500", color: textSecondary }}>
+          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "white", fontSize: "11px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {isAdmin ? "A" : "E"}
+          </div>
           {auth.name || (isAdmin ? "Admin" : "Employee")}
-          <span style={t.roleBadge}>{isAdmin ? "ADMIN" : "EMPLOYEE"}</span>
+          <span style={{ fontSize: "10px", fontWeight: "600", padding: "2px 8px", borderRadius: "20px", background: dark ? "#0f172a" : "#f1f5f9", color: dark ? "#94a3b8" : "#64748b", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+            {isAdmin ? "ADMIN" : "EMPLOYEE"}
+          </span>
         </div>
       </div>
 
       {/* ── TABS ─────────────────────────────────────────────────────────── */}
-      <div style={{ ...s.tabRow, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", overflowX: "auto", WebkitOverflowScrolling: "touch", borderBottom: `1px solid ${cardBorder}` }}>
         {tabs.map(tb => (
-          <button key={tb.key} style={tab === tb.key ? t.tabBtnActive : t.tabBtn} onClick={() => setTab(tb.key)}>
+          <button
+            key={tb.key}
+            onClick={() => setTab(tb.key)}
+            style={{
+              padding: "8px 18px",
+              background: "transparent",
+              color: tab === tb.key ? textPrimary : textSecondary,
+              border: "none",
+              borderBottom: tab === tb.key ? "2px solid #2563eb" : "2px solid transparent",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              marginBottom: "-1px",
+            }}
+          >
             {tb.label}
           </button>
         ))}
@@ -482,37 +530,42 @@ function AdminDashboard() {
       {/* ════════════════════════════════════════════════════════════════════
           DRIVES TAB
       ════════════════════════════════════════════════════════════════════ */}
-      {tab === "drives" && isAdmin && (
+      {tab === "drives" && (
         <>
-          <div style={{ ...s.metricsGrid, gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)" }}>
-            {[
-              { label: "Total drives",   value: drives.length },
-              { label: "Auto-delete on", value: activeCount   },
-              { label: "Expiring soon",  value: expiringCount, warn: true },
-              { label: "Active drives",  value: drives.filter(d => d.status === "ACTIVE").length },
-            ].map(m => (
-              <div key={m.label} style={t.metricCard}>
-                <div style={s.metricLabel}>{m.label}</div>
-                <div style={{ ...t.metricVal, color: m.warn && m.value > 0 ? "#d97706" : (dark ? "#f1f5f9" : "#0f172a") }}>
-                  {m.value}
+          {isAdmin && (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: "10px", marginBottom: "16px" }}>
+              {[
+                { label: "Total drives",   value: drives.length },
+                { label: "Auto-delete on", value: activeCount   },
+                { label: "Expiring soon",  value: expiringCount, warn: true },
+                { label: "Active drives",  value: drives.filter(d => d.status === "ACTIVE").length },
+              ].map(m => (
+                <div key={m.label} style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "10px", padding: "14px 16px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>{m.label}</div>
+                  <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "4px", color: m.warn && m.value > 0 ? "#d97706" : textPrimary }}>
+                    {m.value}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {error && (
-            <div style={s.errorBanner}>
-              <span>⚠️ {error}</span>
-              <button style={s.errorClose} onClick={() => setError(null)}>✕</button>
+              ))}
             </div>
           )}
 
-          <div style={t.card}>
-            <div style={s.cardHeader}>
-              <h2 style={t.cardTitle}>{editingId ? "Edit drive" : "Create drive"}</h2>
-              {editingId && <button onClick={cancelEdit} style={t.cancelBtn}>Cancel</button>}
+          {error && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: dark ? "#450a0a" : "#fef2f2", border: `1px solid ${dark ? "#7f1d1d" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: dark ? "#f87171" : "#b91c1c", marginBottom: "14px" }}>
+              <span>⚠️ {error}</span>
+              <button style={{ background: "transparent", border: "none", color: dark ? "#f87171" : "#b91c1c", cursor: "pointer", fontSize: "14px" }} onClick={() => setError(null)}>✕</button>
             </div>
-            <div style={{ ...s.formGrid, gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)" }}>
+          )}
+
+          {/* Create / Edit form */}
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>{editingId ? "Edit drive" : "Create drive"}</h2>
+              {editingId && (
+                <button onClick={cancelEdit} style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${cardBorder}`, borderRadius: "6px", fontSize: "12px", color: textSecondary, cursor: "pointer" }}>Cancel</button>
+              )}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "12px" }}>
               {[
                 { key: "companyName",      placeholder: "Company name"         },
                 { key: "jobRole",          placeholder: "Job role"             },
@@ -524,97 +577,70 @@ function AdminDashboard() {
                 { key: "applyLink",        placeholder: "Apply link (URL)"    },
                 { key: "keySkills",        placeholder: "Key skills"          },
               ].map(({ key, placeholder }) => (
-                <div key={key} style={s.formField}>
-                  <label style={s.fieldLabel}>{placeholder.split(" (")[0]}</label>
-                  <input style={t.input} placeholder={placeholder} value={form[key]} onChange={set(key)} />
+                <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>{placeholder.split(" (")[0]}</label>
+                  <input style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} placeholder={placeholder} value={form[key]} onChange={set(key)} />
                 </div>
               ))}
-              <div style={s.formField}>
-                <label style={s.fieldLabel}>Category</label>
-                <select style={t.input} value={form.category} onChange={set("category")}>
-                  <option value="IT_SOFTWARE">IT / Software</option>
-                  <option value="CORE_ENGINEERING">Core Engineering</option>
-                  <option value="GOVERNMENT">Government</option>
-                  <option value="BANKING">Banking</option>
-                  <option value="MANAGEMENT">Management</option>
-                  <option value="INTERNSHIP">Internship</option>
-                  <option value="OTHERS">Others</option>
-                </select>
-              </div>
-              <div style={s.formField}>
-                <label style={s.fieldLabel}>Status</label>
-                <select style={t.input} value={form.status} onChange={set("status")}>
-                  <option value="ACTIVE">Active</option>
-                  <option value="UPCOMING">Upcoming</option>
-                  <option value="CLOSED">Closed</option>
-                  <option value="EXPIRED">Expired</option>
-                </select>
-              </div>
-              <div style={s.formField}>
-                <label style={s.fieldLabel}>Job type</label>
-                <select style={t.input} value={form.jobType} onChange={set("jobType")}>
-                  <option value="Full-Time">Full-Time</option>
-                  <option value="Internship">Internship</option>
-                  <option value="Contract">Contract</option>
-                </select>
-              </div>
-              <div style={s.formField}>
-                <label style={s.fieldLabel}>Experience level</label>
-                <select style={t.input} value={form.experienceLevel} onChange={set("experienceLevel")}>
-                  <option>Freshers</option>
-                  <option>0-1 Years</option>
-                  <option>1-2 Years</option>
-                  <option>2-3 Years</option>
-                  <option>3+ Years</option>
-                </select>
-              </div>
-              <div style={s.formField}>
-                <label style={s.fieldLabel}>Deadline *</label>
-                <input type="date" style={t.input} value={form.deadline} onChange={set("deadline")} />
+              {[
+                { key: "category", label: "Category", options: [["IT_SOFTWARE","IT / Software"],["CORE_ENGINEERING","Core Engineering"],["GOVERNMENT","Government"],["BANKING","Banking"],["MANAGEMENT","Management"],["INTERNSHIP","Internship"],["OTHERS","Others"]] },
+                { key: "status",   label: "Status",   options: [["ACTIVE","Active"],["UPCOMING","Upcoming"],["CLOSED","Closed"],["EXPIRED","Expired"]] },
+                { key: "jobType",  label: "Job type", options: [["Full-Time","Full-Time"],["Internship","Internship"],["Contract","Contract"]] },
+                { key: "experienceLevel", label: "Experience level", options: [["Freshers","Freshers"],["0-1 Years","0-1 Years"],["1-2 Years","1-2 Years"],["2-3 Years","2-3 Years"],["3+ Years","3+ Years"]] },
+              ].map(({ key, label, options }) => (
+                <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>{label}</label>
+                  <select style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} value={form[key]} onChange={set(key)}>
+                    {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+              ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Deadline *</label>
+                <input type="date" style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} value={form.deadline} onChange={set("deadline")} />
               </div>
             </div>
-            <div style={{ ...s.formField, marginTop: "12px" }}>
-              <label style={s.fieldLabel}>Job description</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "12px" }}>
+              <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Job description</label>
               <textarea
-                style={{ ...t.input, minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
+                style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box", minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
                 placeholder="Describe the role..."
                 value={form.jobDescription}
                 onChange={set("jobDescription")}
               />
             </div>
-            <label style={t.toggleRow}>
-              <input type="checkbox" checked={form.autoDeleteEnabled}
-                onChange={e => setForm({ ...form, autoDeleteEnabled: e.target.checked })} />
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: textSecondary, marginTop: "14px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.autoDeleteEnabled} onChange={e => setForm({ ...form, autoDeleteEnabled: e.target.checked })} />
               <span>Auto-delete after deadline</span>
             </label>
-            <div style={s.submitRow}>
-              <button style={s.primaryBtn} onClick={editingId ? handleUpdate : handleAdd}>
+            <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+              <button style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }} onClick={editingId ? handleUpdate : handleAdd}>
                 {editingId ? "Update drive" : "Publish drive"}
               </button>
               {!editingId && (
-                <button onClick={() => setForm(emptyForm)} style={t.resetBtn}>Reset</button>
+                <button onClick={() => setForm(emptyForm)} style={{ padding: "9px 16px", background: "transparent", color: textSecondary, border: `1px solid ${cardBorder}`, borderRadius: "7px", fontSize: "13px", cursor: "pointer" }}>Reset</button>
               )}
             </div>
           </div>
 
-          {/* ── Live drives table with pagination ── */}
-          <div style={t.card}>
-            <div style={s.cardHeader}>
-              <h2 style={t.cardTitle}>Live drives</h2>
-              <span style={t.countBadge}>{drives.length} total</span>
+          {/* Live drives table */}
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Live drives</h2>
+              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{drives.length} total</span>
             </div>
             {loading ? (
-              <p style={{ color: "#94a3b8", fontSize: "14px" }}>Loading...</p>
+              <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
             ) : drives.length === 0 ? (
-              <p style={{ color: "#94a3b8", fontSize: "14px" }}>No drives yet.</p>
+              <p style={{ color: textSecondary, fontSize: "14px" }}>No drives yet.</p>
             ) : (
               <>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={s.table}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                     <thead>
                       <tr>
                         {["Company","Role","Location","CTC","Category","Status","Auto-del","Actions","Deadline"].map(h => (
-                          <th key={h} style={t.th}>{h}</th>
+                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -622,42 +648,34 @@ function AdminDashboard() {
                       {pagedDrives.map(d => {
                         const dl = deadlineBadge(d.deadline);
                         return (
-                          <tr key={d.id}>
-                            <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>{d.companyName}</td>
-                            <td style={t.td}>{d.jobRole}</td>
-                            <td style={t.td}>{d.location || "—"}</td>
-                            <td style={t.td}>{d.ctcDisplay || "—"}</td>
-                            <td style={t.td}>{d.category || "—"}</td>
-                            <td style={t.td}>
-                              <span style={{ ...s.badge,
-                                background: d.status==="ACTIVE"?"#dcfce7":d.status==="UPCOMING"?"#eff6ff":d.status==="EXPIRED"?"#fef9c3":"#fee2e2",
-                                color:      d.status==="ACTIVE"?"#15803d":d.status==="UPCOMING"?"#1d4ed8":d.status==="EXPIRED"?"#92400e":"#b91c1c",
+                          <tr key={d.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
+                            <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.ctcDisplay || "—"}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.category || "—"}</td>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                background: d.status==="ACTIVE"?(dark?"#052e16":"#dcfce7"):d.status==="UPCOMING"?(dark?"#0c2a3e":"#eff6ff"):d.status==="EXPIRED"?(dark?"#422006":"#fef9c3"):(dark?"#450a0a":"#fee2e2"),
+                                color:      d.status==="ACTIVE"?(dark?"#4ade80":"#15803d"):d.status==="UPCOMING"?(dark?"#38bdf8":"#1d4ed8"):d.status==="EXPIRED"?(dark?"#fbbf24":"#92400e"):(dark?"#f87171":"#b91c1c"),
                               }}>{d.status}</span>
                             </td>
-                            <td style={t.td}>
-                              <span style={{ ...s.badge,
-                                background: d.autoDeleteEnabled ? "#dcfce7" : "#f1f5f9",
-                                color:      d.autoDeleteEnabled ? "#15803d" : "#94a3b8",
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                background: d.autoDeleteEnabled ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#1e293b" : "#f1f5f9"),
+                                color:      d.autoDeleteEnabled ? (dark ? "#4ade80" : "#15803d") : textSecondary,
                               }}>
                                 {d.autoDeleteEnabled ? "ON" : "OFF"}
                               </span>
                             </td>
-                            <td style={t.td}>
-                              <button style={t.editBtn} onClick={() => startEdit(d)}>Edit</button>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => startEdit(d)}>Edit</button>
                               {isAdmin && (
-                                <button style={{ ...s.deleteBtn, marginLeft: 4 }} onClick={() => deleteDrive(d.id)}>Delete</button>
+                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer", marginLeft: 4 }} onClick={() => deleteDrive(d.id)}>Delete</button>
                               )}
                             </td>
-                            {/* Deadline — far right, colored badge */}
-                            <td style={t.td}>
-                              <span style={{
-                                ...s.badge,
-                                background: dl.bg,
-                                color:      dl.color,
-                                border:     `1px solid ${dl.border}`,
-                                fontSize:   11,
-                                whiteSpace: "nowrap",
-                              }}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
                                 {dl.label}
                               </span>
                             </td>
@@ -667,12 +685,7 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  total={drives.length}
-                  page={drivePage}
-                  pageSize={PAGE_SIZE}
-                  onChange={setDrivePage}
-                />
+                <Pagination total={drives.length} page={drivePage} pageSize={PAGE_SIZE} onChange={setDrivePage} />
               </>
             )}
           </div>
@@ -685,83 +698,79 @@ function AdminDashboard() {
       {tab === "users" && isAdmin && (
         <>
           {userError && (
-            <div style={s.errorBanner}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: dark ? "#450a0a" : "#fef2f2", border: `1px solid ${dark ? "#7f1d1d" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: dark ? "#f87171" : "#b91c1c", marginBottom: "14px" }}>
               <span>⚠️ {userError}</span>
-              <button style={s.errorClose} onClick={() => setUserError(null)}>✕</button>
+              <button style={{ background: "transparent", border: "none", color: dark ? "#f87171" : "#b91c1c", cursor: "pointer", fontSize: "14px" }} onClick={() => setUserError(null)}>✕</button>
             </div>
           )}
-          <div style={t.card}>
-            <div style={s.cardHeader}>
-              <h2 style={t.cardTitle}>Registered users</h2>
-              <span style={t.countBadge}>{filteredUsers.length} shown</span>
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Registered users</h2>
+              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{filteredUsers.length} shown</span>
             </div>
-            <div style={s.formField}>
-              <input
-                style={t.input}
-                placeholder="Search by name, email, or college..."
-                value={userSearch}
-                onChange={e => handleUserSearch(e.target.value)}
-              />
-            </div>
+            <input
+              style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }}
+              placeholder="Search by name, email, or college..."
+              value={userSearch}
+              onChange={e => handleUserSearch(e.target.value)}
+            />
             <div style={{ marginTop: "14px", overflowX: "auto" }}>
               {usersLoading ? (
-                <p style={{ color: "#94a3b8", fontSize: "14px" }}>Loading...</p>
+                <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
               ) : filteredUsers.length === 0 ? (
-                <p style={{ color: "#94a3b8", fontSize: "14px" }}>No users found.</p>
+                <p style={{ color: textSecondary, fontSize: "14px" }}>No users found.</p>
               ) : (
                 <>
-                  <table style={s.table}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                     <thead>
                       <tr>
                         {["Name","Email","Role","College","Branch","Batch","Verified","Actions"].map(h => (
-                          <th key={h} style={t.th}>{h}</th>
+                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {pagedUsers.map(u => (
-                        <tr key={u.id}>
-                          <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>{u.name || "—"}</td>
-                          <td style={t.td}>{u.email}</td>
-                          <td style={t.td}>
-                            <span style={{ ...s.badge,
-                              background: u.role==="ROLE_ADMIN"?"#ede9fe":u.role==="ROLE_EMPLOYEE"?"#fef3c7":"#f1f5f9",
-                              color:      u.role==="ROLE_ADMIN"?"#6d28d9":u.role==="ROLE_EMPLOYEE"?"#92400e":"#64748b",
+                        <tr key={u.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
+                          <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{u.name || "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.email}</td>
+                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              background: u.role==="ROLE_ADMIN"?(dark?"#2e1065":"#ede9fe"):u.role==="ROLE_EMPLOYEE"?(dark?"#422006":"#fef3c7"):(dark?"#1e293b":"#f1f5f9"),
+                              color:      u.role==="ROLE_ADMIN"?(dark?"#c4b5fd":"#6d28d9"):u.role==="ROLE_EMPLOYEE"?(dark?"#fbbf24":"#92400e"):(dark?"#94a3b8":"#64748b"),
                             }}>
                               {u.role==="ROLE_ADMIN"?"Admin":u.role==="ROLE_EMPLOYEE"?"Employee":"User"}
                             </span>
                           </td>
-                          <td style={t.td}>{u.college || "—"}</td>
-                          <td style={t.td}>{u.branch  || "—"}</td>
-                          <td style={t.td}>{u.batchYear|| "—"}</td>
-                          <td style={t.td}>
-                            <span style={{ ...s.badge,
-                              background: u.emailVerified ? "#dcfce7" : "#fef9c3",
-                              color:      u.emailVerified ? "#15803d" : "#92400e",
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.college || "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.branch  || "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.batchYear|| "—"}</td>
+                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              background: u.emailVerified ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#422006" : "#fef9c3"),
+                              color:      u.emailVerified ? (dark ? "#4ade80" : "#15803d") : (dark ? "#fbbf24" : "#92400e"),
                             }}>
                               {u.emailVerified ? "Verified" : "Unverified"}
                             </span>
                           </td>
-                          <td style={t.td}>
+                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                             {u.role !== "ROLE_ADMIN" && (
-                              <button style={u.role==="ROLE_EMPLOYEE" ? s.demoteBtn : t.promoteBtn} onClick={() => promoteUser(u)}>
+                              <button
+                                style={{ padding: "5px 10px", borderRadius: "6px", border: u.role==="ROLE_EMPLOYEE" ? "1px solid rgba(217,119,6,0.4)" : "1px solid rgba(37,99,235,0.4)", background: "transparent", color: u.role==="ROLE_EMPLOYEE" ? (dark?"#fbbf24":"#d97706") : (dark?"#60a5fa":"#2563eb"), fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer" }}
+                                onClick={() => promoteUser(u)}
+                              >
                                 {u.role==="ROLE_EMPLOYEE" ? "Demote" : "Make Employee"}
                               </button>
                             )}
                             {u.role !== "ROLE_ADMIN" && (
-                              <button style={s.deleteBtn} onClick={() => deleteUser(u)}>Delete</button>
+                              <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => deleteUser(u)}>Delete</button>
                             )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  <Pagination
-                    total={filteredUsers.length}
-                    page={userPage}
-                    pageSize={PAGE_SIZE}
-                    onChange={setUserPage}
-                  />
+                  <Pagination total={filteredUsers.length} page={userPage} pageSize={PAGE_SIZE} onChange={setUserPage} />
                 </>
               )}
             </div>
@@ -775,40 +784,41 @@ function AdminDashboard() {
       {tab === "discovery" && (
         <>
           {pendingError && (
-            <div style={s.errorBanner}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: dark ? "#450a0a" : "#fef2f2", border: `1px solid ${dark ? "#7f1d1d" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: dark ? "#f87171" : "#b91c1c", marginBottom: "14px" }}>
               <span>⚠️ {pendingError}</span>
-              <button style={s.errorClose} onClick={() => setPendingError(null)}>✕</button>
+              <button style={{ background: "transparent", border: "none", color: dark ? "#f87171" : "#b91c1c", cursor: "pointer", fontSize: "14px" }} onClick={() => setPendingError(null)}>✕</button>
             </div>
           )}
 
           {isEmployee && (
             <div style={{
-              ...s.errorBanner,
-              background:   rejectionStatus.onCooldown ? "#fef2f2" : "#f0fdf4",
-              borderColor:  rejectionStatus.onCooldown ? "#fecaca" : "#bbf7d0",
-              color:        rejectionStatus.onCooldown ? "#b91c1c" : "#15803d",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: rejectionStatus.onCooldown ? (dark ? "#450a0a" : "#fef2f2") : (dark ? "#052e16" : "#f0fdf4"),
+              border: `1px solid ${rejectionStatus.onCooldown ? (dark ? "#7f1d1d" : "#fecaca") : (dark ? "#14532d" : "#bbf7d0")}`,
+              borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
+              color: rejectionStatus.onCooldown ? (dark ? "#f87171" : "#b91c1c") : (dark ? "#4ade80" : "#15803d"),
               marginBottom: "14px",
             }}>
               {rejectionStatus.onCooldown
                 ? `🚫 Rejection limit reached. Cooldown: ${rejectionStatus.cooldownMinutesLeft} minute(s) remaining.`
-                : `✅ Rejections this hour: ${rejectionStatus.used} / 5 used — ${rejectionStatus.remaining} remaining`}
+                : `✅ Rejections this hour: ${rejectionStatus.used} / 10 used — ${rejectionStatus.remaining} remaining`}
             </div>
           )}
 
           {last5Approved.length > 0 && (
-            <div style={{ ...t.card, marginBottom: "16px" }}>
-              <div style={s.cardHeader}>
-                <h2 style={t.cardTitle}>✓ Last 5 approved — for reference</h2>
-                <span style={{ ...t.countBadge, background: "#f0fdf4", color: "#15803d" }}>
+            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>✓ Last 5 approved — for reference</h2>
+                <span style={{ background: dark ? "#052e16" : "#f0fdf4", color: dark ? "#4ade80" : "#15803d", fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
                   {last5Approved.length} recent
                 </span>
               </div>
               <div style={{ overflowX: "auto" }}>
-                <table style={s.table}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                   <thead>
                     <tr>
                       {["Company","Role","Location","Source","Deadline"].map(h => (
-                        <th key={h} style={t.th}>{h}</th>
+                        <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -816,17 +826,17 @@ function AdminDashboard() {
                     {last5Approved.map(d => {
                       const dl = deadlineBadge(d.deadline);
                       return (
-                        <tr key={d.id} style={{ opacity: 0.75 }}>
-                          <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>{d.companyName}</td>
-                          <td style={t.td}>{d.jobRole}</td>
-                          <td style={t.td}>{d.location || "—"}</td>
-                          <td style={t.td}>
-                            <span style={{ ...s.badge, background: "#f0fdf4", color: "#15803d" }}>
+                        <tr key={d.id} style={{ opacity: 0.8, borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
+                          <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
+                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", background: dark ? "#052e16" : "#f0fdf4", color: dark ? "#4ade80" : "#15803d" }}>
                               {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI":"Manual"}
                             </span>
                           </td>
-                          <td style={t.td}>
-                            <span style={{ ...s.badge, background: dl.bg, color: dl.color, border: `1px solid ${dl.border}`, fontSize: 11 }}>
+                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
                               {dl.label}
                             </span>
                           </td>
@@ -839,58 +849,67 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* ── Pending drives with pagination ── */}
-          <div style={t.card}>
-            <div style={s.cardHeader}>
-              <h2 style={t.cardTitle}>Pending AI-discovered drives</h2>
-              <span style={t.countBadge}>{pendingDrives.length} awaiting review</span>
+          {/* ── Pending drives ── */}
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Pending AI-discovered drives</h2>
+              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{pendingDrives.length} awaiting review</span>
             </div>
-            <p style={{ color: "#94a3b8", fontSize: "13px", marginTop: "-8px", marginBottom: "16px" }}>
+            <p style={{ color: textSecondary, fontSize: "13px", marginTop: "0", marginBottom: "16px" }}>
               Found automatically by the discovery scheduler. Not visible publicly until approved.
               Verify deadlines marked "guessed" before approving.
             </p>
             {pendingLoading ? (
-              <p style={{ color: "#94a3b8", fontSize: "14px" }}>Loading...</p>
+              <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
             ) : pendingDrives.length === 0 ? (
-              <p style={{ color: "#94a3b8", fontSize: "14px" }}>No pending drives right now.</p>
+              <p style={{ color: textSecondary, fontSize: "14px" }}>No pending drives right now.</p>
             ) : (
               <>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={s.table}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                     <thead>
                       <tr>
-                        {["Company","Role","Location","Source","Link","Actions","Deadline"].map(h => (
-                          <th key={h} style={t.th}>{h}</th>
+                        {["Company","Role","Location","Source","Auto-expire 30d","Link","Actions","Deadline"].map(h => (
+                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {pagedPending.map(d => {
                         const dl = deadlineBadge(d.deadline);
+                        const autoExpire = d.autoExpireAfter30Days !== false; // default ON
                         return (
-                          <tr key={d.id}>
-                            <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>{d.companyName}</td>
-                            <td style={t.td}>{d.jobRole}</td>
-                            <td style={t.td}>{d.location || "—"}</td>
-                            <td style={t.td}>
-                              <span style={{ ...s.badge,
-                                background: d.source==="RSS_FEED"?"#f0fdf4":d.source==="AI_SEARCH"?"#eff6ff":"#f1f5f9",
-                                color:      d.source==="RSS_FEED"?"#15803d":d.source==="AI_SEARCH"?"#1d4ed8":"#64748b",
+                          <tr key={d.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
+                            <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                background: d.source==="RSS_FEED"?(dark?"#052e16":"#f0fdf4"):d.source==="AI_SEARCH"?(dark?"#0c2a3e":"#eff6ff"):(dark?"#1e293b":"#f1f5f9"),
+                                color:      d.source==="RSS_FEED"?(dark?"#4ade80":"#15803d"):d.source==="AI_SEARCH"?(dark?"#38bdf8":"#1d4ed8"):(dark?"#94a3b8":"#64748b"),
                               }}>
                                 {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI Search":"Manual"}
                               </span>
                             </td>
-                            <td style={t.td}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                background: autoExpire ? (dark?"#052e16":"#f0fdf4") : (dark?"#1e293b":"#f1f5f9"),
+                                color:      autoExpire ? (dark?"#4ade80":"#15803d") : textSecondary,
+                              }}>
+                                {autoExpire ? "ON" : "OFF"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                               {d.applyLink
-                                ? <a href={d.applyLink} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", fontSize: "12px" }}>View ↗</a>
+                                ? <a href={d.applyLink} target="_blank" rel="noopener noreferrer" style={{ color: dark ? "#60a5fa" : "#2563eb", fontSize: "12px" }}>View ↗</a>
                                 : "—"}
                             </td>
-                            <td style={t.td}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                               <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button style={t.editBtn} onClick={() => openEdit(d)}>Edit</button>
-                                <button style={t.promoteBtn} onClick={() => approveDrive(d)}>Approve</button>
+                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => openEdit(d)}>Edit</button>
+                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => approveDrive(d)}>Approve</button>
                                 <button
-                                  style={{ ...s.deleteBtn, opacity: (!isAdmin && rejectionStatus.onCooldown) ? 0.4 : 1 }}
+                                  style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark?"#f87171":"#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer", opacity: (!isAdmin && rejectionStatus.onCooldown) ? 0.4 : 1 }}
                                   disabled={!isAdmin && rejectionStatus.onCooldown}
                                   onClick={() => rejectDrive(d)}
                                 >
@@ -898,13 +917,10 @@ function AdminDashboard() {
                                 </button>
                               </div>
                             </td>
-                            {/* Deadline — far right */}
-                            <td style={t.td}>
-                              <span style={{ ...s.badge, background: dl.bg, color: dl.color, border: `1px solid ${dl.border}`, fontSize: 11, whiteSpace: "nowrap" }}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
                                 {dl.label}
-                                {d.deadlineGuessed && (
-                                  <span style={{ marginLeft: 4, opacity: 0.7 }}>⚠</span>
-                                )}
+                                {d.deadlineGuessed && <span style={{ marginLeft: 4, opacity: 0.7 }}>⚠</span>}
                               </span>
                             </td>
                           </tr>
@@ -913,37 +929,32 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  total={pendingDrives.length}
-                  page={pendingPage}
-                  pageSize={PAGE_SIZE}
-                  onChange={setPendingPage}
-                />
+                <Pagination total={pendingDrives.length} page={pendingPage} pageSize={PAGE_SIZE} onChange={setPendingPage} />
               </>
             )}
           </div>
 
-          {/* ── Rejected drives with pagination ── */}
-          <div style={t.card}>
-            <div style={s.cardHeader}>
-              <h2 style={t.cardTitle}>✕ Rejected drives</h2>
+          {/* ── Rejected drives ── */}
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>✕ Rejected drives</h2>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Auto-deleted after 3 days</span>
-                <span style={{ ...t.countBadge, background: "#fef2f2", color: "#b91c1c" }}>
+                <span style={{ fontSize: "11px", color: textSecondary }}>Auto-deleted after 3 days</span>
+                <span style={{ background: dark ? "#450a0a" : "#fef2f2", color: dark ? "#f87171" : "#b91c1c", fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
                   {rejectedDrives.length}
                 </span>
               </div>
             </div>
             {rejectedDrives.length === 0 ? (
-              <p style={{ color: "#94a3b8", fontSize: "14px" }}>No rejected drives.</p>
+              <p style={{ color: textSecondary, fontSize: "14px" }}>No rejected drives.</p>
             ) : (
               <>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={s.table}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                     <thead>
                       <tr>
                         {["Company","Role","Location","Source","Actions","Deadline"].map(h => (
-                          <th key={h} style={t.th}>{h}</th>
+                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -951,24 +962,23 @@ function AdminDashboard() {
                       {pagedRejected.map(d => {
                         const dl = deadlineBadge(d.deadline);
                         return (
-                          <tr key={d.id} style={{ opacity: 0.7 }}>
-                            <td style={{ ...t.td, fontWeight: "600", color: dark ? "#f1f5f9" : "#0f172a" }}>{d.companyName}</td>
-                            <td style={t.td}>{d.jobRole}</td>
-                            <td style={t.td}>{d.location || "—"}</td>
-                            <td style={t.td}>
-                              <span style={{ ...s.badge, background: "#fee2e2", color: "#b91c1c" }}>
+                          <tr key={d.id} style={{ opacity: 0.75, borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
+                            <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
+                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", background: dark ? "#450a0a" : "#fee2e2", color: dark ? "#f87171" : "#b91c1c" }}>
                                 {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI":"Manual"}
                               </span>
                             </td>
-                            <td style={t.td}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                               <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button style={t.editBtn} onClick={() => openEdit(d)}>Edit</button>
-                                <button style={t.promoteBtn} onClick={() => approveDrive(d)}>Approve anyway</button>
+                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => openEdit(d)}>Edit</button>
+                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => approveDrive(d)}>Approve anyway</button>
                               </div>
                             </td>
-                            {/* Deadline — far right */}
-                            <td style={t.td}>
-                              <span style={{ ...s.badge, background: dl.bg, color: dl.color, border: `1px solid ${dl.border}`, fontSize: 11, whiteSpace: "nowrap" }}>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
                                 {dl.label}
                               </span>
                             </td>
@@ -978,12 +988,7 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  total={rejectedDrives.length}
-                  page={rejectedPage}
-                  pageSize={PAGE_SIZE}
-                  onChange={setRejectedPage}
-                />
+                <Pagination total={rejectedDrives.length} page={rejectedPage} pageSize={PAGE_SIZE} onChange={setRejectedPage} />
               </>
             )}
           </div>
@@ -994,91 +999,3 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
-
-// ── Modal styles ──────────────────────────────────────────────────────────────
-const modalOverlay = {
-  position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  zIndex: 1000, padding: "16px",
-};
-const modalBox = {
-  background: "#fff", borderRadius: "12px", padding: "24px",
-  maxHeight: "90vh", overflowY: "auto",
-};
-const closeBtnStyle = {
-  background: "transparent", border: "none", fontSize: "18px",
-  cursor: "pointer", color: "#94a3b8", lineHeight: 1,
-};
-
-// ── LIGHT ─────────────────────────────────────────────────────────────────────
-const s = {
-  page:       { maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', system-ui, sans-serif", background: "#f8fafc", minHeight: "100vh" },
-  topBar:     { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" },
-  topLeft:    { display: "flex", alignItems: "center", gap: "12px" },
-  brandIcon:  { width: "34px", height: "34px", background: "#2563eb", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  pageTitle:  { fontSize: "17px", fontWeight: "700", color: "#0f172a", letterSpacing: "-0.3px" },
-  pageSub:    { fontSize: "12px", color: "#94a3b8", marginTop: "1px" },
-  adminPill:  { display: "flex", alignItems: "center", gap: "8px", background: "white", border: "1px solid #e2e8f0", borderRadius: "20px", padding: "6px 14px 6px 8px", fontSize: "13px", fontWeight: "500", color: "#475569" },
-  roleBadge:  { fontSize: "10px", fontWeight: "600", padding: "2px 8px", borderRadius: "20px", background: "#f1f5f9", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.4px" },
-  avatar:     { width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "white", fontSize: "11px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center" },
-  tabRow:     { display: "flex", gap: "6px", marginBottom: "16px" },
-  tabBtn:     { padding: "8px 18px", background: "transparent", color: "#94a3b8", border: "none", borderBottom: "2px solid transparent", fontSize: "13px", fontWeight: "600", cursor: "pointer", whiteSpace: "nowrap" },
-  tabBtnActive:{ padding: "8px 18px", background: "transparent", color: "#0f172a", border: "none", borderBottom: "2px solid #2563eb", fontSize: "13px", fontWeight: "600", cursor: "pointer", whiteSpace: "nowrap" },
-  metricsGrid:{ display: "grid", gap: "10px", marginBottom: "16px" },
-  metricCard: { background: "white", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 16px" },
-  metricLabel:{ fontSize: "11px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" },
-  metricVal:  { fontSize: "24px", fontWeight: "700", marginTop: "4px", color: "#0f172a" },
-  card:       { background: "white", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", marginBottom: "16px" },
-  cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-  cardTitle:  { fontSize: "15px", fontWeight: "600", color: "#0f172a", margin: 0 },
-  cancelBtn:  { padding: "5px 12px", background: "transparent", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "12px", color: "#64748b", cursor: "pointer" },
-  countBadge: { background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" },
-  errorBanner:{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: "#b91c1c", marginBottom: "14px" },
-  errorClose: { background: "transparent", border: "none", color: "#b91c1c", cursor: "pointer", fontSize: "14px" },
-  formGrid:   { display: "grid", gap: "12px" },
-  formField:  { display: "flex", flexDirection: "column", gap: "5px" },
-  fieldLabel: { fontSize: "11px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.4px" },
-  input:      { padding: "9px 12px", border: "1px solid #e2e8f0", borderRadius: "7px", fontSize: "13px", background: "#f8fafc", color: "#0f172a", outline: "none", width: "100%", boxSizing: "border-box" },
-  toggleRow:  { display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#475569", marginTop: "14px", cursor: "pointer" },
-  submitRow:  { display: "flex", gap: "8px", marginTop: "14px" },
-  primaryBtn: { padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer" },
-  resetBtn:   { padding: "9px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "7px", fontSize: "13px", cursor: "pointer" },
-  table:      { width: "100%", borderCollapse: "collapse", fontSize: "13px" },
-  th:         { textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" },
-  td:         { padding: "11px 12px", borderBottom: "1px solid #f1f5f9", color: "#475569", verticalAlign: "middle" },
-  badge:      { display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600" },
-  editBtn:    { padding: "5px 10px", borderRadius: "6px", border: "1px solid #e2e8f0", background: "transparent", color: "#0f172a", fontSize: "12px", fontWeight: "500", cursor: "pointer" },
-  deleteBtn:  { padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.3)", background: "transparent", color: "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" },
-  demoteBtn:  { padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(217,119,6,0.3)", background: "transparent", color: "#d97706", fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer" },
-  promoteBtn: { padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.3)", background: "transparent", color: "#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" },
-  deniedPage: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#f8fafc" },
-  deniedCard: { background: "white", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "48px", textAlign: "center" },
-  deniedTitle:{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 8px" },
-};
-
-// ── DARK ──────────────────────────────────────────────────────────────────────
-const dm = {
-  ...s,
-  page:        { ...s.page,        background: "#0f172a" },
-  pageTitle:   { ...s.pageTitle,   color: "#f1f5f9" },
-  adminPill:   { ...s.adminPill,   background: "#1e293b", borderColor: "#334155", color: "#94a3b8" },
-  roleBadge:   { ...s.roleBadge,   background: "#0f172a", color: "#64748b" },
-  metricCard:  { ...s.metricCard,  background: "#1e293b", borderColor: "#334155" },
-  metricVal:   { ...s.metricVal,   color: "#f1f5f9" },
-  card:        { ...s.card,        background: "#1e293b", borderColor: "#334155" },
-  cardTitle:   { ...s.cardTitle,   color: "#f1f5f9" },
-  cancelBtn:   { ...s.cancelBtn,   borderColor: "#334155", color: "#94a3b8" },
-  countBadge:  { ...s.countBadge,  background: "#0f172a", color: "#64748b" },
-  input:       { ...s.input,       background: "#0f172a", borderColor: "#334155", color: "#f1f5f9" },
-  toggleRow:   { ...s.toggleRow,   color: "#94a3b8" },
-  resetBtn:    { ...s.resetBtn,    borderColor: "#334155", color: "#94a3b8" },
-  th:          { ...s.th,          borderBottomColor: "#334155" },
-  td:          { ...s.td,          borderBottomColor: "#1e293b", color: "#94a3b8" },
-  editBtn:     { ...s.editBtn,     borderColor: "#334155", color: "#f1f5f9" },
-  promoteBtn:  { ...s.promoteBtn,  borderColor: "rgba(37,99,235,0.4)", color: "#60a5fa" },
-  tabBtn:      { ...s.tabBtn,      color: "#64748b" },
-  tabBtnActive:{ ...s.tabBtnActive,color: "#f1f5f9" },
-  deniedPage:  { ...s.deniedPage,  background: "#0f172a" },
-  deniedCard:  { ...s.deniedCard,  background: "#1e293b", borderColor: "#334155" },
-  deniedTitle: { ...s.deniedTitle, color: "#f1f5f9" },
-};
