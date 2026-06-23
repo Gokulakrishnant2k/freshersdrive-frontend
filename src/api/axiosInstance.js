@@ -1,6 +1,8 @@
 import axios from "axios";
 
 export const API_BASE_URL = "https://api.fresherspot.in/api";
+export const OAUTH_BASE_URL = "https://api.fresherspot.in";
+
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -17,21 +19,6 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-// RESPONSE: handle auth errors globally
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      window.location.href = "/login";
-    }
-
-    return Promise.reject(error);
-  }
 );
 
 export default axiosInstance;

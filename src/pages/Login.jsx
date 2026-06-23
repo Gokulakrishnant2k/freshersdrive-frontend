@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { DARK, LIGHT } from "../theme/tokens";
 import Logo from "../components/Logo";
+import { API_BASE_URL, OAUTH_BASE_URL } from "../api/axiosInstance";
 
 const STAT_COLORS = ["#60a5fa", "#c084fc", "#34d399", "#f472b6"];
 
@@ -74,9 +75,9 @@ function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
-  };
+const handleGoogleLogin = () => {
+  window.location.href = `${OAUTH_BASE_URL}/api/oauth2/authorization/google`;
+};
 
   return (
     <div style={s.page} className="fd-login-page">
