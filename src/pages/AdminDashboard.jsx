@@ -349,14 +349,21 @@ function AdminDashboard() {
   const cancelEdit = () => { setEditingId(null); setForm(emptyForm); setError(null); };
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  const t = dark ? dm : s;
+  const cardBg        = dark ? "#1e293b" : "#ffffff";
+  const cardBorder    = dark ? "#334155" : "#e2e8f0";
+  const textPrimary   = dark ? "#f1f5f9" : "#0f172a";
+  const textSecondary = dark ? "#94a3b8" : "#64748b";
+  const inputBg       = dark ? "#0f172a" : "#f8fafc";
+  const inputBorder   = dark ? "#475569" : "#e2e8f0";
+  const inputColor    = dark ? "#f1f5f9" : "#0f172a";
+  const pageBg        = dark ? "#0f172a" : "#f8fafc";
 
   if (!canAccess) {
     return (
-      <div style={t.deniedPage}>
-        <div style={t.deniedCard}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: pageBg }}>
+        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "48px", textAlign: "center" }}>
           <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔒</div>
-          <h2 style={t.deniedTitle}>Access Denied</h2>
+          <h2 style={{ fontSize: "20px", fontWeight: "700", color: textPrimary, margin: "0 0 8px" }}>Access Denied</h2>
           <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>
             You don't have permission to view this page.
           </p>
@@ -406,16 +413,7 @@ function AdminDashboard() {
     { key: "discovery", label: `AI Discovery${pendingDrives.length > 0 ? ` (${pendingDrives.length})` : ""}` },
   ];
 
-  // ── Theme-aware colors ──────────────────────────────────────────────────
-  const cardBg     = dark ? "#1e293b" : "#ffffff";
-  const cardBorder = dark ? "#334155" : "#e2e8f0";
-  const textPrimary   = dark ? "#f1f5f9" : "#0f172a";
-  const textSecondary = dark ? "#94a3b8" : "#64748b";
-  const inputBg    = dark ? "#0f172a" : "#f8fafc";
-  const inputBorder= dark ? "#475569" : "#e2e8f0";
-  const inputColor = dark ? "#f1f5f9" : "#0f172a";
-  const pageBg     = dark ? "#0f172a" : "#f8fafc";
-  const rowHover   = dark ? "#263044" : "#f8fafc";
+
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', system-ui, sans-serif", background: pageBg, minHeight: "100vh", padding: isMobile ? "16px 12px" : "24px 20px" }}>
