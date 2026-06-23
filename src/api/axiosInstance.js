@@ -1,7 +1,6 @@
 import axios from "axios";
 
-export const API_BASE_URL = "https://freshersdrive-backend.onrender.com/api";
-
+export const API_BASE_URL = "https://api.fresherspot.in/api";
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
