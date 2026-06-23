@@ -1,21 +1,35 @@
 // src/utils/ticketTheme.js
 //
-// Shared "boarding pass" design tokens — the visual language DriveCard
-// established (a campus drive as a ticket with a closing window). Any
-// component that wants to feel like part of the same product imports
-// from here instead of redefining its own palette.
-export const INK = "#101a30";
-export const PAGE_BG = { light: "#f8fafc", dark: "#0f172a" };
-export const PAPER      = { light: "#fbfcfe",  dark: "#161f33" };
-export const PAPER_TEXT = { light: "#19223a",  dark: "#e7ecf5" };
-export const MUTED      = { light: "#8993ab",  dark: "#7c8aa8" };
-export const HAIRLINE   = { light: "#e7ebf2",  dark: "#2a3550" };
-// Universal — never themed by company, so urgency stays scannable.
+// Redesigned theme — "Placement OS" aesthetic.
+// Deep navy base, electric indigo primary, Inter-only type hierarchy.
+// All components that previously imported from here stay compatible:
+// every export name is preserved, values are swapped.
+
+// ── Base surfaces ────────────────────────────────────────────────────────────
+export const INK     = "#0D1424"; // near-black navy — card header bg
+export const PAGE_BG = { light: "#F0F4FA", dark: "#080E1C" };
+
+// Card body surfaces — slightly elevated from page
+export const PAPER      = { light: "#FFFFFF",  dark: "#111827" };
+export const PAPER_TEXT = { light: "#0F172A",  dark: "#E8EDF5" };
+export const MUTED      = { light: "#64748B",  dark: "#6B7FA3" };
+export const HAIRLINE   = { light: "#E2E8F0",  dark: "#1E2D45" };
+
+// ── Urgency — semantic, not decorative ──────────────────────────────────────
 export const STATUS_INK = {
-  urgent: "#C92A2A", // final call
-  soon:   "#B45309", // closing soon
-  closed: "#5B6478", // closed
+  urgent: "#EF4444", // red-500  — final call
+  soon:   "#F59E0B", // amber-500 — closing soon
+  closed: "#64748B", // slate-500 — over
 };
+
+// Urgency surface tints (bg + border for badges)
+export const STATUS_TINT = {
+  urgent: { bg: "#FEF2F2", border: "#FECACA", dark_bg: "#2D1515", dark_border: "#7F1D1D" },
+  soon:   { bg: "#FFFBEB", border: "#FDE68A", dark_bg: "#2D2006", dark_border: "#78350F" },
+  closed: { bg: "#F1F5F9", border: "#CBD5E1", dark_bg: "#1E293B", dark_border: "#334155" },
+};
+
+// ── Category labels ──────────────────────────────────────────────────────────
 export const CATEGORY_LABELS = {
   IT_SOFTWARE:      "IT · Software",
   CORE_ENGINEERING: "Core · Engg",
@@ -24,23 +38,33 @@ export const CATEGORY_LABELS = {
   MANAGEMENT:       "Management",
   INTERNSHIP:       "Internship",
   OFF_CAMPUS:       "Off Campus",
+  OTHERS:           "Others",
 };
-// Livery accents (one per company, like tail colors).
+
+// ── Company accent palette ───────────────────────────────────────────────────
+// Shifted to more saturated, professional hues that pop on both
+// light and dark surfaces without looking like a toy box.
 export const ACCENTS = [
-  "#E8590C", // Tarmac Orange
-  "#1C7ED6", // Aviation Blue
-  "#2F9E44", // Runway Green
-  "#E03131", // Beacon Red
-  "#7048E8", // Slate Violet
-  "#0CA678", // Teal Jet
-  "#F08C00", // Signal Amber
+  "#6366F1", // Indigo     — primary brand feel
+  "#3B82F6", // Blue       — clean, tech
+  "#10B981", // Emerald    — growth, finance
+  "#F59E0B", // Amber      — energy, FMCG
+  "#EF4444", // Red        — bold, consulting
+  "#8B5CF6", // Violet     — creative, product
+  "#06B6D4", // Cyan       — startup, SaaS
+  "#EC4899", // Pink       — media, consumer
+  "#14B8A6", // Teal       — healthcare, ops
+  "#F97316", // Orange     — core / manufacturing
 ];
+
 export function getAccent(name = "") {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   return ACCENTS[hash % ACCENTS.length];
 }
-// Deterministic decorative barcode — same drive always renders the same bars.
+
+// ── Deterministic barcode decoration ────────────────────────────────────────
+// Kept for visual continuity in DriveCard / ExpiringDrives.
 export function barcodeBars(seed = "x", count = 22) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 131 + seed.charCodeAt(i)) >>> 0;
@@ -51,12 +75,26 @@ export function barcodeBars(seed = "x", count = 22) {
   }
   return bars;
 }
+
+// ── Urgency helper ───────────────────────────────────────────────────────────
 export function getUrgency(deadline) {
   if (!deadline) return { daysLeft: null, level: null };
   const daysLeft = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
   const level =
     daysLeft <= 0 ? "closed" :
     daysLeft <= 2 ? "urgent" :
-    daysLeft <= 7 ? "soon" : null;
+    daysLeft <= 7 ? "soon"   : null;
   return { daysLeft, level };
 }
+
+// ── Card shadow tokens ───────────────────────────────────────────────────────
+export const SHADOW = {
+  rest:  {
+    light: "0 1px 3px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.04)",
+    dark:  "0 1px 3px rgba(0,0,0,0.4),     0 4px 12px rgba(0,0,0,0.25)",
+  },
+  hover: {
+    light: "0 8px 24px rgba(99,102,241,0.14), 0 2px 6px rgba(15,23,42,0.08)",
+    dark:  "0 8px 28px rgba(99,102,241,0.22), 0 2px 6px rgba(0,0,0,0.45)",
+  },
+};

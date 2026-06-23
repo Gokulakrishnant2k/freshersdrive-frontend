@@ -80,11 +80,12 @@ function AdminDashboard() {
   const [tab, setTab] = useState(isAdmin ? "drives" : "discovery");
 
   // ── Drives tab ──────────────────────────────────────────────────────────
-  const [drives, setDrives]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [error, setError]         = useState(null);
-  const [drivePage, setDrivePage] = useState(1);
+  const [drives, setDrives]           = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [editingId, setEditingId]     = useState(null);
+  const [error, setError]             = useState(null);
+  const [drivePage, setDrivePage]     = useState(1);
+  const [driveSearch, setDriveSearch] = useState("");   // ← NEW
 
   // ── Users tab ───────────────────────────────────────────────────────────
   const [users, setUsers]               = useState([]);
@@ -319,6 +320,8 @@ function AdminDashboard() {
       applyLink:         drive.applyLink         || "",
       autoDeleteEnabled: drive.autoDeleteEnabled || false,
     });
+    // Scroll to form on mobile
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleUpdate = async () => {
@@ -349,6 +352,7 @@ function AdminDashboard() {
   const cancelEdit = () => { setEditingId(null); setForm(emptyForm); setError(null); };
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
+  // ── Theme tokens ────────────────────────────────────────────────────────
   const cardBg        = dark ? "#1e293b" : "#ffffff";
   const cardBorder    = dark ? "#334155" : "#e2e8f0";
   const textPrimary   = dark ? "#f1f5f9" : "#0f172a";
@@ -389,13 +393,28 @@ function AdminDashboard() {
     );
   });
 
+  // ── Drive search filter ─────────────────────────────────────────────────
+  const filteredDrives = drives.filter(d => {
+    const q = driveSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (d.companyName || "").toLowerCase().includes(q) ||
+      (d.jobRole     || "").toLowerCase().includes(q) ||
+      (d.location    || "").toLowerCase().includes(q) ||
+      (d.category    || "").toLowerCase().includes(q) ||
+      (d.status      || "").toLowerCase().includes(q) ||
+      (d.ctcDisplay  || "").toLowerCase().includes(q)
+    );
+  });
+
   // ── Pagination slices ───────────────────────────────────────────────────
-  const pagedDrives   = drives.slice((drivePage - 1) * PAGE_SIZE, drivePage * PAGE_SIZE);
+  const pagedDrives   = filteredDrives.slice((drivePage - 1) * PAGE_SIZE, drivePage * PAGE_SIZE);
   const pagedUsers    = filteredUsers.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
   const pagedPending  = pendingDrives.slice((pendingPage - 1) * PAGE_SIZE, pendingPage * PAGE_SIZE);
   const pagedRejected = rejectedDrives.slice((rejectedPage - 1) * PAGE_SIZE, rejectedPage * PAGE_SIZE);
 
-  const handleUserSearch = (v) => { setUserSearch(v); setUserPage(1); };
+  const handleUserSearch  = (v) => { setUserSearch(v);  setUserPage(1);  };
+  const handleDriveSearch = (v) => { setDriveSearch(v); setDrivePage(1); }; // ← NEW
 
   // ── Deadline badge helper ───────────────────────────────────────────────
   const deadlineBadge = (deadline) => {
@@ -413,7 +432,18 @@ function AdminDashboard() {
     { key: "discovery", label: `AI Discovery${pendingDrives.length > 0 ? ` (${pendingDrives.length})` : ""}` },
   ];
 
-
+  // ── Shared input style ──────────────────────────────────────────────────
+  const inputStyle = {
+    padding: "9px 12px",
+    border: `1px solid ${inputBorder}`,
+    borderRadius: "7px",
+    fontSize: "13px",
+    background: inputBg,
+    color: inputColor,
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  };
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', system-ui, sans-serif", background: pageBg, minHeight: "100vh", padding: isMobile ? "16px 12px" : "24px 20px" }}>
@@ -443,7 +473,7 @@ function AdminDashboard() {
                     {label}
                   </label>
                   <input
-                    style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }}
+                    style={inputStyle}
                     value={editFields[key] || ""}
                     onChange={e => setEditFields({ ...editFields, [key]: e.target.value })}
                   />
@@ -577,7 +607,7 @@ function AdminDashboard() {
               ].map(({ key, placeholder }) => (
                 <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>{placeholder.split(" (")[0]}</label>
-                  <input style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} placeholder={placeholder} value={form[key]} onChange={set(key)} />
+                  <input style={inputStyle} placeholder={placeholder} value={form[key]} onChange={set(key)} />
                 </div>
               ))}
               {[
@@ -588,20 +618,20 @@ function AdminDashboard() {
               ].map(({ key, label, options }) => (
                 <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>{label}</label>
-                  <select style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} value={form[key]} onChange={set(key)}>
+                  <select style={inputStyle} value={form[key]} onChange={set(key)}>
                     {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>
               ))}
               <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Deadline *</label>
-                <input type="date" style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }} value={form.deadline} onChange={set("deadline")} />
+                <input type="date" style={inputStyle} value={form.deadline} onChange={set("deadline")} />
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "12px" }}>
               <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Job description</label>
               <textarea
-                style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box", minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
+                style={{ ...inputStyle, minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
                 placeholder="Describe the role..."
                 value={form.jobDescription}
                 onChange={set("jobDescription")}
@@ -611,7 +641,7 @@ function AdminDashboard() {
               <input type="checkbox" checked={form.autoDeleteEnabled} onChange={e => setForm({ ...form, autoDeleteEnabled: e.target.checked })} />
               <span>Auto-delete after deadline</span>
             </label>
-            <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+            <div style={{ display: "flex", gap: "8px", marginTop: "14px", flexWrap: "wrap" }}>
               <button style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }} onClick={editingId ? handleUpdate : handleAdd}>
                 {editingId ? "Update drive" : "Publish drive"}
               </button>
@@ -621,20 +651,35 @@ function AdminDashboard() {
             </div>
           </div>
 
-          {/* Live drives table */}
+          {/* ── Live drives table ── */}
           <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+
+            {/* Header row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Live drives</h2>
-              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{drives.length} total</span>
+              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px", whiteSpace: "nowrap" }}>
+                {filteredDrives.length} {driveSearch.trim() ? "found" : "total"}
+              </span>
             </div>
+
+            {/* ── Search bar ── */}
+            <input
+              style={{ ...inputStyle, marginBottom: "14px" }}
+              placeholder="Search by company, role, location, category, CTC or status…"
+              value={driveSearch}
+              onChange={e => handleDriveSearch(e.target.value)}
+            />
+
             {loading ? (
               <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
-            ) : drives.length === 0 ? (
-              <p style={{ color: textSecondary, fontSize: "14px" }}>No drives yet.</p>
+            ) : filteredDrives.length === 0 ? (
+              <p style={{ color: textSecondary, fontSize: "14px" }}>
+                {driveSearch.trim() ? `No drives matching "${driveSearch}".` : "No drives yet."}
+              </p>
             ) : (
               <>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
                     <thead>
                       <tr>
                         {["Company","Role","Location","CTC","Category","Status","Auto-del","Actions","Deadline"].map(h => (
@@ -653,13 +698,15 @@ function AdminDashboard() {
                             <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.ctcDisplay || "—"}</td>
                             <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.category || "—"}</td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              <span style={{
+                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                                 background: d.status==="ACTIVE"?(dark?"#052e16":"#dcfce7"):d.status==="UPCOMING"?(dark?"#0c2a3e":"#eff6ff"):d.status==="EXPIRED"?(dark?"#422006":"#fef9c3"):(dark?"#450a0a":"#fee2e2"),
                                 color:      d.status==="ACTIVE"?(dark?"#4ade80":"#15803d"):d.status==="UPCOMING"?(dark?"#38bdf8":"#1d4ed8"):d.status==="EXPIRED"?(dark?"#fbbf24":"#92400e"):(dark?"#f87171":"#b91c1c"),
                               }}>{d.status}</span>
                             </td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              <span style={{
+                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                                 background: d.autoDeleteEnabled ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#1e293b" : "#f1f5f9"),
                                 color:      d.autoDeleteEnabled ? (dark ? "#4ade80" : "#15803d") : textSecondary,
                               }}>
@@ -667,10 +714,22 @@ function AdminDashboard() {
                               </span>
                             </td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => startEdit(d)}>Edit</button>
-                              {isAdmin && (
-                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer", marginLeft: 4 }} onClick={() => deleteDrive(d.id)}>Delete</button>
-                              )}
+                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                                <button
+                                  style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                                  onClick={() => startEdit(d)}
+                                >
+                                  Edit
+                                </button>
+                                {isAdmin && (
+                                  <button
+                                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                                    onClick={() => deleteDrive(d.id)}
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
                             </td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                               <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
@@ -683,7 +742,7 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination total={drives.length} page={drivePage} pageSize={PAGE_SIZE} onChange={setDrivePage} />
+                <Pagination total={filteredDrives.length} page={drivePage} pageSize={PAGE_SIZE} onChange={setDrivePage} />
               </>
             )}
           </div>
@@ -707,19 +766,19 @@ function AdminDashboard() {
               <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{filteredUsers.length} shown</span>
             </div>
             <input
-              style={{ padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px", fontSize: "13px", background: inputBg, color: inputColor, outline: "none", width: "100%", boxSizing: "border-box" }}
+              style={inputStyle}
               placeholder="Search by name, email, or college..."
               value={userSearch}
               onChange={e => handleUserSearch(e.target.value)}
             />
-            <div style={{ marginTop: "14px", overflowX: "auto" }}>
+            <div style={{ marginTop: "14px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {usersLoading ? (
                 <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
               ) : filteredUsers.length === 0 ? (
                 <p style={{ color: textSecondary, fontSize: "14px" }}>No users found.</p>
               ) : (
                 <>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
                     <thead>
                       <tr>
                         {["Name","Email","Role","College","Branch","Batch","Verified","Actions"].map(h => (
@@ -733,7 +792,8 @@ function AdminDashboard() {
                           <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{u.name || "—"}</td>
                           <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.email}</td>
                           <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                            <span style={{
+                              display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                               background: u.role==="ROLE_ADMIN"?(dark?"#2e1065":"#ede9fe"):u.role==="ROLE_EMPLOYEE"?(dark?"#422006":"#fef3c7"):(dark?"#1e293b":"#f1f5f9"),
                               color:      u.role==="ROLE_ADMIN"?(dark?"#c4b5fd":"#6d28d9"):u.role==="ROLE_EMPLOYEE"?(dark?"#fbbf24":"#92400e"):(dark?"#94a3b8":"#64748b"),
                             }}>
@@ -744,7 +804,8 @@ function AdminDashboard() {
                           <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.branch  || "—"}</td>
                           <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.batchYear|| "—"}</td>
                           <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                            <span style={{
+                              display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                               background: u.emailVerified ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#422006" : "#fef9c3"),
                               color:      u.emailVerified ? (dark ? "#4ade80" : "#15803d") : (dark ? "#fbbf24" : "#92400e"),
                             }}>
@@ -811,8 +872,8 @@ function AdminDashboard() {
                   {last5Approved.length} recent
                 </span>
               </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "500px" : "unset" }}>
                   <thead>
                     <tr>
                       {["Company","Role","Location","Source","Deadline"].map(h => (
@@ -863,8 +924,8 @@ function AdminDashboard() {
               <p style={{ color: textSecondary, fontSize: "14px" }}>No pending drives right now.</p>
             ) : (
               <>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
                     <thead>
                       <tr>
                         {["Company","Role","Location","Source","Auto-expire 30d","Link","Actions","Deadline"].map(h => (
@@ -875,14 +936,15 @@ function AdminDashboard() {
                     <tbody>
                       {pagedPending.map(d => {
                         const dl = deadlineBadge(d.deadline);
-                        const autoExpire = d.autoExpireAfter30Days !== false; // default ON
+                        const autoExpire = d.autoExpireAfter30Days !== false;
                         return (
                           <tr key={d.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
                             <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
                             <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
                             <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              <span style={{
+                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                                 background: d.source==="RSS_FEED"?(dark?"#052e16":"#f0fdf4"):d.source==="AI_SEARCH"?(dark?"#0c2a3e":"#eff6ff"):(dark?"#1e293b":"#f1f5f9"),
                                 color:      d.source==="RSS_FEED"?(dark?"#4ade80":"#15803d"):d.source==="AI_SEARCH"?(dark?"#38bdf8":"#1d4ed8"):(dark?"#94a3b8":"#64748b"),
                               }}>
@@ -890,7 +952,8 @@ function AdminDashboard() {
                               </span>
                             </td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                              <span style={{
+                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                                 background: autoExpire ? (dark?"#052e16":"#f0fdf4") : (dark?"#1e293b":"#f1f5f9"),
                                 color:      autoExpire ? (dark?"#4ade80":"#15803d") : textSecondary,
                               }}>
@@ -947,8 +1010,8 @@ function AdminDashboard() {
               <p style={{ color: textSecondary, fontSize: "14px" }}>No rejected drives.</p>
             ) : (
               <>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "600px" : "unset" }}>
                     <thead>
                       <tr>
                         {["Company","Role","Location","Source","Actions","Deadline"].map(h => (
