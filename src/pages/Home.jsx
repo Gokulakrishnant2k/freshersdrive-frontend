@@ -22,8 +22,6 @@ const CATEGORY_LABELS = {
   OTHERS:          "Others",
 };
 
-// Maps the labels used in Hero's category card to the enum values used
-// here, so clicking a category in the Hero actually filters this page.
 const HERO_CATEGORY_MAP = {
   "IT Services": "IT_SOFTWARE",
   "Core Engineering": "CORE_ENGINEERING",
@@ -40,9 +38,7 @@ const BATCH_OPTIONS = ["2025", "2026", "2027", "2028"];
 
 const PROFILE_KEY = "fd_user_profile";
 
-// ── Design tokens ─────────────────────────────────────────────────────────
-// Dark canvas matches Hero's #0c0b2b exactly so the page reads as one
-// continuous surface instead of Hero + a different-feeling app below it.
+// ── Design tokens ──────────────────────────────────────────────────────────
 const DARK = {
   bg: "#0c0b2b",
   glass: "rgba(255,255,255,0.045)",
@@ -58,6 +54,8 @@ const DARK = {
   divider: "rgba(255,255,255,0.08)",
   inputBg: "rgba(255,255,255,0.05)",
   shadow: "0 20px 50px rgba(0,0,0,0.35)",
+  highlightGradient: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(192,132,252,0.10) 100%)",
+  highlightBorder: "rgba(129,140,248,0.3)",
 };
 
 const LIGHT = {
@@ -75,11 +73,14 @@ const LIGHT = {
   divider: "rgba(99,102,241,0.1)",
   inputBg: "#f8f7fc",
   shadow: "0 20px 50px rgba(76,29,149,0.08)",
+  highlightGradient: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(147,51,234,0.04) 100%)",
+  highlightBorder: "rgba(99,102,241,0.2)",
 };
 
 const STYLE_BLOCK = `
   @keyframes fd2-shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
   @keyframes fd2-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fd2-pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .fd2-skel {
     background: linear-gradient(90deg, rgba(129,140,248,0.08) 25%, rgba(129,140,248,0.18) 37%, rgba(129,140,248,0.08) 63%);
     background-size: 400px 100%;
@@ -95,6 +96,10 @@ const STYLE_BLOCK = `
   .fd2-page-btn:hover { transform: translateY(-1px); }
   .fd2-fav-row { transition: background 0.15s ease; }
   .fd2-fav-row:hover { background: rgba(129,140,248,0.08); }
+  .fd2-hl-track::-webkit-scrollbar { display: none; }
+  .fd2-hl-track { -ms-overflow-style: none; scrollbar-width: none; }
+  .fd2-dot-btn { transition: transform 0.15s ease, opacity 0.15s ease; }
+  .fd2-dot-btn:hover { transform: scale(1.3); }
   @media (prefers-reduced-motion: reduce) {
     .fd2-skel { animation: none; }
     .fd2-card-in { animation: none; }
@@ -111,9 +116,6 @@ function AmbientGlow() {
   );
 }
 
-// Signature element: a sliding-pill tab control. The highlight physically
-// moves to the selected category instead of just changing a background,
-// which mirrors the "live tracking" idea already established in Hero.
 function CategoryTabs({ categories, labels, active, onChange, tk }) {
   const containerRef = useRef(null);
   const btnRefs = useRef({});
@@ -126,11 +128,10 @@ function CategoryTabs({ categories, labels, active, onChange, tk }) {
     }
   };
 
-  useLayoutEffect(() => { measure(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [active]);
+  useLayoutEffect(() => { measure(); }, [active]);
   useEffect(() => {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   return (
@@ -213,6 +214,133 @@ function SkeletonCard({ tk }) {
   );
 }
 
+// ── Highlighted Drives Slider ──────────────────────────────────────────────
+// Shows 1 card at a time, auto-scrolls every 4 seconds, manual arrows.
+function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk }) {
+  const [current, setCurrent] = useState(0);
+  const timerRef = useRef(null);
+
+  const total = drives.length;
+
+  const go = (idx) => {
+    setCurrent((idx + total) % total);
+  };
+
+  // Reset and restart timer whenever current changes
+  useEffect(() => {
+    if (total <= 1) return;
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % total);
+    }, 4000);
+    return () => clearInterval(timerRef.current);
+  }, [current, total]);
+
+  if (total === 0) return null;
+
+  return (
+    <section style={{
+      background: tk.highlightGradient,
+      border: `0.5px solid ${tk.highlightBorder}`,
+      borderRadius: 20,
+      padding: "20px 20px 16px",
+      marginBottom: 28,
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Animated live dot */}
+          <span style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: tk.gradient,
+            display: "inline-block",
+            animation: "fd2-pulse-dot 2s ease-in-out infinite",
+            boxShadow: `0 0 0 3px ${tk.accent}22`,
+          }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: tk.text, letterSpacing: "-0.2px" }}>
+            Highlighted drives
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            background: tk.gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            border: `0.5px solid ${tk.highlightBorder}`,
+            borderRadius: 999, padding: "2px 8px",
+          }}>
+            {total} featured
+          </span>
+        </div>
+
+        {/* Arrow controls */}
+        {total > 1 && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              className="fd2-focus"
+              onClick={() => go(current - 1)}
+              aria-label="Previous"
+              style={{
+                width: 30, height: 30, borderRadius: "50%",
+                background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
+                cursor: "pointer", color: tk.textSecondary,
+                fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >‹</button>
+            <button
+              className="fd2-focus"
+              onClick={() => go(current + 1)}
+              aria-label="Next"
+              style={{
+                width: 30, height: 30, borderRadius: "50%",
+                background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
+                cursor: "pointer", color: tk.textSecondary,
+                fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >›</button>
+          </div>
+        )}
+      </div>
+
+      {/* Single card view */}
+      <div style={{ position: "relative", minHeight: 180 }}>
+        <div
+          key={current}
+          className="fd2-card-in"
+          style={{ width: "100%" }}
+        >
+          <DriveCard
+            drive={drives[current]}
+            dark={dark}
+            favorites={favorites}
+            onToggleFav={onToggleFav}
+          />
+        </div>
+      </div>
+
+      {/* Dot indicators */}
+      {total > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 14 }}>
+          {Array.from({ length: total }).map((_, i) => (
+            <button
+              key={i}
+              className="fd2-dot-btn fd2-focus"
+              onClick={() => go(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              style={{
+                width: i === current ? 20 : 6,
+                height: 6, borderRadius: 999,
+                border: "none", cursor: "pointer", padding: 0,
+                background: i === current ? tk.accent : tk.glassBorder,
+                transition: "width 0.3s ease, background 0.3s ease",
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Home() {
   const { dark, setDark } = useTheme();
   const navigate = useNavigate();
@@ -228,13 +356,14 @@ export default function Home() {
   const scrollToHowItWorks = () =>
     howItWorksRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  const [drives,   setDrives]   = useState([]);
-  const [search,   setSearch]   = useState("");
-  const [loading,  setLoading]  = useState(true);
-  const [category, setCategory] = useState("All");
-  const [location, setLocation] = useState("All");
-  const [role,     setRole]     = useState("All");
-  const [page,     setPage]     = useState(1);
+  const [drives,      setDrives]      = useState([]);
+  const [featured,    setFeatured]    = useState([]);
+  const [search,      setSearch]      = useState("");
+  const [loading,     setLoading]     = useState(true);
+  const [category,    setCategory]    = useState("All");
+  const [location,    setLocation]    = useState("All");
+  const [role,        setRole]        = useState("All");
+  const [page,        setPage]        = useState(1);
 
   const savedProfile = (() => {
     try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; } catch { return {}; }
@@ -266,6 +395,11 @@ export default function Home() {
     axios.get("/drives")
       .then((res) => { setDrives(res.data); setLoading(false); })
       .catch(()   => setLoading(false));
+
+    // Fetch featured/highlighted drives
+    axios.get("/drives/featured")
+      .then((res) => setFeatured(res.data))
+      .catch(()   => setFeatured([]));
   }, []);
 
   useEffect(() => {
@@ -279,8 +413,6 @@ export default function Home() {
 
   useEffect(() => { setPage(1); }, [search, category, location, role]);
 
-  // Press "/" anywhere on the page to jump into search — a small, common
-  // power-user pattern that costs nothing and feels considered.
   useEffect(() => {
     const onKeyDown = (e) => {
       const tag = document.activeElement?.tagName;
@@ -404,33 +536,17 @@ export default function Home() {
                 </div>
               </div>
               <div style={t.bannerControls} className="fd-banner-controls">
-                <select
-                  style={t.bannerSelect}
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                >
+                <select style={t.bannerSelect} value={branch} onChange={(e) => setBranch(e.target.value)}>
                   <option value="">Select department</option>
-                  {BRANCH_OPTIONS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
+                  {BRANCH_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
-                <select
-                  style={t.bannerSelect}
-                  value={batch}
-                  onChange={(e) => setBatch(e.target.value)}
-                >
+                <select style={t.bannerSelect} value={batch} onChange={(e) => setBatch(e.target.value)}>
                   <option value="">Select batch</option>
-                  {BATCH_OPTIONS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
+                  {BATCH_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 <button
                   className="fd2-focus"
-                  style={{
-                    ...t.bannerBtn,
-                    opacity: branch && batch ? 1 : 0.45,
-                    cursor: branch && batch ? "pointer" : "not-allowed",
-                  }}
+                  style={{ ...t.bannerBtn, opacity: branch && batch ? 1 : 0.45, cursor: branch && batch ? "pointer" : "not-allowed" }}
                   onClick={handleSaveProfile}
                   disabled={!branch || !batch}
                 >
@@ -449,35 +565,21 @@ export default function Home() {
 
             <div style={t.card} className="fd2-glass-card">
               <p style={t.filterHeading}>Location</p>
-              <select
-                style={t.dropDown}
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              >
+              <select style={t.dropDown} value={location} onChange={(e) => setLocation(e.target.value)}>
                 <option value="All">All locations</option>
-                {locations.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
+                {locations.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
 
               <p style={{ ...t.filterHeading, marginTop: "18px" }}>Job role</p>
-              <select
-                style={t.dropDown}
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
+              <select style={t.dropDown} value={role} onChange={(e) => setRole(e.target.value)}>
                 <option value="All">All roles</option>
-                {roles.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
+                {roles.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
 
               {!showBanner && branch && batch && (
                 <div style={t.profileChip}>
                   <span style={t.profileChipText}>{branch} · {batch}</span>
-                  <button style={t.profileChipReset} className="fd2-focus" onClick={handleResetProfile} title="Change">
-                    ✕
-                  </button>
+                  <button style={t.profileChipReset} className="fd2-focus" onClick={handleResetProfile} title="Change">✕</button>
                 </div>
               )}
             </div>
@@ -513,41 +615,23 @@ export default function Home() {
                   </svg>
                 }
               />
-
               {!lastFavDrive ? (
                 <p style={{ fontSize: "12px", color: tk.textMuted, marginTop: "2px", lineHeight: "1.6" }}>
                   Tap the heart on any drive card to save it here.
                 </p>
               ) : (
                 <div>
-                  <div
-                    style={t.favItem}
-                    className="fd2-fav-row"
-                    onClick={() => navigate(`/drives/${lastFavDrive.id}`)}
-                  >
-                    <div style={t.favDot}>
-                      {lastFavDrive.companyName?.charAt(0)?.toUpperCase()}
-                    </div>
+                  <div style={t.favItem} className="fd2-fav-row" onClick={() => navigate(`/drives/${lastFavDrive.id}`)}>
+                    <div style={t.favDot}>{lastFavDrive.companyName?.charAt(0)?.toUpperCase()}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={t.favCompany}>{lastFavDrive.companyName}</div>
                       <div style={t.favRole}>{lastFavDrive.jobRole}</div>
                     </div>
-                    <button
-                      style={t.favRemove}
-                      className="fd2-focus"
-                      title="Remove"
-                      onClick={(e) => { e.stopPropagation(); toggleFav(lastFavDrive.id); }}
-                    >
-                      ✕
-                    </button>
+                    <button style={t.favRemove} className="fd2-focus" title="Remove"
+                      onClick={(e) => { e.stopPropagation(); toggleFav(lastFavDrive.id); }}>✕</button>
                   </div>
-
                   {favorites.size > 1 && (
-                    <button
-                      style={t.favMoreBtn}
-                      className="fd2-focus"
-                      onClick={() => navigate("/saved-drives")}
-                    >
+                    <button style={t.favMoreBtn} className="fd2-focus" onClick={() => navigate("/saved-drives")}>
                       +{favorites.size - 1} more saved →
                     </button>
                   )}
@@ -559,6 +643,17 @@ export default function Home() {
 
           {/* FEED */}
           <main style={t.feed}>
+
+            {/* ── HIGHLIGHTED DRIVES SLIDER ── */}
+            {featured.length > 0 && (
+              <HighlightedSlider
+                drives={featured}
+                dark={dark}
+                favorites={favorites}
+                onToggleFav={toggleFav}
+                tk={tk}
+              />
+            )}
 
             {/* ── RECOMMENDED SECTION (SLIDER) ── */}
             {!showBanner && branch && batch && (
@@ -593,40 +688,17 @@ export default function Home() {
 
                 {!recLoading && recommended.length > 0 && (
                   <div style={t.sliderWrap} className="fd-slider-wrap">
-                    <button
-                      style={{ ...t.sliderArrow, left: "-16px" }}
-                      className="fd-slider-arrow fd2-focus"
-                      onClick={() => scrollRec(-1)}
-                      aria-label="Scroll left"
-                    >
-                      ‹
-                    </button>
-
+                    <button style={{ ...t.sliderArrow, left: "-16px" }} className="fd-slider-arrow fd2-focus"
+                      onClick={() => scrollRec(-1)} aria-label="Scroll left">‹</button>
                     <div ref={recTrackRef} style={t.recTrack}>
                       {recommended.map((drive, i) => (
-                        <div
-                          key={drive.id}
-                          className="fd2-card-in"
-                          style={{ ...t.recCardWrap, animationDelay: `${i * 40}ms` }}
-                        >
-                          <DriveCard
-                            drive={drive}
-                            dark={dark}
-                            favorites={favorites}
-                            onToggleFav={toggleFav}
-                          />
+                        <div key={drive.id} className="fd2-card-in" style={{ ...t.recCardWrap, animationDelay: `${i * 40}ms` }}>
+                          <DriveCard drive={drive} dark={dark} favorites={favorites} onToggleFav={toggleFav} />
                         </div>
                       ))}
                     </div>
-
-                    <button
-                      style={{ ...t.sliderArrow, right: "-16px" }}
-                      className="fd-slider-arrow fd2-focus"
-                      onClick={() => scrollRec(1)}
-                      aria-label="Scroll right"
-                    >
-                      ›
-                    </button>
+                    <button style={{ ...t.sliderArrow, right: "-16px" }} className="fd-slider-arrow fd2-focus"
+                      onClick={() => scrollRec(1)} aria-label="Scroll right">›</button>
                   </div>
                 )}
 
@@ -645,23 +717,14 @@ export default function Home() {
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
               </div>
-
-              <CategoryTabs
-                categories={CATEGORIES}
-                labels={CATEGORY_LABELS}
-                active={category}
-                onChange={setCategory}
-                tk={tk}
-              />
+              <CategoryTabs categories={CATEGORIES} labels={CATEGORY_LABELS} active={category} onChange={setCategory} tk={tk} />
             </div>
 
             <div ref={howItWorksRef} />
 
             {loading && (
               <div style={t.grid} className="fd-grid">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <SkeletonCard key={i} tk={tk} />
-                ))}
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} tk={tk} />)}
               </div>
             )}
 
@@ -670,9 +733,7 @@ export default function Home() {
                 <div style={{ fontSize: 26, marginBottom: 8 }}>🔍</div>
                 <div style={{ fontWeight: 700, color: tk.text, marginBottom: 4 }}>No drives match these filters</div>
                 <div style={{ marginBottom: 16 }}>Try widening your search or clearing filters.</div>
-                <button className="fd2-focus" style={t.clearFiltersBtn} onClick={handleClearFilters}>
-                  Clear filters
-                </button>
+                <button className="fd2-focus" style={t.clearFiltersBtn} onClick={handleClearFilters}>Clear filters</button>
               </div>
             )}
 
@@ -680,12 +741,7 @@ export default function Home() {
               <div style={t.grid} className="fd-grid">
                 {pageDrives.map((drive, i) => (
                   <div key={drive.id} className="fd2-card-in" style={{ animationDelay: `${i * 35}ms` }}>
-                    <DriveCard
-                      drive={drive}
-                      dark={dark}
-                      favorites={favorites}
-                      onToggleFav={toggleFav}
-                    />
+                    <DriveCard drive={drive} dark={dark} favorites={favorites} onToggleFav={toggleFav} />
                   </div>
                 ))}
               </div>
@@ -693,34 +749,17 @@ export default function Home() {
 
             {!loading && totalPages > 1 && (
               <div style={t.pagination}>
-                <button
-                  className="fd2-page-btn fd2-focus"
+                <button className="fd2-page-btn fd2-focus"
                   style={{ ...t.pageBtn, ...(page === 1 ? t.pageBtnDisabled : {}) }}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  ← Prev
-                </button>
-
+                  onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>← Prev</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button
-                    key={n}
-                    className="fd2-page-btn fd2-focus"
+                  <button key={n} className="fd2-page-btn fd2-focus"
                     style={{ ...t.pageBtn, ...(n === page ? t.pageBtnActive : {}) }}
-                    onClick={() => setPage(n)}
-                  >
-                    {n}
-                  </button>
+                    onClick={() => setPage(n)}>{n}</button>
                 ))}
-
-                <button
-                  className="fd2-page-btn fd2-focus"
+                <button className="fd2-page-btn fd2-focus"
                   style={{ ...t.pageBtn, ...(page === totalPages ? t.pageBtnDisabled : {}) }}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next →
-                </button>
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next →</button>
               </div>
             )}
           </main>
