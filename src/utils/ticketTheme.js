@@ -52,7 +52,7 @@ export const ACCENTS = [
   "#EF4444", // Red        — bold, consulting
   "#8B5CF6", // Violet     — creative, product
   "#06B6D4", // Cyan       — startup, SaaS
-  "#EC4899", // Pink       — media, consumer
+  "#0EA5E9", // Sky Blue ← replace with this
   "#14B8A6", // Teal       — healthcare, ops
   "#F97316", // Orange     — core / manufacturing
 ];
