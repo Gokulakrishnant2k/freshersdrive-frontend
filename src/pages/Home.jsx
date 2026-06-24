@@ -61,11 +61,14 @@ const DARK = {
   pink:             "#ec4899",
   pinkTint:         "rgba(236,72,153,0.12)",
   divider:          "rgba(255,255,255,0.07)",
-  inputBg:          "rgba(255,255,255,0.04)",
+  inputBg:          "rgba(255,255,255,0.06)",
+  inputText:        "#f0f0ff",
+  inputBorder:      "rgba(255,255,255,0.12)",
   shadow:           "0 4px 24px rgba(0,0,0,0.4)",
   shadowLg:         "0 20px 60px rgba(0,0,0,0.5)",
   highlightGradient:"linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(139,92,246,0.07) 100%)",
   highlightBorder:  "rgba(99,102,241,0.22)",
+  colorScheme:      "dark",
 };
 
 const LIGHT = {
@@ -92,10 +95,13 @@ const LIGHT = {
   pinkTint:         "rgba(219,39,119,0.08)",
   divider:          "rgba(99,102,241,0.08)",
   inputBg:          "#f8f7fc",
+  inputText:        "#1a1740",
+  inputBorder:      "rgba(99,102,241,0.10)",
   shadow:           "0 4px 24px rgba(99,102,241,0.08)",
   shadowLg:         "0 20px 60px rgba(76,29,149,0.10)",
   highlightGradient:"linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.03) 100%)",
   highlightBorder:  "rgba(99,102,241,0.15)",
+  colorScheme:      "light",
 };
 
 // ── Global styles ──────────────────────────────────────────────────────────
@@ -121,6 +127,10 @@ const STYLE_BLOCK = `
   @keyframes fd2-slide-in {
     from { opacity: 0; transform: translateX(18px); }
     to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fd2-hl-progress {
+    from { width: 0%; }
+    to   { width: 100%; }
   }
 
   .fd2-skel {
@@ -181,6 +191,26 @@ const STYLE_BLOCK = `
   /* Scrollbar hide for rec track */
   .fd2-no-scroll::-webkit-scrollbar { display: none; }
   .fd2-no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Dark-mode aware select/option */
+  select.fd2-select-dark {
+    color-scheme: dark;
+    background-color: rgba(255,255,255,0.06);
+    color: #f0f0ff;
+  }
+  select.fd2-select-dark option {
+    background-color: #1a1a3e;
+    color: #f0f0ff;
+  }
+  select.fd2-select-light {
+    color-scheme: light;
+    background-color: #f8f7fc;
+    color: #1a1740;
+  }
+  select.fd2-select-light option {
+    background-color: #ffffff;
+    color: #1a1740;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .fd2-skel     { animation: none; }
@@ -320,13 +350,12 @@ function SkeletonCard({ tk }) {
 }
 
 // ── Highlighted Drives Slider — 2 at a time ───────────────────────────────
-function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }) {
+function HighlightedDrivesSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin, onManage }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef(null);
   const [paused, setPaused] = useState(false);
 
   const total = drives.length;
-  // We show 2 at a time; pages = ceil(total/2)
   const pageCount = Math.ceil(total / 2);
 
   const go = (pageIdx) => {
@@ -343,7 +372,7 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
     return () => clearInterval(timerRef.current);
   }, [current, pageCount, paused]);
 
-  if (total === 0) return null;
+  if (total === 0 && !isAdmin) return null;
 
   const startIdx = current * 2;
   const visibleDrives = drives.slice(startIdx, startIdx + 2);
@@ -362,7 +391,7 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
         overflow: "hidden",
       }}
     >
-      {/* Subtle decorative corner accent */}
+      {/* Decorative corner accent */}
       <div aria-hidden style={{
         position: "absolute", top: 0, right: 0,
         width: 200, height: 200,
@@ -371,7 +400,7 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
       }} />
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: total > 0 ? 18 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
             width: 8, height: 8, borderRadius: "50%",
@@ -381,23 +410,26 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
             flexShrink: 0,
           }} />
           <span style={{ fontSize: 14.5, fontWeight: 700, color: tk.text, letterSpacing: "-0.3px" }}>
-            Featured Drives
+            Highlighted Drives
           </span>
-          <span style={{
-            fontSize: 11, fontWeight: 700,
-            background: tk.gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            border: `1px solid ${tk.highlightBorder}`,
-            borderRadius: 999, padding: "2px 10px",
-          }}>
-            {total} featured
-          </span>
+          {total > 0 && (
+            <span style={{
+              fontSize: 11, fontWeight: 700,
+              background: tk.gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              border: `1px solid ${tk.highlightBorder}`,
+              borderRadius: 999, padding: "2px 10px",
+            }}>
+              {total} highlighted
+            </span>
+          )}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isAdmin && (
             <button
               className="fd2-focus fd2-arrow-btn"
-              title="Manage featured drives"
+              title="Manage highlighted drives"
+              onClick={onManage}
               style={{
                 fontSize: 11, fontWeight: 600, color: tk.accentLight,
                 background: tk.accentSoft, border: `1px solid ${tk.accent}30`,
@@ -439,28 +471,44 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
         </div>
       </div>
 
-      {/* 2-card grid */}
-      <div
-        key={current}
-        className="fd2-slide-in"
-        style={{
-          display: "grid",
-          gridTemplateColumns: visibleDrives.length === 2 ? "1fr 1fr" : "1fr",
-          gap: 14,
-        }}
-      >
-        {visibleDrives.map((drive) => (
-          <DriveCard
-            key={drive.id}
-            drive={drive}
-            dark={dark}
-            favorites={favorites}
-            onToggleFav={onToggleFav}
-          />
-        ))}
-      </div>
+      {/* Empty state for admin */}
+      {total === 0 && isAdmin && (
+        <div style={{
+          padding: "24px 0 8px",
+          textAlign: "center",
+          color: tk.textMuted,
+          fontSize: 13,
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 8 }}>✦</div>
+          <div style={{ fontWeight: 600, color: tk.textSecondary, marginBottom: 4 }}>No highlighted drives yet</div>
+          <div>Click <strong>Manage</strong> to pin drives to this section.</div>
+        </div>
+      )}
 
-      {/* Dot indicators + progress */}
+      {/* 2-card grid */}
+      {total > 0 && (
+        <div
+          key={current}
+          className="fd2-slide-in"
+          style={{
+            display: "grid",
+            gridTemplateColumns: visibleDrives.length === 2 ? "1fr 1fr" : "1fr",
+            gap: 14,
+          }}
+        >
+          {visibleDrives.map((drive) => (
+            <DriveCard
+              key={drive.id}
+              drive={drive}
+              dark={dark}
+              favorites={favorites}
+              onToggleFav={onToggleFav}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Dot indicators + progress bar */}
       {pageCount > 1 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 16 }}>
           {Array.from({ length: pageCount }).map((_, i) => (
@@ -477,7 +525,6 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
             />
           ))}
 
-          {/* Thin progress bar below dots */}
           {!paused && (
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, overflow: "hidden", borderRadius: "0 0 20px 20px" }}>
               <div
@@ -493,8 +540,6 @@ function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }
           )}
         </div>
       )}
-
-      <style>{`@keyframes fd2-hl-progress { from { width: 0% } to { width: 100% } }`}</style>
     </section>
   );
 }
@@ -595,7 +640,7 @@ export default function Home() {
   const navigate = useNavigate();
   const tk = dark ? DARK : LIGHT;
 
-  // Check admin role — adjust to your actual auth logic
+  // Check admin / employer role
   const isAdmin = useMemo(() => {
     try {
       const user = JSON.parse(localStorage.getItem("fd_user") || "{}");
@@ -611,7 +656,7 @@ export default function Home() {
   const scrollToHowItWorks = () => howItWorksRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const [drives,      setDrives]      = useState([]);
-  const [featured,    setFeatured]    = useState([]);
+  const [highlighted, setHighlighted] = useState([]);  // ← replaces "featured"
   const [search,      setSearch]      = useState("");
   const [loading,     setLoading]     = useState(true);
   const [category,    setCategory]    = useState("All");
@@ -631,17 +676,16 @@ export default function Home() {
   const recTrackRef = useRef(null);
   const scrollRec = (dir) => recTrackRef.current?.scrollBy({ left: dir * 290, behavior: "smooth" });
 
-  // Deduplicated, sorted locations (case-insensitive)
+  // ── FIX 1: Deduplicated, sorted locations (case-insensitive, first-seen canonical form) ──
   const locations = useMemo(() => {
-    const seen = new Set();
-    const result = [];
+    const seen = new Map(); // key = lowercase → canonical display value
     drives.forEach((d) => {
       if (!d.location) return;
       const norm = d.location.trim();
       const key  = norm.toLowerCase();
-      if (!seen.has(key)) { seen.add(key); result.push(norm); }
+      if (!seen.has(key)) seen.set(key, norm); // keep first-seen casing
     });
-    return result.sort((a, b) => a.localeCompare(b));
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
   }, [drives]);
 
   useEffect(() => {
@@ -649,9 +693,10 @@ export default function Home() {
       .then((res) => { setDrives(res.data); setLoading(false); })
       .catch(()   => setLoading(false));
 
-    axios.get("/drives/featured")
-      .then((res) => setFeatured(res.data))
-      .catch(()   => setFeatured([]));
+    // Fetch highlighted drives — adjust endpoint to match your backend
+    axios.get("/drives/highlighted")
+      .then((res) => setHighlighted(res.data))
+      .catch(()   => setHighlighted([]));
   }, []);
 
   useEffect(() => {
@@ -683,6 +728,7 @@ export default function Home() {
     const q  = search.toLowerCase();
     const sm = d.companyName?.toLowerCase().includes(q) || d.jobRole?.toLowerCase().includes(q);
     const cm = category === "All" || d.category === category;
+    // ── FIX 1 continued: compare lowercase so "Pan India" === "pan india"
     const lm = location === "All" || d.location?.trim().toLowerCase() === location.trim().toLowerCase();
     return sm && cm && lm;
   });
@@ -709,7 +755,13 @@ export default function Home() {
     scrollToBrowse();
   };
 
+  // Admin: navigate to manage highlighted drives page
+  const handleManageHighlighted = () => navigate("/admin/highlighted-drives");
+
   const lastFavDrive = drives.find((d) => d.id === lastAddedId) || null;
+
+  // ── FIX 2: select class helper for dark-mode theming ──
+  const selectClass = dark ? "fd2-select-dark" : "fd2-select-light";
 
   const t = buildStyles(tk);
 
@@ -785,6 +837,7 @@ export default function Home() {
               </div>
               <div style={t.bannerControls} className="fd-banner-controls">
                 <select
+                  className={selectClass}
                   style={t.bannerSelect}
                   value={branch}
                   onChange={(e) => setBranch(e.target.value)}
@@ -794,6 +847,7 @@ export default function Home() {
                   {BRANCH_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 <select
+                  className={selectClass}
                   style={t.bannerSelect}
                   value={batch}
                   onChange={(e) => setBatch(e.target.value)}
@@ -840,7 +894,9 @@ export default function Home() {
               />
 
               <p style={t.filterHeading}>Location</p>
+              {/* ── FIX 2: dark-mode select via CSS class ── */}
               <select
+                className={selectClass}
                 style={t.dropDown}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -948,18 +1004,6 @@ export default function Home() {
           {/* ── FEED ── */}
           <main style={t.feed}>
 
-            {/* HIGHLIGHTED DRIVES (first row) */}
-            {featured.length > 0 && (
-              <HighlightedSlider
-                drives={featured}
-                dark={dark}
-                favorites={favorites}
-                onToggleFav={toggleFav}
-                tk={tk}
-                isAdmin={isAdmin}
-              />
-            )}
-
             {/* RECOMMENDED */}
             {!showBanner && branch && batch && (
               <section style={{ marginBottom: 8 }}>
@@ -1018,6 +1062,19 @@ export default function Home() {
 
                 <div style={t.recDivider} />
               </section>
+            )}
+
+            {/* ── FIX 3: HIGHLIGHTED DRIVES — between Recommended and Open Drives ── */}
+            {(highlighted.length > 0 || isAdmin) && (
+              <HighlightedDrivesSlider
+                drives={highlighted}
+                dark={dark}
+                favorites={favorites}
+                onToggleFav={toggleFav}
+                tk={tk}
+                isAdmin={isAdmin}
+                onManage={handleManageHighlighted}
+              />
             )}
 
             {/* ALL DRIVES */}
@@ -1167,10 +1224,10 @@ function buildStyles(tk) {
     bannerControls: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
     bannerSelect: {
       padding: "8px 12px", fontSize: 13,
-      border: `1px solid ${tk.glassBorder}`, borderRadius: 10,
-      fontFamily: "inherit", background: tk.inputBg, color: tk.text,
+      border: `1px solid ${tk.inputBorder}`,
+      borderRadius: 10,
+      fontFamily: "inherit",
       outline: "none", cursor: "pointer",
-      colorScheme: tk === DARK ? "dark" : "light",
       transition: "border-color 0.15s ease",
     },
     bannerBtn: {
@@ -1202,12 +1259,10 @@ function buildStyles(tk) {
     },
     dropDown: {
       width: "100%", padding: "9px 10px",
-      border: `1px solid ${tk.glassBorder}`,
+      border: `1px solid ${tk.inputBorder}`,
       borderRadius: 10, fontSize: 13,
       fontFamily: "inherit", letterSpacing: "-0.1px",
-      background: tk.inputBg, color: tk.text,
       outline: "none", cursor: "pointer",
-      colorScheme: tk === DARK ? "dark" : "light",
       transition: "border-color 0.15s ease",
     },
     clearFiltersSmall: {
