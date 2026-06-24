@@ -8,7 +8,7 @@ import useFavorites from "../UseFavorites";
 import Hero from "./Hero";
 import Logo from "../components/Logo";
 
-const CATEGORIES = ["All", "IT_SOFTWARE", "CORE_ENGINEERING", "GOVERNMENT", "BANKING", "MANAGEMENT", "INTERNSHIP","OTHERS"];
+const CATEGORIES = ["All", "IT_SOFTWARE", "CORE_ENGINEERING", "GOVERNMENT", "BANKING", "MANAGEMENT", "INTERNSHIP", "OTHERS"];
 const PAGE_SIZE = 9;
 
 const CATEGORY_LABELS = {
@@ -19,14 +19,14 @@ const CATEGORY_LABELS = {
   BANKING:          "Banking",
   MANAGEMENT:       "Management",
   INTERNSHIP:       "Internship",
-  OTHERS:          "Others",
+  OTHERS:           "Others",
 };
 
 const HERO_CATEGORY_MAP = {
-  "IT Services": "IT_SOFTWARE",
-  "Core Engineering": "CORE_ENGINEERING",
-  "Internships": "INTERNSHIP",
-  "Government": "GOVERNMENT",
+  "IT Services":       "IT_SOFTWARE",
+  "Core Engineering":  "CORE_ENGINEERING",
+  "Internships":       "INTERNSHIP",
+  "Government":        "GOVERNMENT",
 };
 
 const BRANCH_OPTIONS = [
@@ -35,97 +35,194 @@ const BRANCH_OPTIONS = [
 ];
 
 const BATCH_OPTIONS = ["2025", "2026", "2027", "2028"];
-
 const PROFILE_KEY = "fd_user_profile";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const DARK = {
-  bg: "#0c0b2b",
-  glass: "rgba(255,255,255,0.045)",
-  glassBorder: "rgba(255,255,255,0.1)",
-  text: "#ffffff",
-  textSecondary: "rgba(255,255,255,0.6)",
-  textMuted: "rgba(255,255,255,0.38)",
-  accent: "#6366f1",
-  accentLight: "#818cf8",
-  gradient: "linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%)",
-  warning: "#fbbf24",
-  pink: "#f472b6",
-  divider: "rgba(255,255,255,0.08)",
-  inputBg: "rgba(255,255,255,0.05)",
-  shadow: "0 20px 50px rgba(0,0,0,0.35)",
-  highlightGradient: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(192,132,252,0.10) 100%)",
-  highlightBorder: "rgba(129,140,248,0.3)",
+  bg:               "#080820",
+  bgAlt:            "#0d0d2b",
+  glass:            "rgba(255,255,255,0.04)",
+  glassMid:         "rgba(255,255,255,0.06)",
+  glassHover:       "rgba(255,255,255,0.08)",
+  glassBorder:      "rgba(255,255,255,0.09)",
+  glassBorderHover: "rgba(255,255,255,0.18)",
+  text:             "#f0f0ff",
+  textSecondary:    "rgba(240,240,255,0.55)",
+  textMuted:        "rgba(240,240,255,0.32)",
+  accent:           "#6366f1",
+  accentLight:      "#818cf8",
+  accentSoft:       "rgba(99,102,241,0.15)",
+  gradient:         "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+  gradientSubtle:   "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%)",
+  warning:          "#f59e0b",
+  warningTint:      "rgba(245,158,11,0.12)",
+  success:          "#10b981",
+  successTint:      "rgba(16,185,129,0.12)",
+  pink:             "#ec4899",
+  pinkTint:         "rgba(236,72,153,0.12)",
+  divider:          "rgba(255,255,255,0.07)",
+  inputBg:          "rgba(255,255,255,0.04)",
+  shadow:           "0 4px 24px rgba(0,0,0,0.4)",
+  shadowLg:         "0 20px 60px rgba(0,0,0,0.5)",
+  highlightGradient:"linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(139,92,246,0.07) 100%)",
+  highlightBorder:  "rgba(99,102,241,0.22)",
 };
 
 const LIGHT = {
-  bg: "#f6f5fb",
-  glass: "#ffffff",
-  glassBorder: "rgba(99,102,241,0.1)",
-  text: "#1e1b3a",
-  textSecondary: "rgba(30,27,58,0.6)",
-  textMuted: "rgba(30,27,58,0.4)",
-  accent: "#6366f1",
-  accentLight: "#6366f1",
-  gradient: "linear-gradient(135deg, #6366f1 0%, #9333ea 50%, #db2777 100%)",
-  warning: "#d97706",
-  pink: "#db2777",
-  divider: "rgba(99,102,241,0.1)",
-  inputBg: "#f8f7fc",
-  shadow: "0 20px 50px rgba(76,29,149,0.08)",
-  highlightGradient: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(147,51,234,0.04) 100%)",
-  highlightBorder: "rgba(99,102,241,0.2)",
+  bg:               "#f4f3fa",
+  bgAlt:            "#ffffff",
+  glass:            "#ffffff",
+  glassMid:         "#fafafa",
+  glassHover:       "#f8f7ff",
+  glassBorder:      "rgba(99,102,241,0.10)",
+  glassBorderHover: "rgba(99,102,241,0.25)",
+  text:             "#1a1740",
+  textSecondary:    "rgba(26,23,64,0.55)",
+  textMuted:        "rgba(26,23,64,0.38)",
+  accent:           "#6366f1",
+  accentLight:      "#6366f1",
+  accentSoft:       "rgba(99,102,241,0.08)",
+  gradient:         "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+  gradientSubtle:   "linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.03) 100%)",
+  warning:          "#d97706",
+  warningTint:      "rgba(217,119,6,0.08)",
+  success:          "#059669",
+  successTint:      "rgba(5,150,105,0.08)",
+  pink:             "#db2777",
+  pinkTint:         "rgba(219,39,119,0.08)",
+  divider:          "rgba(99,102,241,0.08)",
+  inputBg:          "#f8f7fc",
+  shadow:           "0 4px 24px rgba(99,102,241,0.08)",
+  shadowLg:         "0 20px 60px rgba(76,29,149,0.10)",
+  highlightGradient:"linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.03) 100%)",
+  highlightBorder:  "rgba(99,102,241,0.15)",
 };
 
+// ── Global styles ──────────────────────────────────────────────────────────
 const STYLE_BLOCK = `
-  @keyframes fd2-shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
-  @keyframes fd2-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fd2-pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  @keyframes fd2-shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  @keyframes fd2-card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fd2-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes fd2-pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.85); }
+  }
+  @keyframes fd2-slide-in {
+    from { opacity: 0; transform: translateX(18px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
   .fd2-skel {
-    background: linear-gradient(90deg, rgba(129,140,248,0.08) 25%, rgba(129,140,248,0.18) 37%, rgba(129,140,248,0.08) 63%);
-    background-size: 400px 100%;
-    animation: fd2-shimmer 1.4s ease-in-out infinite;
+    background: linear-gradient(90deg,
+      rgba(129,140,248,0.06) 25%,
+      rgba(129,140,248,0.14) 37%,
+      rgba(129,140,248,0.06) 63%
+    );
+    background-size: 600px 100%;
+    animation: fd2-shimmer 1.6s ease-in-out infinite;
     border-radius: 10px;
   }
-  .fd2-card-in { animation: fd2-card-in 0.45s ease both; }
-  .fd2-focus:focus-visible { outline: 2px solid #818cf8; outline-offset: 3px; border-radius: 8px; }
-  .fd2-glass-card { transition: border-color 0.2s ease, transform 0.2s ease; }
-  .fd2-glass-card:hover { transform: translateY(-2px); }
-  .fd2-search-wrap:focus-within { box-shadow: 0 0 0 3px rgba(129,140,248,0.18); border-radius: 10px; }
-  .fd2-page-btn { transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+  .fd2-card-in   { animation: fd2-card-in 0.45s ease both; }
+  .fd2-slide-in  { animation: fd2-slide-in 0.38s cubic-bezier(0.22,1,0.36,1) both; }
+  .fd2-fade-in   { animation: fd2-fade-in 0.3s ease both; }
+
+  .fd2-focus:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+  .fd2-glass-card {
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .fd2-glass-card:hover {
+    transform: translateY(-1px);
+  }
+  .fd2-search-wrap:focus-within {
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    border-radius: 12px;
+  }
+  .fd2-page-btn {
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
   .fd2-page-btn:hover { transform: translateY(-1px); }
-  .fd2-fav-row { transition: background 0.15s ease; }
-  .fd2-fav-row:hover { background: rgba(129,140,248,0.08); }
-  .fd2-hl-track::-webkit-scrollbar { display: none; }
-  .fd2-hl-track { -ms-overflow-style: none; scrollbar-width: none; }
-  .fd2-dot-btn { transition: transform 0.15s ease, opacity 0.15s ease; }
-  .fd2-dot-btn:hover { transform: scale(1.3); }
+  .fd2-fav-row   { transition: background 0.15s ease; }
+  .fd2-dot-btn   { transition: width 0.3s ease, background 0.3s ease, transform 0.15s ease; }
+  .fd2-dot-btn:hover { transform: scale(1.2); }
+
+  .fd2-stat-card {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .fd2-stat-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .fd2-hl-card-wrap {
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .fd2-arrow-btn {
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+  }
+  .fd2-arrow-btn:hover {
+    transform: scale(1.08);
+  }
+
+  /* Scrollbar hide for rec track */
+  .fd2-no-scroll::-webkit-scrollbar { display: none; }
+  .fd2-no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
   @media (prefers-reduced-motion: reduce) {
-    .fd2-skel { animation: none; }
-    .fd2-card-in { animation: none; }
-    .fd2-glass-card:hover, .fd2-page-btn:hover { transform: none; }
+    .fd2-skel     { animation: none; }
+    .fd2-card-in,
+    .fd2-slide-in,
+    .fd2-fade-in  { animation: none; }
+    .fd2-glass-card:hover,
+    .fd2-page-btn:hover,
+    .fd2-stat-card:hover { transform: none; }
+  }
+
+  /* Responsive overrides */
+  @media (max-width: 900px) {
+    .fd-layout { grid-template-columns: 1fr !important; }
+    .fd-sidebar { position: static !important; }
+  }
+  @media (max-width: 640px) {
+    .fd-topbar { padding: 10px 16px !important; gap: 10px !important; }
+    .fd-layout  { padding: 14px 16px !important; }
+    .fd2-kbd-hint { display: none !important; }
   }
 `;
 
+// ── Ambient glow (dark mode only) ─────────────────────────────────────────
 function AmbientGlow() {
   return (
     <div aria-hidden="true" style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
-      <div style={{ position: "absolute", top: "-8%", right: "-6%", width: "42%", height: "42%", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.10), transparent 70%)" }} />
-      <div style={{ position: "absolute", bottom: "8%", left: "-8%", width: "38%", height: "38%", borderRadius: "50%", background: "radial-gradient(circle, rgba(192,132,252,0.06), transparent 70%)" }} />
+      <div style={{ position: "absolute", top: "-10%", right: "-5%",  width: "45%", height: "45%", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)" }} />
+      <div style={{ position: "absolute", bottom: "5%",  left: "-10%", width: "40%", height: "40%", borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)" }} />
+      <div style={{ position: "absolute", top: "50%",   left: "50%",  width: "30%", height: "30%", borderRadius: "50%", transform: "translate(-50%,-50%)", background: "radial-gradient(circle, rgba(236,72,153,0.03) 0%, transparent 70%)" }} />
     </div>
   );
 }
 
+// ── Category tabs with animated pill ──────────────────────────────────────
 function CategoryTabs({ categories, labels, active, onChange, tk }) {
-  const containerRef = useRef(null);
   const btnRefs = useRef({});
   const [box, setBox] = useState({ top: 0, left: 0, width: 0, height: 0 });
 
   const measure = () => {
     const el = btnRefs.current[active];
-    if (el) {
-      setBox({ top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight });
-    }
+    if (el) setBox({ top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight });
   };
 
   useLayoutEffect(() => { measure(); }, [active]);
@@ -135,19 +232,18 @@ function CategoryTabs({ categories, labels, active, onChange, tk }) {
   }, [active]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: "relative", display: "flex", gap: 4, flexWrap: "wrap",
-        background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
-        borderRadius: 14, padding: 5, marginBottom: 18,
-      }}
-    >
+    <div style={{
+      position: "relative", display: "flex", gap: 3, flexWrap: "wrap",
+      background: tk.glass, border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 14, padding: 4, marginBottom: 20,
+    }}>
       <div style={{
-        position: "absolute", top: box.top, left: box.left, width: box.width, height: box.height,
+        position: "absolute",
+        top: box.top, left: box.left, width: box.width, height: box.height,
         borderRadius: 10, background: tk.gradient,
-        transition: "top 0.35s cubic-bezier(0.34,1.56,0.64,1), left 0.35s cubic-bezier(0.34,1.56,0.64,1), width 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+        transition: "all 0.35s cubic-bezier(0.34,1.56,0.64,1)",
         zIndex: 0,
+        boxShadow: "0 2px 12px rgba(99,102,241,0.35)",
       }} />
       {categories.map((c) => (
         <button
@@ -158,7 +254,7 @@ function CategoryTabs({ categories, labels, active, onChange, tk }) {
           onClick={() => onChange(c)}
           style={{
             position: "relative", zIndex: 1,
-            padding: "8px 14px", fontSize: 13, fontWeight: active === c ? 700 : 500,
+            padding: "8px 15px", fontSize: 12.5, fontWeight: active === c ? 700 : 500,
             fontFamily: "inherit", letterSpacing: "-0.1px", whiteSpace: "nowrap",
             border: "none", borderRadius: 10, cursor: "pointer",
             background: "transparent",
@@ -173,6 +269,7 @@ function CategoryTabs({ categories, labels, active, onChange, tk }) {
   );
 }
 
+// ── Panel header ──────────────────────────────────────────────────────────
 function PanelHeader({ icon, iconBg, title, badge, onClick, tk }) {
   return (
     <div
@@ -183,14 +280,21 @@ function PanelHeader({ icon, iconBg, title, badge, onClick, tk }) {
       className={onClick ? "fd2-focus" : undefined}
       style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, cursor: onClick ? "pointer" : "default" }}
     >
-      <div style={{ width: 26, height: 26, borderRadius: 8, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: 8, background: iconBg,
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
         {icon}
       </div>
-      <span style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.2px", color: tk.text }}>
+      <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.2px", color: tk.text }}>
         {title}
       </span>
       {!!badge && (
-        <span style={{ fontSize: 11, fontWeight: 700, color: tk.pink, background: tk.pink + "1A", borderRadius: 999, padding: "1px 7px" }}>
+        <span style={{
+          fontSize: 10.5, fontWeight: 700, color: tk.pink,
+          background: tk.pinkTint, borderRadius: 999, padding: "2px 8px",
+          border: `1px solid ${tk.pink}22`,
+        }}>
           {badge}
         </span>
       )}
@@ -203,158 +307,308 @@ function PanelHeader({ icon, iconBg, title, badge, onClick, tk }) {
   );
 }
 
+// ── Skeleton card ─────────────────────────────────────────────────────────
 function SkeletonCard({ tk }) {
   return (
-    <div style={{ background: tk.glass, border: `0.5px solid ${tk.glassBorder}`, borderRadius: 16, padding: 16, minHeight: 168 }}>
-      <div className="fd2-skel" style={{ width: 38, height: 38, borderRadius: 10, marginBottom: 14 }} />
-      <div className="fd2-skel" style={{ width: "70%", height: 13, marginBottom: 8 }} />
-      <div className="fd2-skel" style={{ width: "50%", height: 11, marginBottom: 18 }} />
-      <div className="fd2-skel" style={{ width: "40%", height: 11 }} />
+    <div style={{ background: tk.glass, border: `1px solid ${tk.glassBorder}`, borderRadius: 16, padding: 18, minHeight: 172 }}>
+      <div className="fd2-skel" style={{ width: 40, height: 40, borderRadius: 10, marginBottom: 14 }} />
+      <div className="fd2-skel" style={{ width: "68%", height: 13, marginBottom: 8 }} />
+      <div className="fd2-skel" style={{ width: "48%", height: 11, marginBottom: 20 }} />
+      <div className="fd2-skel" style={{ width: "38%", height: 11 }} />
     </div>
   );
 }
 
-// ── Highlighted Drives Slider ──────────────────────────────────────────────
-// Shows 1 card at a time, auto-scrolls every 4 seconds, manual arrows.
-function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk }) {
+// ── Highlighted Drives Slider — 2 at a time ───────────────────────────────
+function HighlightedSlider({ drives, dark, favorites, onToggleFav, tk, isAdmin }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef(null);
+  const [paused, setPaused] = useState(false);
 
   const total = drives.length;
+  // We show 2 at a time; pages = ceil(total/2)
+  const pageCount = Math.ceil(total / 2);
 
-  const go = (idx) => {
-    setCurrent((idx + total) % total);
+  const go = (pageIdx) => {
+    const clamped = ((pageIdx % pageCount) + pageCount) % pageCount;
+    setCurrent(clamped);
   };
 
-  // Reset and restart timer whenever current changes
   useEffect(() => {
-    if (total <= 1) return;
+    if (pageCount <= 1 || paused) return;
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % total);
-    }, 4000);
+      setCurrent((prev) => (prev + 1) % pageCount);
+    }, 5000);
     return () => clearInterval(timerRef.current);
-  }, [current, total]);
+  }, [current, pageCount, paused]);
 
   if (total === 0) return null;
 
+  const startIdx = current * 2;
+  const visibleDrives = drives.slice(startIdx, startIdx + 2);
+
   return (
-    <section style={{
-      background: tk.highlightGradient,
-      border: `0.5px solid ${tk.highlightBorder}`,
-      borderRadius: 20,
-      padding: "20px 20px 16px",
-      marginBottom: 28,
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Animated live dot */}
+    <section
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      style={{
+        background: tk.highlightGradient,
+        border: `1px solid ${tk.highlightBorder}`,
+        borderRadius: 20,
+        padding: "22px 22px 18px",
+        marginBottom: 32,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Subtle decorative corner accent */}
+      <div aria-hidden style={{
+        position: "absolute", top: 0, right: 0,
+        width: 200, height: 200,
+        background: "radial-gradient(circle at top right, rgba(139,92,246,0.07) 0%, transparent 65%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
             width: 8, height: 8, borderRadius: "50%",
-            background: tk.gradient,
-            display: "inline-block",
+            background: tk.gradient, display: "inline-block",
             animation: "fd2-pulse-dot 2s ease-in-out infinite",
             boxShadow: `0 0 0 3px ${tk.accent}22`,
+            flexShrink: 0,
           }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: tk.text, letterSpacing: "-0.2px" }}>
-            Highlighted drives
+          <span style={{ fontSize: 14.5, fontWeight: 700, color: tk.text, letterSpacing: "-0.3px" }}>
+            Featured Drives
           </span>
           <span style={{
             fontSize: 11, fontWeight: 700,
             background: tk.gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            border: `0.5px solid ${tk.highlightBorder}`,
-            borderRadius: 999, padding: "2px 8px",
+            border: `1px solid ${tk.highlightBorder}`,
+            borderRadius: 999, padding: "2px 10px",
           }}>
             {total} featured
           </span>
         </div>
 
-        {/* Arrow controls */}
-        {total > 1 && (
-          <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {isAdmin && (
             <button
-              className="fd2-focus"
-              onClick={() => go(current - 1)}
-              aria-label="Previous"
+              className="fd2-focus fd2-arrow-btn"
+              title="Manage featured drives"
               style={{
-                width: 30, height: 30, borderRadius: "50%",
-                background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
-                cursor: "pointer", color: tk.textSecondary,
-                fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 600, color: tk.accentLight,
+                background: tk.accentSoft, border: `1px solid ${tk.accent}30`,
+                borderRadius: 8, padding: "5px 12px", cursor: "pointer",
+                fontFamily: "inherit",
               }}
-            >‹</button>
-            <button
-              className="fd2-focus"
-              onClick={() => go(current + 1)}
-              aria-label="Next"
-              style={{
-                width: 30, height: 30, borderRadius: "50%",
-                background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
-                cursor: "pointer", color: tk.textSecondary,
-                fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >›</button>
-          </div>
-        )}
+            >
+              ✦ Manage
+            </button>
+          )}
+          {pageCount > 1 && (
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                className="fd2-focus fd2-arrow-btn"
+                onClick={() => go(current - 1)}
+                aria-label="Previous"
+                style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: tk.glass, border: `1px solid ${tk.glassBorder}`,
+                  cursor: "pointer", color: tk.textSecondary, fontSize: 18,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  backdropFilter: "blur(8px)",
+                }}
+              >‹</button>
+              <button
+                className="fd2-focus fd2-arrow-btn"
+                onClick={() => go(current + 1)}
+                aria-label="Next"
+                style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: tk.glass, border: `1px solid ${tk.glassBorder}`,
+                  cursor: "pointer", color: tk.textSecondary, fontSize: 18,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  backdropFilter: "blur(8px)",
+                }}
+              >›</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Single card view */}
-      <div style={{ position: "relative", minHeight: 180 }}>
-        <div
-          key={current}
-          className="fd2-card-in"
-          style={{ width: "100%" }}
-        >
+      {/* 2-card grid */}
+      <div
+        key={current}
+        className="fd2-slide-in"
+        style={{
+          display: "grid",
+          gridTemplateColumns: visibleDrives.length === 2 ? "1fr 1fr" : "1fr",
+          gap: 14,
+        }}
+      >
+        {visibleDrives.map((drive) => (
           <DriveCard
-            drive={drives[current]}
+            key={drive.id}
+            drive={drive}
             dark={dark}
             favorites={favorites}
             onToggleFav={onToggleFav}
           />
-        </div>
+        ))}
       </div>
 
-      {/* Dot indicators */}
-      {total > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 14 }}>
-          {Array.from({ length: total }).map((_, i) => (
+      {/* Dot indicators + progress */}
+      {pageCount > 1 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 16 }}>
+          {Array.from({ length: pageCount }).map((_, i) => (
             <button
               key={i}
               className="fd2-dot-btn fd2-focus"
               onClick={() => go(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={`Page ${i + 1}`}
               style={{
-                width: i === current ? 20 : 6,
-                height: 6, borderRadius: 999,
-                border: "none", cursor: "pointer", padding: 0,
+                width: i === current ? 22 : 6, height: 6,
+                borderRadius: 999, border: "none", cursor: "pointer", padding: 0,
                 background: i === current ? tk.accent : tk.glassBorder,
-                transition: "width 0.3s ease, background 0.3s ease",
               }}
             />
           ))}
+
+          {/* Thin progress bar below dots */}
+          {!paused && (
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, overflow: "hidden", borderRadius: "0 0 20px 20px" }}>
+              <div
+                key={`${current}-progress`}
+                style={{
+                  height: "100%",
+                  background: tk.gradient,
+                  animation: "fd2-hl-progress 5s linear forwards",
+                  transformOrigin: "left",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
+
+      <style>{`@keyframes fd2-hl-progress { from { width: 0% } to { width: 100% } }`}</style>
     </section>
   );
 }
 
+// ── Quick stats sidebar panel ─────────────────────────────────────────────
+function QuickStats({ drives, tk }) {
+  const newThisWeek = useMemo(() => {
+    const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    return drives.filter((d) => d.postedAt && new Date(d.postedAt).getTime() > cutoff).length;
+  }, [drives]);
+
+  const catCounts = useMemo(() => {
+    const map = {};
+    drives.forEach((d) => { if (d.category) map[d.category] = (map[d.category] || 0) + 1; });
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+  }, [drives]);
+
+  const stats = [
+    { label: "Total drives",  value: drives.length, color: tk.accent,   bg: tk.accentSoft },
+    { label: "New this week", value: newThisWeek,    color: tk.success,  bg: tk.successTint },
+  ];
+
+  return (
+    <div>
+      <PanelHeader
+        tk={tk}
+        iconBg={tk.accentSoft}
+        title="At a glance"
+        icon={
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke={tk.accentLight} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        }
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="fd2-stat-card"
+            style={{
+              background: s.bg,
+              border: `1px solid ${s.color}22`,
+              borderRadius: 12, padding: "12px 10px",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-1px", lineHeight: 1 }}>
+              {drives.length === 0 ? "—" : s.value}
+            </div>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: tk.textMuted, marginTop: 4, letterSpacing: "0.2px" }}>
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {catCounts.length > 0 && (
+        <>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: tk.textMuted, letterSpacing: "0.6px", textTransform: "uppercase", marginBottom: 8 }}>
+            Top sectors
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {catCounts.map(([cat, count]) => {
+              const pct = Math.round((count / drives.length) * 100);
+              return (
+                <div key={cat}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: tk.textSecondary }}>
+                      {CATEGORY_LABELS[cat] || cat}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: tk.textMuted }}>{count}</span>
+                  </div>
+                  <div style={{ height: 3, background: tk.divider, borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", borderRadius: 99,
+                      background: tk.gradient,
+                      width: `${pct}%`,
+                      transition: "width 0.6s ease",
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Main Home component ────────────────────────────────────────────────────
 export default function Home() {
   const { dark, setDark } = useTheme();
   const navigate = useNavigate();
   const tk = dark ? DARK : LIGHT;
 
+  // Check admin role — adjust to your actual auth logic
+  const isAdmin = useMemo(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("fd_user") || "{}");
+      return user?.role === "ADMIN" || user?.role === "EMPLOYER";
+    } catch { return false; }
+  }, []);
+
   const browseDrivesRef = useRef(null);
   const howItWorksRef   = useRef(null);
   const searchInputRef  = useRef(null);
 
-  const scrollToBrowse = () =>
-    browseDrivesRef.current?.scrollIntoView({ behavior: "smooth" });
-
-  const scrollToHowItWorks = () =>
-    howItWorksRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBrowse    = () => browseDrivesRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToHowItWorks = () => howItWorksRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const [drives,      setDrives]      = useState([]);
   const [featured,    setFeatured]    = useState([]);
@@ -362,7 +616,6 @@ export default function Home() {
   const [loading,     setLoading]     = useState(true);
   const [category,    setCategory]    = useState("All");
   const [location,    setLocation]    = useState("All");
-  const [role,        setRole]        = useState("All");
   const [page,        setPage]        = useState(1);
 
   const savedProfile = (() => {
@@ -375,28 +628,27 @@ export default function Home() {
   const [recLoading,  setRecLoading]  = useState(false);
 
   const { favorites, toggleFav, lastAddedId } = useFavorites();
-
   const recTrackRef = useRef(null);
-  const scrollRec = (dir) => {
-    recTrackRef.current?.scrollBy({ left: dir * 290, behavior: "smooth" });
-  };
+  const scrollRec = (dir) => recTrackRef.current?.scrollBy({ left: dir * 290, behavior: "smooth" });
 
-  const locations = useMemo(
-    () => [...new Set(drives.map((d) => d.location).filter(Boolean))].sort(),
-    [drives]
-  );
-
-  const roles = useMemo(
-    () => [...new Set(drives.map((d) => d.jobRole).filter(Boolean))].sort(),
-    [drives]
-  );
+  // Deduplicated, sorted locations (case-insensitive)
+  const locations = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    drives.forEach((d) => {
+      if (!d.location) return;
+      const norm = d.location.trim();
+      const key  = norm.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); result.push(norm); }
+    });
+    return result.sort((a, b) => a.localeCompare(b));
+  }, [drives]);
 
   useEffect(() => {
     axios.get("/drives")
       .then((res) => { setDrives(res.data); setLoading(false); })
       .catch(()   => setLoading(false));
 
-    // Fetch featured/highlighted drives
     axios.get("/drives/featured")
       .then((res) => setFeatured(res.data))
       .catch(()   => setFeatured([]));
@@ -405,14 +657,16 @@ export default function Home() {
   useEffect(() => {
     if (!branch || !batch) return;
     setRecLoading(true);
-    axios.get(`/drives/recommended?branch=${encodeURIComponent(branch)}&batch=${encodeURIComponent(batch)}`)
+    axios
+      .get(`/drives/recommended?branch=${encodeURIComponent(branch)}&batch=${encodeURIComponent(batch)}`)
       .then((res) => setRecommended(res.data))
       .catch(()   => setRecommended([]))
       .finally(() => setRecLoading(false));
   }, [branch, batch]);
 
-  useEffect(() => { setPage(1); }, [search, category, location, role]);
+  useEffect(() => { setPage(1); }, [search, category, location]);
 
+  // "/" shortcut to focus search
   useEffect(() => {
     const onKeyDown = (e) => {
       const tag = document.activeElement?.tagName;
@@ -427,12 +681,10 @@ export default function Home() {
 
   const filtered = drives.filter((d) => {
     const q  = search.toLowerCase();
-    const sm = d.companyName?.toLowerCase().includes(q) ||
-               d.jobRole?.toLowerCase().includes(q);
+    const sm = d.companyName?.toLowerCase().includes(q) || d.jobRole?.toLowerCase().includes(q);
     const cm = category === "All" || d.category === category;
-    const lm = location === "All" || d.location === location;
-    const rm = role     === "All" || d.jobRole  === role;
-    return sm && cm && lm && rm;
+    const lm = location === "All" || d.location?.trim().toLowerCase() === location.trim().toLowerCase();
+    return sm && cm && lm;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -446,15 +698,10 @@ export default function Home() {
 
   const handleResetProfile = () => {
     localStorage.removeItem(PROFILE_KEY);
-    setBranch("");
-    setBatch("");
-    setRecommended([]);
-    setShowBanner(true);
+    setBranch(""); setBatch(""); setRecommended([]); setShowBanner(true);
   };
 
-  const handleClearFilters = () => {
-    setSearch(""); setCategory("All"); setLocation("All"); setRole("All");
-  };
+  const handleClearFilters = () => { setSearch(""); setCategory("All"); setLocation("All"); };
 
   const handleHeroCategoryClick = (label) => {
     const mapped = HERO_CATEGORY_MAP[label];
@@ -493,30 +740,26 @@ export default function Home() {
             <input
               ref={searchInputRef}
               style={t.search}
-              className="fd-search"
-              placeholder="Search companies, roles, locations…"
+              placeholder="Search companies, roles…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search drives"
             />
-            <span style={t.kbdHint}>/</span>
+            <span className="fd2-kbd-hint" style={t.kbdHint}>/</span>
           </div>
 
-          <button style={t.darkBtn} className="fd2-focus" onClick={() => setDark(!dark)} title="Toggle theme">
+          <button style={t.darkBtn} className="fd2-focus" onClick={() => setDark(!dark)} title="Toggle theme" aria-label="Toggle theme">
             {dark ? (
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="5"/>
-                <line x1="12" y1="1"  x2="12" y2="3"/>
-                <line x1="12" y1="21" x2="12" y2="23"/>
-                <line x1="4.22" y1="4.22"   x2="5.64"  y2="5.64"/>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                <line x1="1"  y1="12" x2="3"  y2="12"/>
-                <line x1="21" y1="12" x2="23" y2="12"/>
-                <line x1="4.22" y1="19.78" x2="5.64"  y2="18.36"/>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             ) : (
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
               </svg>
@@ -529,24 +772,43 @@ export default function Home() {
           <div style={t.banner}>
             <div style={t.bannerInner}>
               <div style={t.bannerLeft}>
-                <div style={t.bannerIcon}>✨</div>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+                  background: tk.gradient,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 18, boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
+                }}>✨</div>
                 <div>
-                  <div style={t.bannerTitle}>Get personalised drive recommendations</div>
-                  <div style={t.bannerSub}>Tell us your department and batch — we'll surface the most relevant drives for you.</div>
+                  <div style={t.bannerTitle}>Get personalised recommendations</div>
+                  <div style={t.bannerSub}>Select your department and batch to surface the most relevant drives.</div>
                 </div>
               </div>
               <div style={t.bannerControls} className="fd-banner-controls">
-                <select style={t.bannerSelect} value={branch} onChange={(e) => setBranch(e.target.value)}>
-                  <option value="">Select department</option>
+                <select
+                  style={t.bannerSelect}
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  aria-label="Select department"
+                >
+                  <option value="">Department</option>
                   {BRANCH_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
-                <select style={t.bannerSelect} value={batch} onChange={(e) => setBatch(e.target.value)}>
-                  <option value="">Select batch</option>
+                <select
+                  style={t.bannerSelect}
+                  value={batch}
+                  onChange={(e) => setBatch(e.target.value)}
+                  aria-label="Select batch"
+                >
+                  <option value="">Batch year</option>
                   {BATCH_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 <button
                   className="fd2-focus"
-                  style={{ ...t.bannerBtn, opacity: branch && batch ? 1 : 0.45, cursor: branch && batch ? "pointer" : "not-allowed" }}
+                  style={{
+                    ...t.bannerBtn,
+                    opacity: branch && batch ? 1 : 0.42,
+                    cursor: branch && batch ? "pointer" : "not-allowed",
+                  }}
                   onClick={handleSaveProfile}
                   disabled={!branch || !batch}
                 >
@@ -563,32 +825,67 @@ export default function Home() {
           {/* LEFT SIDEBAR */}
           <aside style={t.sidebar} className="fd-sidebar">
 
+            {/* Filters card */}
             <div style={t.card} className="fd2-glass-card">
+              <PanelHeader
+                tk={tk}
+                iconBg={tk.accentSoft}
+                title="Filter drives"
+                icon={
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke={tk.accentLight} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  </svg>
+                }
+              />
+
               <p style={t.filterHeading}>Location</p>
-              <select style={t.dropDown} value={location} onChange={(e) => setLocation(e.target.value)}>
+              <select
+                style={t.dropDown}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                aria-label="Filter by location"
+              >
                 <option value="All">All locations</option>
-                {locations.map((l) => <option key={l} value={l}>{l}</option>)}
+                {locations.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
               </select>
 
-              <p style={{ ...t.filterHeading, marginTop: "18px" }}>Job role</p>
-              <select style={t.dropDown} value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="All">All roles</option>
-                {roles.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+              {(search || category !== "All" || location !== "All") && (
+                <button
+                  className="fd2-focus"
+                  style={t.clearFiltersSmall}
+                  onClick={handleClearFilters}
+                >
+                  ✕ Clear filters
+                </button>
+              )}
 
               {!showBanner && branch && batch && (
                 <div style={t.profileChip}>
-                  <span style={t.profileChipText}>{branch} · {batch}</span>
-                  <button style={t.profileChipReset} className="fd2-focus" onClick={handleResetProfile} title="Change">✕</button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: tk.gradient, flexShrink: 0,
+                    }} />
+                    <span style={t.profileChipText}>{branch} · {batch}</span>
+                  </div>
+                  <button style={t.profileChipReset} className="fd2-focus" onClick={handleResetProfile} title="Change profile">✕</button>
                 </div>
               )}
+            </div>
+
+            {/* Quick Stats */}
+            <div style={t.card} className="fd2-glass-card">
+              <QuickStats drives={drives} tk={tk} />
             </div>
 
             {/* Expiring Soon */}
             <div style={t.card} className="fd2-glass-card">
               <PanelHeader
                 tk={tk}
-                iconBg={tk.warning + "20"}
+                iconBg={tk.warningTint}
                 title="Expiring soon"
                 icon={
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -604,9 +901,9 @@ export default function Home() {
             <div style={t.card} className="fd2-glass-card">
               <PanelHeader
                 tk={tk}
-                iconBg={tk.pink + "20"}
+                iconBg={tk.pinkTint}
                 title="Saved drives"
-                badge={favorites.size}
+                badge={favorites.size || undefined}
                 onClick={() => navigate("/saved-drives")}
                 icon={
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -616,19 +913,27 @@ export default function Home() {
                 }
               />
               {!lastFavDrive ? (
-                <p style={{ fontSize: "12px", color: tk.textMuted, marginTop: "2px", lineHeight: "1.6" }}>
+                <p style={{ fontSize: 12, color: tk.textMuted, lineHeight: 1.65, margin: 0 }}>
                   Tap the heart on any drive card to save it here.
                 </p>
               ) : (
                 <div>
-                  <div style={t.favItem} className="fd2-fav-row" onClick={() => navigate(`/drives/${lastFavDrive.id}`)}>
+                  <div
+                    style={t.favItem}
+                    className="fd2-fav-row"
+                    onClick={() => navigate(`/drives/${lastFavDrive.id}`)}
+                  >
                     <div style={t.favDot}>{lastFavDrive.companyName?.charAt(0)?.toUpperCase()}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={t.favCompany}>{lastFavDrive.companyName}</div>
                       <div style={t.favRole}>{lastFavDrive.jobRole}</div>
                     </div>
-                    <button style={t.favRemove} className="fd2-focus" title="Remove"
-                      onClick={(e) => { e.stopPropagation(); toggleFav(lastFavDrive.id); }}>✕</button>
+                    <button
+                      style={t.favRemove}
+                      className="fd2-focus"
+                      title="Remove"
+                      onClick={(e) => { e.stopPropagation(); toggleFav(lastFavDrive.id); }}
+                    >✕</button>
                   </div>
                   {favorites.size > 1 && (
                     <button style={t.favMoreBtn} className="fd2-focus" onClick={() => navigate("/saved-drives")}>
@@ -638,13 +943,12 @@ export default function Home() {
                 </div>
               )}
             </div>
-
           </aside>
 
-          {/* FEED */}
+          {/* ── FEED ── */}
           <main style={t.feed}>
 
-            {/* ── HIGHLIGHTED DRIVES SLIDER ── */}
+            {/* HIGHLIGHTED DRIVES (first row) */}
             {featured.length > 0 && (
               <HighlightedSlider
                 drives={featured}
@@ -652,16 +956,18 @@ export default function Home() {
                 favorites={favorites}
                 onToggleFav={toggleFav}
                 tk={tk}
+                isAdmin={isAdmin}
               />
             )}
 
-            {/* ── RECOMMENDED SECTION (SLIDER) ── */}
+            {/* RECOMMENDED */}
             {!showBanner && branch && batch && (
-              <section style={t.recSection}>
+              <section style={{ marginBottom: 8 }}>
                 <div style={t.feedHeader}>
                   <div>
                     <div style={t.feedTitle}>
-                      <span style={t.eyebrowDot} /> Recommended for {branch} · {batch}
+                      <span style={t.eyebrowDot} />
+                      Recommended for {branch} · {batch}
                     </div>
                     <div style={t.feedSub}>Matched to your department and batch year</div>
                   </div>
@@ -674,7 +980,7 @@ export default function Home() {
 
                 {recLoading && (
                   <div style={t.sliderWrap}>
-                    <div style={t.recTrack}>
+                    <div style={t.recTrack} className="fd2-no-scroll">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <div key={i} style={t.recCardWrap}><SkeletonCard tk={tk} /></div>
                       ))}
@@ -687,18 +993,26 @@ export default function Home() {
                 )}
 
                 {!recLoading && recommended.length > 0 && (
-                  <div style={t.sliderWrap} className="fd-slider-wrap">
-                    <button style={{ ...t.sliderArrow, left: "-16px" }} className="fd-slider-arrow fd2-focus"
-                      onClick={() => scrollRec(-1)} aria-label="Scroll left">‹</button>
-                    <div ref={recTrackRef} style={t.recTrack}>
+                  <div style={t.sliderWrap}>
+                    <button
+                      style={{ ...t.sliderArrow, left: "-14px" }}
+                      className="fd2-arrow-btn fd2-focus"
+                      onClick={() => scrollRec(-1)}
+                      aria-label="Scroll recommended left"
+                    >‹</button>
+                    <div ref={recTrackRef} style={t.recTrack} className="fd2-no-scroll">
                       {recommended.map((drive, i) => (
                         <div key={drive.id} className="fd2-card-in" style={{ ...t.recCardWrap, animationDelay: `${i * 40}ms` }}>
                           <DriveCard drive={drive} dark={dark} favorites={favorites} onToggleFav={toggleFav} />
                         </div>
                       ))}
                     </div>
-                    <button style={{ ...t.sliderArrow, right: "-16px" }} className="fd-slider-arrow fd2-focus"
-                      onClick={() => scrollRec(1)} aria-label="Scroll right">›</button>
+                    <button
+                      style={{ ...t.sliderArrow, right: "-14px" }}
+                      className="fd2-arrow-btn fd2-focus"
+                      onClick={() => scrollRec(1)}
+                      aria-label="Scroll recommended right"
+                    >›</button>
                   </div>
                 )}
 
@@ -706,39 +1020,48 @@ export default function Home() {
               </section>
             )}
 
-            {/* ── ALL DRIVES ── */}
+            {/* ALL DRIVES */}
             <div ref={browseDrivesRef}>
               <div style={t.feedHeader}>
                 <div>
-                  <div style={t.feedTitle}><span style={t.eyebrowDot} /> Open drives</div>
+                  <div style={t.feedTitle}>
+                    <span style={t.eyebrowDot} />
+                    Open Drives
+                  </div>
                   <div style={t.feedSub}>Freshest opportunities, updated daily</div>
                 </div>
                 <span style={t.countBadge}>
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
               </div>
-              <CategoryTabs categories={CATEGORIES} labels={CATEGORY_LABELS} active={category} onChange={setCategory} tk={tk} />
+              <CategoryTabs
+                categories={CATEGORIES}
+                labels={CATEGORY_LABELS}
+                active={category}
+                onChange={setCategory}
+                tk={tk}
+              />
             </div>
 
             <div ref={howItWorksRef} />
 
             {loading && (
-              <div style={t.grid} className="fd-grid">
+              <div style={t.grid}>
                 {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} tk={tk} />)}
               </div>
             )}
 
             {!loading && filtered.length === 0 && (
               <div style={t.emptyState}>
-                <div style={{ fontSize: 26, marginBottom: 8 }}>🔍</div>
-                <div style={{ fontWeight: 700, color: tk.text, marginBottom: 4 }}>No drives match these filters</div>
-                <div style={{ marginBottom: 16 }}>Try widening your search or clearing filters.</div>
+                <div style={{ fontSize: 30, marginBottom: 10 }}>🔍</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: tk.text, marginBottom: 6 }}>No drives match these filters</div>
+                <div style={{ marginBottom: 20, fontSize: 13 }}>Try widening your search or clearing filters.</div>
                 <button className="fd2-focus" style={t.clearFiltersBtn} onClick={handleClearFilters}>Clear filters</button>
               </div>
             )}
 
             {!loading && filtered.length > 0 && (
-              <div style={t.grid} className="fd-grid">
+              <div style={t.grid}>
                 {pageDrives.map((drive, i) => (
                   <div key={drive.id} className="fd2-card-in" style={{ animationDelay: `${i * 35}ms` }}>
                     <DriveCard drive={drive} dark={dark} favorites={favorites} onToggleFav={toggleFav} />
@@ -749,17 +1072,28 @@ export default function Home() {
 
             {!loading && totalPages > 1 && (
               <div style={t.pagination}>
-                <button className="fd2-page-btn fd2-focus"
+                <button
+                  className="fd2-page-btn fd2-focus"
                   style={{ ...t.pageBtn, ...(page === 1 ? t.pageBtnDisabled : {}) }}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>← Prev</button>
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >← Prev</button>
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button key={n} className="fd2-page-btn fd2-focus"
+                  <button
+                    key={n}
+                    className="fd2-page-btn fd2-focus"
                     style={{ ...t.pageBtn, ...(n === page ? t.pageBtnActive : {}) }}
-                    onClick={() => setPage(n)}>{n}</button>
+                    onClick={() => setPage(n)}
+                  >{n}</button>
                 ))}
-                <button className="fd2-page-btn fd2-focus"
+
+                <button
+                  className="fd2-page-btn fd2-focus"
                   style={{ ...t.pageBtn, ...(page === totalPages ? t.pageBtnDisabled : {}) }}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next →</button>
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >Next →</button>
               </div>
             )}
           </main>
@@ -769,206 +1103,233 @@ export default function Home() {
   );
 }
 
+// ── Styles factory ────────────────────────────────────────────────────────
 function buildStyles(tk) {
   return {
     page: {
       minHeight: "100vh",
       background: tk.bg,
-      fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
       position: "relative",
+      WebkitFontSmoothing: "antialiased",
+      MozOsxFontSmoothing: "grayscale",
     },
     topbar: {
       position: "sticky", top: 0, zIndex: 50,
       background: tk.glass,
-      borderBottom: `0.5px solid ${tk.divider}`,
+      borderBottom: `1px solid ${tk.divider}`,
       backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-      padding: "12px 24px",
-      display: "flex", alignItems: "center", gap: "14px",
+      padding: "11px 24px",
+      display: "flex", alignItems: "center", gap: 14,
     },
-    searchWrap: { flex: 1, position: "relative" },
+    searchWrap: { flex: 1, position: "relative", maxWidth: 520 },
     searchIcon: {
-      position: "absolute", left: "12px", top: "50%",
+      position: "absolute", left: 13, top: "50%",
       transform: "translateY(-50%)", color: tk.textMuted, pointerEvents: "none",
     },
     search: {
-      width: "100%", padding: "9px 38px 9px 36px",
-      border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "10px", fontSize: "13.5px",
+      width: "100%", padding: "9px 38px 9px 38px",
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 11, fontSize: 13.5,
       fontFamily: "inherit", letterSpacing: "-0.1px",
       background: tk.inputBg, color: tk.text,
       outline: "none", boxSizing: "border-box",
+      transition: "border-color 0.2s ease",
     },
     kbdHint: {
-      position: "absolute", right: "10px", top: "50%",
-      transform: "translateY(-50%)", fontSize: "10.5px", fontWeight: "600",
-      color: tk.textMuted, border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "5px", padding: "1px 6px", pointerEvents: "none",
+      position: "absolute", right: 11, top: "50%",
+      transform: "translateY(-50%)", fontSize: 10.5, fontWeight: 600,
+      color: tk.textMuted, border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 5, padding: "1px 6px", pointerEvents: "none",
+      letterSpacing: "0.1px",
     },
     darkBtn: {
-      background: "transparent",
-      border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "9px", padding: "7px 9px", cursor: "pointer",
-      color: tk.textSecondary, display: "flex", alignItems: "center",
-      justifyContent: "center", flexShrink: 0,
+      background: tk.glass,
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 10, padding: "8px 10px",
+      cursor: "pointer", color: tk.textSecondary,
+      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      transition: "border-color 0.15s ease, background 0.15s ease",
     },
-    banner: { background: tk.glass, borderBottom: `0.5px solid ${tk.divider}`, padding: "14px 24px" },
+    banner: {
+      background: tk.glass,
+      borderBottom: `1px solid ${tk.divider}`,
+      padding: "14px 24px",
+    },
     bannerInner: {
-      maxWidth: "1300px", margin: "0 auto",
+      maxWidth: 1300, margin: "0 auto",
       display: "flex", alignItems: "center",
-      justifyContent: "space-between", gap: "20px", flexWrap: "wrap",
+      justifyContent: "space-between", gap: 20, flexWrap: "wrap",
     },
-    bannerLeft: { display: "flex", alignItems: "center", gap: "14px" },
-    bannerIcon: { fontSize: "20px", flexShrink: 0 },
-    bannerTitle: { fontSize: "13.5px", fontWeight: "700", color: tk.text, letterSpacing: "-0.2px" },
-    bannerSub: { fontSize: "12.5px", color: tk.textSecondary, marginTop: "2px" },
-    bannerControls: { display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" },
+    bannerLeft: { display: "flex", alignItems: "center", gap: 14 },
+    bannerTitle: { fontSize: 13.5, fontWeight: 700, color: tk.text, letterSpacing: "-0.2px" },
+    bannerSub:   { fontSize: 12.5, color: tk.textSecondary, marginTop: 2 },
+    bannerControls: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
     bannerSelect: {
-      padding: "8px 12px", fontSize: "13px",
-      border: `0.5px solid ${tk.glassBorder}`, borderRadius: "9px",
-      fontFamily: "inherit", background: tk.inputBg,
-      color: tk.text, outline: "none", cursor: "pointer",
+      padding: "8px 12px", fontSize: 13,
+      border: `1px solid ${tk.glassBorder}`, borderRadius: 10,
+      fontFamily: "inherit", background: tk.inputBg, color: tk.text,
+      outline: "none", cursor: "pointer",
       colorScheme: tk === DARK ? "dark" : "light",
+      transition: "border-color 0.15s ease",
     },
     bannerBtn: {
-      padding: "8px 18px", fontSize: "13px", fontWeight: "700",
-      background: tk.gradient, color: "white",
-      border: "none", borderRadius: "9px", cursor: "pointer", whiteSpace: "nowrap",
+      padding: "8px 20px", fontSize: 13, fontWeight: 700,
+      background: tk.gradient, color: "#fff",
+      border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap",
+      fontFamily: "inherit", boxShadow: "0 2px 12px rgba(99,102,241,0.35)",
+      transition: "opacity 0.15s ease, transform 0.15s ease",
     },
     layout: {
       display: "grid", gridTemplateColumns: "230px 1fr",
-      gap: "18px", padding: "22px 24px",
-      maxWidth: "1300px", margin: "0 auto",
+      gap: 20, padding: "22px 24px",
+      maxWidth: 1340, margin: "0 auto",
     },
     sidebar: {
-      display: "flex", flexDirection: "column", gap: "14px",
-      position: "sticky", top: "78px", height: "fit-content",
+      display: "flex", flexDirection: "column", gap: 14,
+      position: "sticky", top: 78, height: "fit-content",
     },
     card: {
       background: tk.glass,
-      border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "16px", padding: "16px",
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 16, padding: "16px 16px",
       boxShadow: tk.shadow,
     },
     filterHeading: {
-      fontSize: "10.5px", fontWeight: "700", color: tk.textMuted,
+      fontSize: 10.5, fontWeight: 700, color: tk.textMuted,
       textTransform: "uppercase", letterSpacing: "0.7px",
-      marginBottom: "8px", marginTop: 0,
+      marginBottom: 8, marginTop: 0,
     },
     dropDown: {
       width: "100%", padding: "9px 10px",
-      border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "9px", fontSize: "13px",
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 10, fontSize: 13,
       fontFamily: "inherit", letterSpacing: "-0.1px",
       background: tk.inputBg, color: tk.text,
       outline: "none", cursor: "pointer",
       colorScheme: tk === DARK ? "dark" : "light",
+      transition: "border-color 0.15s ease",
+    },
+    clearFiltersSmall: {
+      marginTop: 12, width: "100%",
+      padding: "7px 0", fontSize: 11.5, fontWeight: 600,
+      color: tk.textMuted, background: "transparent",
+      border: `1px solid ${tk.glassBorder}`, borderRadius: 9,
+      cursor: "pointer", fontFamily: "inherit",
+      transition: "border-color 0.15s ease, color 0.15s ease",
     },
     profileChip: {
-      marginTop: "16px", display: "flex", alignItems: "center", justifyContent: "space-between",
-      background: tk.accent + "1A", border: `0.5px solid ${tk.accent}40`,
-      borderRadius: "9px", padding: "7px 10px",
+      marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between",
+      background: tk.accentSoft, border: `1px solid ${tk.accent}30`,
+      borderRadius: 10, padding: "7px 10px",
     },
-    profileChipText: { fontSize: "12px", fontWeight: "700", color: tk.accentLight },
+    profileChipText: { fontSize: 12, fontWeight: 700, color: tk.accentLight },
     profileChipReset: {
       background: "none", border: "none", cursor: "pointer",
-      color: tk.textMuted, fontSize: "11px", padding: "0 2px", lineHeight: 1,
+      color: tk.textMuted, fontSize: 11, padding: "0 2px", lineHeight: 1,
     },
     favItem: {
-      display: "flex", alignItems: "center", gap: "8px",
-      padding: "8px 6px", borderRadius: "9px", cursor: "pointer",
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "7px 6px", borderRadius: 10, cursor: "pointer",
+      transition: "background 0.15s ease",
     },
     favDot: {
-      width: "28px", height: "28px", borderRadius: "8px",
-      background: tk.accent + "1A",
+      width: 30, height: 30, borderRadius: 9,
+      background: tk.accentSoft,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: "13px", fontWeight: "700", color: tk.accentLight, flexShrink: 0,
+      fontSize: 13, fontWeight: 800, color: tk.accentLight, flexShrink: 0,
     },
     favCompany: {
-      fontSize: "12.5px", fontWeight: "700", color: tk.text,
+      fontSize: 12.5, fontWeight: 700, color: tk.text,
       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
     },
     favRole: {
-      fontSize: "11px", color: tk.textMuted,
+      fontSize: 11, color: tk.textMuted,
       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
     },
     favRemove: {
       background: "none", border: "none", cursor: "pointer",
-      color: tk.textMuted, fontSize: "11px", padding: "2px 4px", flexShrink: 0,
+      color: tk.textMuted, fontSize: 11, padding: "2px 4px", flexShrink: 0,
     },
     favMoreBtn: {
-      display: "block", width: "100%", marginTop: "8px",
-      padding: "8px 0", fontSize: "12px", fontWeight: "700",
+      display: "block", width: "100%", marginTop: 8,
+      padding: "8px 0", fontSize: 12, fontWeight: 700,
       color: tk.accentLight, background: "transparent",
-      border: `1px dashed ${tk.accent}50`, borderRadius: "9px",
+      border: `1px dashed ${tk.accent}40`, borderRadius: 10,
       cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+      transition: "border-color 0.15s ease",
     },
     feed: { minWidth: 0 },
-    recSection: { marginBottom: "8px" },
     feedHeader: {
       display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-      marginBottom: "14px", gap: "12px", flexWrap: "wrap",
+      marginBottom: 16, gap: 12, flexWrap: "wrap",
     },
     feedTitle: {
-      fontSize: "18px", fontWeight: "700", letterSpacing: "-0.4px",
-      color: tk.text, lineHeight: "1.2", display: "flex", alignItems: "center", gap: "8px",
+      fontSize: 19, fontWeight: 800, letterSpacing: "-0.5px",
+      color: tk.text, lineHeight: 1.15,
+      display: "flex", alignItems: "center", gap: 9,
     },
     eyebrowDot: {
-      width: "7px", height: "7px", borderRadius: "50%",
-      background: tk.gradient, flexShrink: 0, boxShadow: `0 0 0 3px ${tk.accent}22`,
+      width: 7, height: 7, borderRadius: "50%",
+      background: tk.gradient, flexShrink: 0,
+      boxShadow: `0 0 0 3px ${tk.accent}22`,
     },
-    feedSub: { fontSize: "12.5px", color: tk.textMuted, marginTop: "3px", letterSpacing: "-0.1px" },
+    feedSub: { fontSize: 12.5, color: tk.textMuted, marginTop: 3, letterSpacing: "-0.1px" },
     countBadge: {
-      fontSize: "12px", color: tk.textSecondary,
-      background: tk.accent + "14", padding: "5px 13px",
-      borderRadius: "999px", border: `0.5px solid ${tk.accent}33`,
-      fontWeight: "600", whiteSpace: "nowrap", alignSelf: "center",
+      fontSize: 12, color: tk.textSecondary,
+      background: tk.accentSoft, padding: "5px 14px",
+      borderRadius: 999, border: `1px solid ${tk.accent}22`,
+      fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center",
     },
-    sliderWrap: { position: "relative", padding: "0 18px", marginBottom: "4px" },
+    sliderWrap: { position: "relative", padding: "0 18px", marginBottom: 4 },
     recTrack: {
-      display: "flex", gap: "14px", overflowX: "auto", scrollBehavior: "smooth",
-      paddingBottom: "10px", scrollbarWidth: "none", msOverflowStyle: "none",
+      display: "flex", gap: 14, overflowX: "auto", scrollBehavior: "smooth",
+      paddingBottom: 10,
     },
-    recCardWrap: { minWidth: "270px", maxWidth: "270px", flexShrink: 0 },
+    recCardWrap: { minWidth: 270, maxWidth: 270, flexShrink: 0 },
     sliderArrow: {
-      position: "absolute", top: "40%", transform: "translateY(-50%)",
-      width: "32px", height: "32px",
-      background: tk.glass, border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "50%", fontSize: "18px", textAlign: "center",
+      position: "absolute", top: "38%", transform: "translateY(-50%)",
+      width: 30, height: 30,
+      background: tk.glass, border: `1px solid ${tk.glassBorder}`,
+      borderRadius: "50%", fontSize: 17,
       cursor: "pointer", zIndex: 2, color: tk.textSecondary,
       boxShadow: tk.shadow,
       display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+      backdropFilter: "blur(8px)",
     },
-    recDivider: { borderTop: `0.5px solid ${tk.divider}`, margin: "22px 0 26px" },
+    recDivider: { borderTop: `1px solid ${tk.divider}`, margin: "24px 0 28px" },
     grid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
-      gap: "14px",
+      gridTemplateColumns: "repeat(auto-fill, minmax(272px, 1fr))",
+      gap: 14,
     },
     emptyState: {
-      padding: "56px 20px", textAlign: "center",
-      color: tk.textMuted, fontSize: "13.5px", letterSpacing: "-0.1px",
+      padding: "60px 20px", textAlign: "center",
+      color: tk.textMuted, fontSize: 13.5, letterSpacing: "-0.1px",
     },
     clearFiltersBtn: {
-      padding: "8px 18px", fontSize: "13px", fontWeight: "700",
-      background: tk.accent + "1A", color: tk.accentLight,
-      border: `0.5px solid ${tk.accent}40`, borderRadius: "9px",
+      padding: "9px 22px", fontSize: 13, fontWeight: 700,
+      background: tk.accentSoft, color: tk.accentLight,
+      border: `1px solid ${tk.accent}30`, borderRadius: 10,
       cursor: "pointer", fontFamily: "inherit",
+      transition: "background 0.15s ease",
     },
     pagination: {
       display: "flex", alignItems: "center", justifyContent: "center",
-      gap: "6px", marginTop: "32px", paddingBottom: "8px", flexWrap: "wrap",
+      gap: 6, marginTop: 36, paddingBottom: 10, flexWrap: "wrap",
     },
     pageBtn: {
-      padding: "8px 14px", fontSize: "13px", fontWeight: "600",
+      padding: "8px 15px", fontSize: 13, fontWeight: 600,
       fontFamily: "inherit", letterSpacing: "-0.1px",
-      border: `0.5px solid ${tk.glassBorder}`,
-      borderRadius: "9px", cursor: "pointer",
+      border: `1px solid ${tk.glassBorder}`,
+      borderRadius: 10, cursor: "pointer",
       background: tk.glass, color: tk.textSecondary,
     },
     pageBtnActive: {
       background: tk.gradient, borderColor: "transparent",
-      color: "white", fontWeight: "700",
+      color: "#fff", fontWeight: 700,
+      boxShadow: "0 2px 10px rgba(99,102,241,0.35)",
     },
-    pageBtnDisabled: { opacity: 0.35, cursor: "not-allowed" },
+    pageBtnDisabled: { opacity: 0.32, cursor: "not-allowed" },
   };
 }
