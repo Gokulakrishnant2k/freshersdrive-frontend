@@ -1,15 +1,12 @@
 // src/components/DriveCard.jsx
 //
-// "Placement OS" redesign — professional enterprise card.
-// Signature element: glowing left-rail accent that brightens on hover.
-// Inter-only type stack, weight-driven hierarchy.
-// Dark mode first-class, reduced-motion respected.
+// Redesigned — professional, information-dense, zero decorative noise.
+// Inspired by Linear / Vercel dashboard aesthetics: tight type, restrained
+// palette, every pixel earns its place.
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  INK,
-  PAGE_BG,
   PAPER,
   PAPER_TEXT,
   MUTED,
@@ -20,7 +17,6 @@ import {
   SHADOW,
   getAccent,
   getUrgency,
-  barcodeBars,
 } from "../utils/ticketTheme";
 
 export default function DriveCard({ drive, dark, favorites = new Set(), onToggleFav }) {
@@ -39,52 +35,51 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
     ? (dark ? SHADOW.hover.dark  : SHADOW.hover.light)
     : (dark ? SHADOW.rest.dark   : SHADOW.rest.light);
 
-  // Urgency badge
   const urgencyLabel =
     urgency === "urgent" ? (daysLeft === 0 ? "Today" : `${daysLeft}d left`) :
     urgency === "soon"   ? `${daysLeft}d left` :
     urgency === "closed" ? "Closed" : null;
 
-  const urgencyInk = urgency ? STATUS_INK[urgency] : null;
-  const urgencyTint = urgency
-    ? (dark ? STATUS_TINT[urgency].dark_bg : STATUS_TINT[urgency].bg)
-    : null;
-  const urgencyBorder = urgency
-    ? (dark ? STATUS_TINT[urgency].dark_border : STATUS_TINT[urgency].border)
-    : null;
+  const urgencyInk    = urgency ? STATUS_INK[urgency] : null;
+  const urgencyTintBg = urgency ? (dark ? STATUS_TINT[urgency].dark_bg     : STATUS_TINT[urgency].bg)     : null;
+  const urgencyBorder = urgency ? (dark ? STATUS_TINT[urgency].dark_border : STATUS_TINT[urgency].border) : null;
 
   const handleCardClick = () => {
-    const token = localStorage.getItem("token");
+    const token  = localStorage.getItem("token");
     const target = `/drives/${drive.id}`;
-    if (!token) {
-      sessionStorage.setItem("postLoginRedirect", target);
-      navigate("/login");
-      return;
-    }
+    if (!token) { sessionStorage.setItem("postLoginRedirect", target); navigate("/login"); return; }
     navigate(target);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleCardClick();
-    }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCardClick(); }
   };
 
-  const bars = barcodeBars(String(drive.id ?? drive.companyName ?? "x"));
+  // Avatar: single letter on a very soft tint of the accent
+  const avatarBg  = dark ? accent + "22" : accent + "14";
+  const isActive  = drive.status === "ACTIVE";
+  const isClosed  = urgency === "closed";
 
-  // Initial letter avatar bg — semi-transparent tinted version of accent
-  const avatarBg = accent + (dark ? "2A" : "18");
+  const deadlineDisplay = drive.deadline
+    ? (() => {
+        const formatted = new Date(drive.deadline).toLocaleDateString("en-IN", {
+          day: "numeric", month: "short",
+        });
+        if (daysLeft !== null && daysLeft > 0 && daysLeft <= 7) return `${formatted} · ${daysLeft}d`;
+        return new Date(drive.deadline).toLocaleDateString("en-IN", {
+          day: "numeric", month: "short", year: "2-digit",
+        });
+      })()
+    : null;
 
   return (
     <>
       <style>{STYLE_BLOCK}</style>
-
       <div
         className="dc-card"
         role="button"
         tabIndex={0}
-        aria-label={`View ${drive.jobRole ?? "role"} at ${drive.companyName ?? "this company"}`}
+        aria-label={`${drive.jobRole ?? "Role"} at ${drive.companyName ?? "company"}`}
         onClick={handleCardClick}
         onKeyDown={handleKeyDown}
         onMouseEnter={() => setHovered(true)}
@@ -92,106 +87,76 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
         style={{
           position: "relative",
           background: paper,
-          borderRadius: 14,
-          border: `1px solid ${hovered ? accent + "55" : hairline}`,
+          borderRadius: 12,
+          border: `0.5px solid ${hovered ? (dark ? "#334155" : "#CBD5E1") : hairline}`,
           boxShadow: shadow,
           cursor: "pointer",
           fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
           overflow: "hidden",
-          transition: "box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease",
-          transform: hovered ? "translateY(-3px)" : "translateY(0)",
-          filter: urgency === "closed" ? "grayscale(0.3)" : "none",
-          // Left rail — the signature glow element
-          borderLeft: `3px solid ${accent}`,
+          transition: "box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
+          transform: hovered ? "translateY(-2px)" : "translateY(0)",
+          opacity: isClosed ? 0.6 : 1,
         }}
       >
-        {/* ── Accent glow rail (behind-card, bleeds through border) ── */}
-        {hovered && (
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: 0, top: 0, bottom: 0,
-              width: 3,
-              background: accent,
-              boxShadow: `0 0 12px 2px ${accent}66`,
-              borderRadius: "3px 0 0 3px",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
         {/* ── HEADER ── */}
         <div style={{
-          padding: "16px 18px 14px",
-          borderBottom: `1px solid ${hairline}`,
+          padding: "15px 18px 13px",
+          borderBottom: `0.5px solid ${hairline}`,
           display: "flex",
           alignItems: "flex-start",
-          gap: 12,
+          justifyContent: "space-between",
+          gap: 10,
         }}>
-          {/* Avatar */}
-          <div style={{
-            width: 44, height: 44,
-            borderRadius: 10,
-            background: avatarBg,
-            border: `1.5px solid ${accent}44`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 20, fontWeight: 800, color: accent,
-            flexShrink: 0,
-            letterSpacing: "-0.5px",
-          }}>
-            {(drive.companyName || "?").charAt(0).toUpperCase()}
-          </div>
-
-          {/* Company + role */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Avatar + company + role */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <div style={{
-              fontSize: 15.5, fontWeight: 700,
-              color: text,
+              width: 36, height: 36, borderRadius: 8,
+              background: avatarBg,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 14, fontWeight: 600, color: accent,
+              flexShrink: 0,
               letterSpacing: "-0.2px",
-              lineHeight: 1.2,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
-              {drive.companyName}
+              {(drive.companyName || "?").charAt(0).toUpperCase()}
             </div>
-            <div style={{
-              fontSize: 12.5, fontWeight: 500,
-              color: muted,
-              marginTop: 3,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {drive.jobRole}
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 14, fontWeight: 600,
+                color: text, letterSpacing: "-0.15px",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {drive.companyName}
+              </div>
+              <div style={{
+                fontSize: 12, fontWeight: 400,
+                color: muted, marginTop: 2,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {drive.jobRole}
+              </div>
             </div>
           </div>
 
-          {/* Status pill */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
-            {drive.status === "ACTIVE" && (
+          {/* Badges */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+            {isActive && (
               <span style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                fontSize: 10.5, fontWeight: 700,
-                color: "#10B981",
-                background: dark ? "#052E16" : "#ECFDF5",
-                border: `1px solid ${dark ? "#14532D" : "#A7F3D0"}`,
-                borderRadius: 99, padding: "3px 9px",
-                letterSpacing: "0.4px",
+                fontSize: 11, fontWeight: 500,
+                color: dark ? "#34D399" : "#047857",
+                background: dark ? "#052E16" : "#F0FDF4",
+                border: `0.5px solid ${dark ? "#14532D" : "#BBF7D0"}`,
+                borderRadius: 4, padding: "2px 7px",
               }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: "#10B981",
-                  boxShadow: "0 0 0 2px #10B98133",
-                }} />
-                LIVE
+                Live
               </span>
             )}
             {urgencyLabel && (
               <span style={{
-                fontSize: 10.5, fontWeight: 700,
+                fontSize: 11, fontWeight: 500,
                 color: urgencyInk,
-                background: urgencyTint,
-                border: `1px solid ${urgencyBorder}`,
-                borderRadius: 99, padding: "3px 9px",
-                letterSpacing: "0.3px",
+                background: urgencyTintBg,
+                border: `0.5px solid ${urgencyBorder}`,
+                borderRadius: 4, padding: "2px 7px",
               }}>
                 {urgencyLabel}
               </span>
@@ -199,73 +164,50 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
           </div>
         </div>
 
-        {/* ── BODY — data fields ── */}
-        <div style={{ padding: "14px 18px 12px" }}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
-            gap: "10px 12px",
-          }}>
-            {drive.location && (
-              <Field label="Location" value={drive.location} text={text} muted={muted} />
-            )}
-            {drive.jobType && (
-              <Field label="Type" value={drive.jobType} text={text} muted={muted} />
-            )}
-            {drive.ctcDisplay && (
-              <Field label="Package" value={`₹ ${drive.ctcDisplay}`} text={accent} muted={muted} bold />
-            )}
-            {drive.minCgpa && (
-              <Field label="Min CGPA" value={`${drive.minCgpa}+`} text={text} muted={muted} />
-            )}
-            {drive.deadline && (
-              <Field
-                label="Deadline"
-                value={
-                  daysLeft !== null && daysLeft <= 7 && daysLeft > 0
-                    ? `${new Date(drive.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} · ${daysLeft}d`
-                    : new Date(drive.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" })
-                }
-                text={urgencyInk || text}
-                muted={muted}
-              />
-            )}
-          </div>
+        {/* ── BODY — data grid ── */}
+        <div style={{
+          padding: "13px 18px 11px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(88px, 1fr))",
+          gap: "11px 14px",
+        }}>
+          {drive.location  && <Field label="Location" value={drive.location}               text={text}        muted={muted} />}
+          {drive.jobType   && <Field label="Type"     value={drive.jobType}                text={text}        muted={muted} />}
+          {drive.ctcDisplay && <Field label="Package"  value={`₹ ${drive.ctcDisplay}`}     text={accent}      muted={muted} bold />}
+          {drive.minCgpa   && <Field label="Min CGPA" value={`${drive.minCgpa}+`}          text={text}        muted={muted} />}
+          {deadlineDisplay  && (
+            <Field
+              label="Deadline"
+              value={deadlineDisplay}
+              text={urgencyInk || text}
+              muted={muted}
+            />
+          )}
         </div>
 
         {/* ── FOOTER ── */}
         <div style={{
-          padding: "10px 18px 13px",
-          borderTop: `1px solid ${hairline}`,
+          padding: "9px 18px 12px",
+          borderTop: `0.5px solid ${hairline}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 8,
         }}>
-          {/* Barcode + category */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 1.5, height: 14, flexShrink: 0 }}>
-              {bars.map((w, i) => (
-                <span key={i} style={{
-                  width: w,
-                  height: i % 5 === 0 ? 14 : 8,
-                  background: dark ? "#2A3550" : "#CBD5E1",
-                  display: "inline-block",
-                  borderRadius: 1,
-                }} />
-              ))}
-            </div>
+          {/* Category pill */}
+          <span style={{
+            fontSize: 11, fontWeight: 500,
+            color: muted,
+            display: "flex", alignItems: "center", gap: 5,
+          }}>
             <span style={{
-              fontSize: 11, fontWeight: 600,
-              color: muted,
-              letterSpacing: "0.3px",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {CATEGORY_LABELS[drive.category] || drive.category || "—"}
-            </span>
-          </div>
+              width: 4, height: 4, borderRadius: "50%",
+              background: dark ? "#2A3550" : "#CBD5E1",
+              display: "inline-block",
+            }} />
+            {CATEGORY_LABELS[drive.category] || drive.category || "—"}
+          </span>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* Favourite */}
             {onToggleFav && (
               <button
@@ -275,16 +217,16 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
                 onClick={(e) => { e.stopPropagation(); onToggleFav(drive.id); }}
                 onKeyDown={(e) => e.stopPropagation()}
                 style={{
-                  width: 28, height: 28, borderRadius: 7,
+                  width: 26, height: 26, borderRadius: 6,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: "pointer", padding: 0,
-                  background: isFav ? accent + "18" : "transparent",
-                  border: `1px solid ${isFav ? accent + "55" : hairline}`,
-                  color: isFav ? accent : muted,
-                  transition: "background 0.15s, color 0.15s",
+                  background: isFav ? (dark ? "#1E1B4B" : "#EEF2FF") : "transparent",
+                  border: `0.5px solid ${isFav ? (dark ? "#3730A3" : "#C7D2FE") : hairline}`,
+                  color: isFav ? "#4F46E5" : muted,
+                  transition: "background 0.15s, color 0.15s, border-color 0.15s",
                 }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24"
+                <svg width="11" height="11" viewBox="0 0 24 24"
                   fill={isFav ? "currentColor" : "none"} stroke="currentColor"
                   strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
@@ -294,14 +236,14 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
 
             {/* CTA */}
             <span style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              fontSize: 12, fontWeight: 600,
-              color: accent,
-              transition: "gap 0.15s ease",
+              fontSize: 12, fontWeight: 500,
+              color: hovered ? (dark ? "#818CF8" : "#3730A3") : (dark ? "#6366F1" : "#4F46E5"),
+              display: "flex", alignItems: "center", gap: 4,
+              transition: "color 0.15s",
             }}>
               View role
               <svg
-                width="13" height="13" viewBox="0 0 24 24" fill="none"
+                width="11" height="11" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5"
                 strokeLinecap="round" strokeLinejoin="round"
                 style={{
@@ -320,13 +262,12 @@ export default function DriveCard({ drive, dark, favorites = new Set(), onToggle
   );
 }
 
-// ── Field sub-component ──────────────────────────────────────────────────────
 function Field({ label, value, text, muted, bold }) {
   return (
     <div style={{ minWidth: 0 }}>
       <div style={{
-        fontSize: 10, fontWeight: 600,
-        letterSpacing: "0.55px",
+        fontSize: 10, fontWeight: 500,
+        letterSpacing: "0.5px",
         textTransform: "uppercase",
         color: muted,
         marginBottom: 3,
@@ -334,7 +275,7 @@ function Field({ label, value, text, muted, bold }) {
         {label}
       </div>
       <div style={{
-        fontSize: 13, fontWeight: bold ? 700 : 600,
+        fontSize: 13, fontWeight: bold ? 600 : 500,
         color: text,
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
@@ -344,14 +285,13 @@ function Field({ label, value, text, muted, bold }) {
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
 const STYLE_BLOCK = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 .dc-card:focus-visible {
   outline: 2px solid #6366F1;
   outline-offset: 3px;
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

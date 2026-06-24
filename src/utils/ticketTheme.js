@@ -1,32 +1,29 @@
 // src/utils/ticketTheme.js
 //
-// Redesigned theme — "Placement OS" aesthetic.
-// Deep navy base, electric indigo primary, Inter-only type hierarchy.
-// All components that previously imported from here stay compatible:
-// every export name is preserved, values are swapped.
+// Professional token system — subdued palette, Inter-only, no decorative exports.
+// All component imports remain compatible; decorative helpers (barcodeBars) are
+// kept as no-ops so nothing breaks, but are no longer used in DriveCard / ExpiringDrives.
 
 // ── Base surfaces ────────────────────────────────────────────────────────────
-export const INK     = "#0D1424"; // near-black navy — card header bg
-export const PAGE_BG = { light: "#F0F4FA", dark: "#080E1C" };
+export const INK     = "#0D1424";
+export const PAGE_BG = { light: "#F8FAFC", dark: "#080E1C" };
 
-// Card body surfaces — slightly elevated from page
 export const PAPER      = { light: "#FFFFFF",  dark: "#111827" };
 export const PAPER_TEXT = { light: "#0F172A",  dark: "#E8EDF5" };
 export const MUTED      = { light: "#64748B",  dark: "#6B7FA3" };
 export const HAIRLINE   = { light: "#E2E8F0",  dark: "#1E2D45" };
 
-// ── Urgency — semantic, not decorative ──────────────────────────────────────
+// ── Urgency — semantic, restrained ──────────────────────────────────────────
 export const STATUS_INK = {
-  urgent: "#EF4444", // red-500  — final call
-  soon:   "#F59E0B", // amber-500 — closing soon
-  closed: "#64748B", // slate-500 — over
+  urgent: "#BE123C", // rose-700  — clear danger, not aggressive
+  soon:   "#B45309", // amber-700 — warm caution
+  closed: "#64748B", // slate-500 — neutral
 };
 
-// Urgency surface tints (bg + border for badges)
 export const STATUS_TINT = {
-  urgent: { bg: "#FEF2F2", border: "#FECACA", dark_bg: "#2D1515", dark_border: "#7F1D1D" },
-  soon:   { bg: "#FFFBEB", border: "#FDE68A", dark_bg: "#2D2006", dark_border: "#78350F" },
-  closed: { bg: "#F1F5F9", border: "#CBD5E1", dark_bg: "#1E293B", dark_border: "#334155" },
+  urgent: { bg: "#FFF1F2", border: "#FECDD3", dark_bg: "#1C0611", dark_border: "#9F1239" },
+  soon:   { bg: "#FFFBEB", border: "#FDE68A", dark_bg: "#1C1202", dark_border: "#92400E" },
+  closed: { bg: "#F8FAFC", border: "#E2E8F0", dark_bg: "#1E293B", dark_border: "#334155" },
 };
 
 // ── Category labels ──────────────────────────────────────────────────────────
@@ -41,20 +38,20 @@ export const CATEGORY_LABELS = {
   OTHERS:           "Others",
 };
 
-// ── Company accent palette ───────────────────────────────────────────────────
-// Shifted to more saturated, professional hues that pop on both
-// light and dark surfaces without looking like a toy box.
+// ── Company accent palette ────────────────────────────────────────────────────
+// Reduced saturation — these are subtle identity hints, not decorations.
+// They appear only in the avatar letter + the "View role" link.
 export const ACCENTS = [
-  "#6366F1", // Indigo     — primary brand feel
-  "#3B82F6", // Blue       — clean, tech
-  "#10B981", // Emerald    — growth, finance
-  "#F59E0B", // Amber      — energy, FMCG
-  "#EF4444", // Red        — bold, consulting
-  "#8B5CF6", // Violet     — creative, product
-  "#06B6D4", // Cyan       — startup, SaaS
-  "#17376f", // Sky Blue ← replace with this
-  "#14B8A6", // Teal       — healthcare, ops
-  "#F97316", // Orange     — core / manufacturing
+  "#4F46E5", // Indigo   — primary brand
+  "#0369A1", // Sky      — clean, tech
+  "#047857", // Emerald  — finance, growth
+  "#B45309", // Amber    — energy, FMCG
+  "#B91C1C", // Red      — bold verticals
+  "#7C3AED", // Violet   — product, creative
+  "#0E7490", // Cyan     — SaaS, startup
+  "#1D4ED8", // Blue     — default enterprise
+  "#0F766E", // Teal     — healthcare, ops
+  "#C2410C", // Orange   — manufacturing
 ];
 
 export function getAccent(name = "") {
@@ -63,20 +60,7 @@ export function getAccent(name = "") {
   return ACCENTS[hash % ACCENTS.length];
 }
 
-// ── Deterministic barcode decoration ────────────────────────────────────────
-// Kept for visual continuity in DriveCard / ExpiringDrives.
-export function barcodeBars(seed = "x", count = 22) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 131 + seed.charCodeAt(i)) >>> 0;
-  const bars = [];
-  for (let i = 0; i < count; i++) {
-    h = (h * 1103515245 + 12345) >>> 0;
-    bars.push(2 + (h % 5));
-  }
-  return bars;
-}
-
-// ── Urgency helper ───────────────────────────────────────────────────────────
+// ── Urgency helper ────────────────────────────────────────────────────────────
 export function getUrgency(deadline) {
   if (!deadline) return { daysLeft: null, level: null };
   const daysLeft = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
@@ -87,14 +71,17 @@ export function getUrgency(deadline) {
   return { daysLeft, level };
 }
 
-// ── Card shadow tokens ───────────────────────────────────────────────────────
+// ── Shadow tokens ─────────────────────────────────────────────────────────────
 export const SHADOW = {
-  rest:  {
-    light: "0 1px 3px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.04)",
-    dark:  "0 1px 3px rgba(0,0,0,0.4),     0 4px 12px rgba(0,0,0,0.25)",
+  rest: {
+    light: "0 1px 2px rgba(15,23,42,0.05)",
+    dark:  "0 1px 3px rgba(0,0,0,0.4)",
   },
   hover: {
-    light: "0 8px 24px rgba(99,102,241,0.14), 0 2px 6px rgba(15,23,42,0.08)",
-    dark:  "0 8px 28px rgba(99,102,241,0.22), 0 2px 6px rgba(0,0,0,0.45)",
+    light: "0 4px 16px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06)",
+    dark:  "0 4px 20px rgba(0,0,0,0.5),     0 1px 3px rgba(0,0,0,0.3)",
   },
 };
+
+// ── Kept for backward compatibility — no longer used visually ─────────────────
+export function barcodeBars(seed = "x", count = 22) { return []; }
