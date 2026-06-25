@@ -22,6 +22,7 @@ import DriveCalendar from "./pages/DriveCalendar";
 import SavedDrives from "./pages/SavedDrives";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ManageHighlightedDrives from "./pages/ManageHighlightedDrives";
 
 // Legal Pages
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -66,6 +67,14 @@ function App() {
             element={
               <ProtectedRoute roleRequired={["ROLE_ADMIN", "ROLE_EMPLOYEE"]}>
                 <AddDrive />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/highlighted-drives"
+            element={
+              <ProtectedRoute roleRequired={["ROLE_ADMIN", "ROLE_EMPLOYEE"]}>
+                <ManageHighlightedDrives />
               </ProtectedRoute>
             }
           />
