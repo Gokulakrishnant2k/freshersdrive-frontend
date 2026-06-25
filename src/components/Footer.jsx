@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { INK, MUTED, HAIRLINE, barcodeBars } from "../utils/ticketTheme";
 import Logo from "./Logo";
 
-// ── Social links — replace placeholders with real URLs when ready ──────────
+// ── Social links ────────────────────────────────────────────────────────────
 const socialLinks = {
-  instagram: "https://instagram.com/your_handle_here",
-  youtube: "https://youtube.com/@your_channel_here",
+  instagram: "https://www.instagram.com/fresherspot/?hl=en-in",
+  youtube:   "https://www.youtube.com/@FresherSpot",
+  linkedin:  "https://www.linkedin.com/company/fresherspot", 
 };
 
 export default function Footer() {
@@ -38,10 +39,10 @@ export default function Footer() {
         {/* Quick links */}
         <div style={styles.col}>
           <div style={styles.colTitle}>Explore</div>
-          <Link to="/" className="fd-footer-link" style={styles.footerLink}>Drives</Link>
-          <Link to="/calendar" className="fd-footer-link" style={styles.footerLink}>Calendar</Link>
-          <Link to="/saved-drives" className="fd-footer-link" style={styles.footerLink}>Saved</Link>
-          <Link to="/contact" className="fd-footer-link" style={styles.footerLink}>Contact</Link>
+          <Link to="/"            className="fd-footer-link" style={styles.footerLink}>Drives</Link>
+          <Link to="/calendar"    className="fd-footer-link" style={styles.footerLink}>Calendar</Link>
+          <Link to="/saved-drives"className="fd-footer-link" style={styles.footerLink}>Saved</Link>
+          <Link to="/contact"     className="fd-footer-link" style={styles.footerLink}>Contact</Link>
         </div>
 
         {/* Social */}
@@ -49,6 +50,8 @@ export default function Footer() {
           <div style={styles.colTitle}>Follow us</div>
 
           <div style={styles.socialRow} className="fd-footer-social">
+
+            {/* Instagram */}
             <a
               href={socialLinks.instagram}
               target="_blank"
@@ -58,13 +61,14 @@ export default function Footer() {
               aria-label="Instagram"
               title="Instagram"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </a>
 
+            {/* YouTube */}
             <a
               href={socialLinks.youtube}
               target="_blank"
@@ -74,11 +78,31 @@ export default function Footer() {
               aria-label="YouTube"
               title="YouTube"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
                 <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
               </svg>
             </a>
+
+            {/* LinkedIn */}
+            <a
+              href={socialLinks.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="fd-footer-social-icon"
+              style={styles.socialIcon}
+              aria-label="LinkedIn"
+              title="LinkedIn"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="3" ry="3" />
+                <path d="M8 11v5" />
+                <circle cx="8" cy="8" r="0.5" fill="currentColor" />
+                <path d="M12 16v-5" />
+                <path d="M12 11a3 3 0 0 1 6 0v5" />
+              </svg>
+            </a>
+
           </div>
         </div>
       </div>
@@ -87,10 +111,15 @@ export default function Footer() {
         <div style={styles.bottomLeft}>
           <div style={styles.barcodeRow} aria-hidden="true">
             {bars.map((w, i) => (
-              <span key={i} style={{
-                width: w, height: i % 6 === 0 ? 16 : 10,
-                background: "#3a4666", display: "inline-block",
-              }} />
+              <span
+                key={i}
+                style={{
+                  width: w,
+                  height: i % 6 === 0 ? 16 : 10,
+                  background: "#3a4666",
+                  display: "inline-block",
+                }}
+              />
             ))}
           </div>
           <span style={styles.copyright}>
@@ -102,11 +131,11 @@ export default function Footer() {
           <Link to="/privacy-policy" className="fd-footer-legal-link" style={styles.legalLink}>
             Privacy Policy
           </Link>
-          <span style={styles.legalDivider}>·</span>
+          <span style={styles.legalDivider} aria-hidden="true">·</span>
           <Link to="/terms-of-service" className="fd-footer-legal-link" style={styles.legalLink}>
             Terms of Service
           </Link>
-          <span style={styles.legalDivider}>·</span>
+          <span style={styles.legalDivider} aria-hidden="true">·</span>
           <Link to="/disclaimer" className="fd-footer-legal-link" style={styles.legalLink}>
             Disclaimer
           </Link>
@@ -125,20 +154,40 @@ const styles = {
     position: "relative",
   },
 
-  perfWrap: { position: "relative", height: "0", maxWidth: "1200px", margin: "0 auto" },
+  perfWrap: {
+    position: "relative",
+    height: "0",
+    maxWidth: "1200px",
+    margin: "0 auto",
+  },
   perfLine: {
-    position: "absolute", left: "24px", right: "24px", top: "0",
+    position: "absolute",
+    left: "24px",
+    right: "24px",
+    top: "0",
     borderTop: `2px dashed ${HAIRLINE.dark}`,
   },
   perfNotchLeft: {
-    position: "absolute", left: "10px", top: "0", transform: "translateY(-50%)",
-    width: "9px", height: "9px", borderRadius: "50%",
-    background: INK, border: `1.5px solid ${HAIRLINE.dark}`,
+    position: "absolute",
+    left: "10px",
+    top: "0",
+    transform: "translateY(-50%)",
+    width: "9px",
+    height: "9px",
+    borderRadius: "50%",
+    background: INK,
+    border: `1.5px solid ${HAIRLINE.dark}`,
   },
   perfNotchRight: {
-    position: "absolute", right: "10px", top: "0", transform: "translateY(-50%)",
-    width: "9px", height: "9px", borderRadius: "50%",
-    background: INK, border: `1.5px solid ${HAIRLINE.dark}`,
+    position: "absolute",
+    right: "10px",
+    top: "0",
+    transform: "translateY(-50%)",
+    width: "9px",
+    height: "9px",
+    borderRadius: "50%",
+    background: INK,
+    border: `1.5px solid ${HAIRLINE.dark}`,
   },
 
   inner: {
@@ -202,6 +251,7 @@ const styles = {
     color: MUTED.dark,
     background: "rgba(255,255,255,0.05)",
     border: "1px solid transparent",
+    transition: "color 0.15s ease, border-color 0.15s ease",
   },
 
   bottomBar: {
@@ -213,9 +263,20 @@ const styles = {
     gap: "10px",
   },
 
-  bottomLeft: { display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" },
+  bottomLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
 
-  barcodeRow: { display: "flex", alignItems: "center", gap: "1.5px", height: "16px" },
+  barcodeRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1.5px",
+    height: "16px",
+  },
 
   copyright: {
     fontFamily: "'IBM Plex Mono', monospace",
@@ -254,7 +315,10 @@ const STYLE_BLOCK = `
 }
 .fd-footer .fd-footer-link:hover { color: #e7ecf5; }
 .fd-footer .fd-footer-legal-link:hover { color: #cbd5e1; }
-.fd-footer .fd-footer-social-icon:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+.fd-footer .fd-footer-social-icon:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
 
 @media (max-width: 720px) {
   .fd-footer-inner { grid-template-columns: 1fr !important; }
