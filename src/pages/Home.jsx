@@ -444,12 +444,14 @@ export default function Home() {
   const navigate = useNavigate();
   const tk = dark ? DARK : LIGHT;
 
-  const isAdmin = useMemo(() => {
-    try {
-      const user = JSON.parse(localStorage.getItem("fd_user") || "{}");
-      return ADMIN_LIKE_ROLES.includes(user?.role);
-    } catch { return false; }
-  }, []);
+const isAdmin = useMemo(() => {
+  try {
+    const user = JSON.parse(localStorage.getItem("fd_user") || "{}");
+    console.log("fd_user full object:", user);
+    console.log("fd_user role:", user?.role);
+    return ADMIN_LIKE_ROLES.includes(user?.role);
+  } catch { return false; }
+}, []);
 
   const browseDrivesRef  = useRef(null);
   const howItWorksRef    = useRef(null);
