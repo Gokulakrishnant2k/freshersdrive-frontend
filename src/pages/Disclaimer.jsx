@@ -76,7 +76,7 @@ export default function Disclaimer() {
         <p style={legalText.p}>
           To report an inaccurate listing, request removal, or for any other queries, contact us at:
         </p>
-        <ContactLine email="gokulakrishnant2004@gmail.com" />
+        <ContactLine email="fresherspotsupport@gmail.com" />
       </Section>
     </LegalPageShell>
   );

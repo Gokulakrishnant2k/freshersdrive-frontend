@@ -74,7 +74,7 @@ export default function PrivacyPolicy() {
 
       <Section heading="8. Contact">
         <p style={legalText.p}>For questions regarding this Privacy Policy, contact:</p>
-        <ContactLine email="gokulakrishnant2004@gmail.com" />
+        <ContactLine email="fresherspotsupport@gmail.com" />
       </Section>
     </LegalPageShell>
   );

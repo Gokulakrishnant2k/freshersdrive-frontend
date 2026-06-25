@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { useState } from "react";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SplashScreen from "./components/SplashScreen"; 
 import WhatsAppButton from "./components/WhatsAppButton";
 
 // Pages
@@ -28,8 +29,10 @@ import TermsOfService from "./pages/TermsOfService";
 import Disclaimer from "./pages/Disclaimer";
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false); 
   return (
     <ThemeProvider>
+        {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />} 
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Navbar />
         <WhatsAppButton />

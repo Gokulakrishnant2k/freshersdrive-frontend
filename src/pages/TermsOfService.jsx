@@ -99,7 +99,7 @@ export default function TermsOfService() {
 
       <Section heading="11. Contact">
         <p style={legalText.p}>For any questions about these Terms, contact us at:</p>
-        <ContactLine email="gokulakrishnant2004@gmail.com" note="(replace with your actual email)" />
+        <ContactLine email="fresherspotsupport@gmail.com" />
       </Section>
     </LegalPageShell>
   );

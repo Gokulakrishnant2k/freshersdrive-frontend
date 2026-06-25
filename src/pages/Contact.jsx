@@ -117,7 +117,7 @@ export default function Contact() {
         {/* Info strip */}
         <div style={styles.infoStrip}>
           {[
-            { icon: "📧", label: "Email", value: "support@FresherSpot.in" },
+            { icon: "📧", label: "Email", value: "fresherspotsupport@gmail.com" },
             { icon: "⏱", label: "Response", value: "Within 24 hours" },
           ].map(({ icon, label, value }) => (
             <div key={label} style={styles.infoItem}>

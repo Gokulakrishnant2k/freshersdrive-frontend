@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useTheme } from "../context/ThemeContext";
 import axios from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
+import AdminDiscoveryTab from "./AdminDiscoveryTab";
 
 const PAGE_SIZE = 10;
 
@@ -16,42 +17,19 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// ─── Pagination component ─────────────────────────────────────────────────────
-function Pagination({ total, page, pageSize, onChange }) {
+// ─── Pagination (exported so AdminDiscoveryTab can import it) ─────────────────
+export function Pagination({ total, page, pageSize, onChange }) {
   const totalPages = Math.ceil(total / pageSize);
   if (totalPages <= 1) return null;
-
   const pages = [];
   for (let i = 1; i <= totalPages; i++) pages.push(i);
-
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, flexWrap: "wrap" }}>
-      <button
-        onClick={() => onChange(page - 1)}
-        disabled={page === 1}
-        style={{ ...paginBtn, opacity: page === 1 ? 0.35 : 1 }}
-      >
-        ← Prev
-      </button>
-
+      <button onClick={() => onChange(page - 1)} disabled={page === 1} style={{ ...paginBtn, opacity: page === 1 ? 0.35 : 1 }}>← Prev</button>
       {pages.map(p => (
-        <button
-          key={p}
-          onClick={() => onChange(p)}
-          style={{ ...paginBtn, ...(p === page ? paginBtnActive : {}) }}
-        >
-          {p}
-        </button>
+        <button key={p} onClick={() => onChange(p)} style={{ ...paginBtn, ...(p === page ? paginBtnActive : {}) }}>{p}</button>
       ))}
-
-      <button
-        onClick={() => onChange(page + 1)}
-        disabled={page === totalPages}
-        style={{ ...paginBtn, opacity: page === totalPages ? 0.35 : 1 }}
-      >
-        Next →
-      </button>
-
+      <button onClick={() => onChange(page + 1)} disabled={page === totalPages} style={{ ...paginBtn, opacity: page === totalPages ? 0.35 : 1 }}>Next →</button>
       <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 6 }}>
         {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total}
       </span>
@@ -61,17 +39,25 @@ function Pagination({ total, page, pageSize, onChange }) {
 
 const paginBtn = {
   padding: "5px 12px", borderRadius: "6px", border: "1px solid #334155",
-  background: "transparent", color: "#64748b", fontSize: "12px",
-  fontWeight: "500", cursor: "pointer",
+  background: "transparent", color: "#64748b", fontSize: "12px", fontWeight: "500", cursor: "pointer",
 };
-const paginBtnActive = {
-  background: "#2563eb", borderColor: "#2563eb", color: "#fff",
-};
+const paginBtnActive = { background: "#2563eb", borderColor: "#2563eb", color: "#fff" };
 
+// ─── Deadline badge helper (exported for AdminDiscoveryTab) ───────────────────
+export function deadlineBadge(deadline, dark) {
+  if (!deadline) return { label: "—", color: "#94a3b8", bg: dark ? "#1e293b" : "transparent", border: "transparent" };
+  const diff = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
+  if (diff < 0)  return { label: deadline,                    color: "#f87171", bg: dark ? "#450a0a" : "#fef2f2", border: dark ? "#7f1d1d" : "#fecaca" };
+  if (diff <= 3) return { label: `${deadline} (${diff}d)`,   color: "#fbbf24", bg: dark ? "#422006" : "#fffbeb", border: dark ? "#78350f" : "#fde68a" };
+  if (diff <= 7) return { label: `${deadline} (${diff}d)`,   color: "#38bdf8", bg: dark ? "#0c2a3e" : "#f0f9ff", border: dark ? "#0369a1" : "#bae6fd" };
+  return           { label: deadline,                    color: "#4ade80", bg: dark ? "#052e16" : "#f0fdf4", border: dark ? "#14532d" : "#bbf7d0" };
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 function AdminDashboard() {
-  const { auth }   = useAuth();
-  const { dark }   = useTheme();
-  const isMobile   = useIsMobile();
+  const { auth }  = useAuth();
+  const { dark }  = useTheme();
+  const isMobile  = useIsMobile();
 
   const isAdmin    = auth.role === "ROLE_ADMIN";
   const isEmployee = auth.role === "ROLE_EMPLOYEE";
@@ -79,52 +65,39 @@ function AdminDashboard() {
 
   const [tab, setTab] = useState(isAdmin ? "drives" : "discovery");
 
-  // ── Drives tab ──────────────────────────────────────────────────────────
+  // ── Drives tab state ────────────────────────────────────────────────────────
   const [drives, setDrives]           = useState([]);
   const [loading, setLoading]         = useState(true);
   const [editingId, setEditingId]     = useState(null);
   const [error, setError]             = useState(null);
   const [drivePage, setDrivePage]     = useState(1);
-  const [driveSearch, setDriveSearch] = useState("");   // ← NEW
+  const [driveSearch, setDriveSearch] = useState("");
 
-  // ── Users tab ───────────────────────────────────────────────────────────
+  // ── Users tab state ─────────────────────────────────────────────────────────
   const [users, setUsers]               = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userError, setUserError]       = useState(null);
   const [userSearch, setUserSearch]     = useState("");
   const [userPage, setUserPage]         = useState(1);
 
-  // ── Discovery tab ───────────────────────────────────────────────────────
-  const [pendingDrives, setPendingDrives]   = useState([]);
-  const [rejectedDrives, setRejectedDrives] = useState([]);
-  const [last5Approved, setLast5Approved]   = useState([]);
-  const [pendingLoading, setPendingLoading] = useState(true);
-  const [pendingError, setPendingError]     = useState(null);
-  const [pendingPage, setPendingPage]       = useState(1);
-  const [rejectedPage, setRejectedPage]     = useState(1);
+  // ── Email notification state ────────────────────────────────────────────────
+  // Admin can opt-in to send email when publishing a drive
+  const [requestEmailNotify, setRequestEmailNotify] = useState(false);
+  const [emailTriggerStatus, setEmailTriggerStatus] = useState(null); // { driveId, status }
 
-  const [editingDrive, setEditingDrive] = useState(null);
-  const [editFields, setEditFields]     = useState({});
-  const [editSaving, setEditSaving]     = useState(false);
-
-  const [rejectionStatus, setRejectionStatus] = useState({
-    used: 0, remaining: 10, onCooldown: false, cooldownMinutesLeft: 0,
-  });
-
+  // ── Drive form — autoDeleteEnabled defaults to true ─────────────────────────
   const emptyForm = {
     companyName: "", jobRole: "", jobDescription: "", keySkills: "",
     location: "", ctcDisplay: "", minCgpa: "", deadline: "",
     eligibleBranches: "", eligibleBatches: "", experienceLevel: "Freshers",
     category: "IT_SOFTWARE", status: "ACTIVE", jobType: "Full-Time",
-    applyLink: "", autoDeleteEnabled: false,
+    applyLink: "", autoDeleteEnabled: true,
   };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     fetchDrives();
-    fetchDiscoveryData();
     if (isAdmin) fetchUsers();
-    if (isEmployee) fetchRejectionStatus();
   }, []);
 
   const fetchDrives = async () => {
@@ -150,35 +123,7 @@ function AdminDashboard() {
     }
   };
 
-  const fetchDiscoveryData = async () => {
-    setPendingLoading(true);
-    setPendingError(null);
-    try {
-      const [pendingRes, rejectedRes, approvedRes] = await Promise.all([
-        axios.get("/admin/drives/pending"),
-        axios.get("/admin/drives/rejected"),
-        axios.get("/admin/drives/last-approved"),
-      ]);
-      setPendingDrives(pendingRes.data   || []);
-      setRejectedDrives(rejectedRes.data || []);
-      setLast5Approved(approvedRes.data  || []);
-    } catch (err) {
-      setPendingError("Failed to load discovery data.");
-    } finally {
-      setPendingLoading(false);
-    }
-  };
-
-  const fetchRejectionStatus = async () => {
-    try {
-      const res = await axios.get("/admin/drives/rejection-status");
-      setRejectionStatus(res.data);
-    } catch (err) {
-      console.error("Failed to fetch rejection status", err);
-    }
-  };
-
-  // ── Users actions ───────────────────────────────────────────────────────
+  // ── Users actions ───────────────────────────────────────────────────────────
   const deleteUser = async (user) => {
     if (!window.confirm(`Delete user "${user.name}" (${user.email})? This cannot be undone.`)) return;
     try {
@@ -201,77 +146,13 @@ function AdminDashboard() {
     }
   };
 
-  // ── Discovery actions ───────────────────────────────────────────────────
-  const approveDrive = async (drive) => {
-    if (!window.confirm(`Approve "${drive.companyName} - ${drive.jobRole}"?`)) return;
-    try {
-      await axios.post(`/admin/drives/${drive.id}/approve`);
-      setPendingDrives(prev => prev.filter(d => d.id !== drive.id));
-      setRejectedDrives(prev => prev.filter(d => d.id !== drive.id));
-      fetchDiscoveryData();
-      fetchDrives();
-    } catch (err) {
-      setPendingError(err.response?.data?.message || "Failed to approve drive.");
-    }
-  };
-
-  const rejectDrive = async (drive) => {
-    if (rejectionStatus.onCooldown && !isAdmin) {
-      alert(`Rejection limit reached. Try again in ${rejectionStatus.cooldownMinutesLeft} minute(s).`);
-      return;
-    }
-    if (!window.confirm(`Reject "${drive.companyName} - ${drive.jobRole}"?`)) return;
-    try {
-      await axios.post(`/admin/drives/${drive.id}/reject`);
-      setPendingDrives(prev => prev.filter(d => d.id !== drive.id));
-      setRejectedDrives(prev => [drive, ...prev]);
-      if (isEmployee) fetchRejectionStatus();
-    } catch (err) {
-      if (err.response?.status === 429) {
-        alert(err.response.data.error);
-        fetchRejectionStatus();
-      } else {
-        setPendingError(err.response?.data?.message || "Failed to reject drive.");
-      }
-    }
-  };
-
-  const openEdit = (drive) => {
-    setEditingDrive(drive);
-    setEditFields({
-      companyName:          drive.companyName          || "",
-      jobRole:              drive.jobRole              || "",
-      location:             drive.location             || "",
-      deadline:             drive.deadline             || "",
-      ctcDisplay:           drive.ctcDisplay           || "",
-      eligibleBatches:      drive.eligibleBatches      || "",
-      applyLink:            drive.applyLink            || "",
-      autoExpireAfter30Days: drive.autoExpireAfter30Days !== undefined
-                              ? drive.autoExpireAfter30Days
-                              : true,
-    });
-  };
-
-  const saveEdit = async () => {
-    if (!editingDrive) return;
-    setEditSaving(true);
-    try {
-      const res = await axios.patch(`/admin/drives/${editingDrive.id}/edit`, editFields);
-      setPendingDrives(prev => prev.map(d => d.id === editingDrive.id ? res.data : d));
-      setRejectedDrives(prev => prev.map(d => d.id === editingDrive.id ? res.data : d));
-      setEditingDrive(null);
-    } catch (err) {
-      alert("Failed to save changes.");
-    } finally {
-      setEditSaving(false);
-    }
-  };
-
-  // ── Drives tab actions ──────────────────────────────────────────────────
+  // ── Drive form helpers ──────────────────────────────────────────────────────
   const buildPayload = (f) => ({
     ...f,
     minCgpa:  f.minCgpa  ? parseFloat(f.minCgpa) : null,
     deadline: f.deadline || null,
+    // employees always submit as UPCOMING; admin picks status freely
+    status: isEmployee ? "UPCOMING" : f.status,
   });
 
   const formatErrors = (data) => {
@@ -284,6 +165,30 @@ function AdminDashboard() {
     return "Unknown error";
   };
 
+  // ── Email trigger (admin direct) ────────────────────────────────────────────
+  const triggerEmailForDrive = async (driveId) => {
+    try {
+      setEmailTriggerStatus({ driveId, status: "pending" });
+      await axios.post(`/admin/drives/${driveId}/send-notification`);
+      setEmailTriggerStatus({ driveId, status: "sent" });
+      setTimeout(() => setEmailTriggerStatus(null), 4000);
+    } catch (err) {
+      setEmailTriggerStatus({ driveId, status: "error" });
+      setTimeout(() => setEmailTriggerStatus(null), 4000);
+    }
+  };
+
+  // ── Email approval request (employee flow) ──────────────────────────────────
+  const requestEmailApproval = async (driveId) => {
+    try {
+      await axios.post(`/admin/drives/${driveId}/request-email-approval`);
+      alert("Email approval request sent to admin.");
+    } catch (err) {
+      alert("Failed to request email approval.");
+    }
+  };
+
+  // ── Create drive ────────────────────────────────────────────────────────────
   const handleAdd = async () => {
     setError(null);
     if (!form.companyName.trim()) { setError("Company name is required."); return; }
@@ -292,13 +197,28 @@ function AdminDashboard() {
     try {
       const res = await axios.post("/drives", buildPayload(form));
       setDrives(prev => [res.data, ...prev]);
+
+      // Admin opted to send email on publish
+      if (isAdmin && requestEmailNotify) {
+        await triggerEmailForDrive(res.data.id);
+      }
+      // Employee: offer to request email approval
+      if (isEmployee) {
+        const want = window.confirm(
+          "Drive published as Upcoming. Request admin approval to send email notifications?"
+        );
+        if (want) await requestEmailApproval(res.data.id);
+      }
+
       setForm(emptyForm);
+      setRequestEmailNotify(false);
       setDrivePage(1);
     } catch (err) {
       setError(`Failed to create drive: ${formatErrors(err.response?.data)}`);
     }
   };
 
+  // ── Edit drive ──────────────────────────────────────────────────────────────
   const startEdit = (drive) => {
     setEditingId(drive.id);
     setError(null);
@@ -315,12 +235,11 @@ function AdminDashboard() {
       eligibleBatches:   drive.eligibleBatches   || "",
       experienceLevel:   drive.experienceLevel   || "Freshers",
       category:          drive.category          || "IT_SOFTWARE",
-      status:            drive.status            || "ACTIVE",
+      status:            drive.status            || "ACTIVE",   // preserve real status
       jobType:           drive.jobType           || "Full-Time",
       applyLink:         drive.applyLink         || "",
-      autoDeleteEnabled: drive.autoDeleteEnabled || false,
+      autoDeleteEnabled: drive.autoDeleteEnabled ?? true,
     });
-    // Scroll to form on mobile
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -352,7 +271,7 @@ function AdminDashboard() {
   const cancelEdit = () => { setEditingId(null); setForm(emptyForm); setError(null); };
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  // ── Theme tokens ────────────────────────────────────────────────────────
+  // ── Theme tokens ────────────────────────────────────────────────────────────
   const cardBg        = dark ? "#1e293b" : "#ffffff";
   const cardBorder    = dark ? "#334155" : "#e2e8f0";
   const textPrimary   = dark ? "#f1f5f9" : "#0f172a";
@@ -362,15 +281,19 @@ function AdminDashboard() {
   const inputColor    = dark ? "#f1f5f9" : "#0f172a";
   const pageBg        = dark ? "#0f172a" : "#f8fafc";
 
+  const inputStyle = {
+    padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px",
+    fontSize: "13px", background: inputBg, color: inputColor,
+    outline: "none", width: "100%", boxSizing: "border-box",
+  };
+
   if (!canAccess) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: pageBg }}>
         <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "48px", textAlign: "center" }}>
           <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔒</div>
           <h2 style={{ fontSize: "20px", fontWeight: "700", color: textPrimary, margin: "0 0 8px" }}>Access Denied</h2>
-          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>
-            You don't have permission to view this page.
-          </p>
+          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>You don't have permission to view this page.</p>
         </div>
       </div>
     );
@@ -386,128 +309,38 @@ function AdminDashboard() {
   const filteredUsers = users.filter(u => {
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
-    return (
-      (u.name   || "").toLowerCase().includes(q) ||
-      (u.email  || "").toLowerCase().includes(q) ||
-      (u.college|| "").toLowerCase().includes(q)
-    );
+    return (u.name||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q) || (u.college||"").toLowerCase().includes(q);
   });
 
-  // ── Drive search filter ─────────────────────────────────────────────────
   const filteredDrives = drives.filter(d => {
     const q = driveSearch.trim().toLowerCase();
     if (!q) return true;
     return (
-      (d.companyName || "").toLowerCase().includes(q) ||
-      (d.jobRole     || "").toLowerCase().includes(q) ||
-      (d.location    || "").toLowerCase().includes(q) ||
-      (d.category    || "").toLowerCase().includes(q) ||
-      (d.status      || "").toLowerCase().includes(q) ||
-      (d.ctcDisplay  || "").toLowerCase().includes(q)
+      (d.companyName||"").toLowerCase().includes(q) ||
+      (d.jobRole    ||"").toLowerCase().includes(q) ||
+      (d.location   ||"").toLowerCase().includes(q) ||
+      (d.category   ||"").toLowerCase().includes(q) ||
+      (d.status     ||"").toLowerCase().includes(q) ||
+      (d.ctcDisplay ||"").toLowerCase().includes(q)
     );
   });
 
-  // ── Pagination slices ───────────────────────────────────────────────────
-  const pagedDrives   = filteredDrives.slice((drivePage - 1) * PAGE_SIZE, drivePage * PAGE_SIZE);
-  const pagedUsers    = filteredUsers.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
-  const pagedPending  = pendingDrives.slice((pendingPage - 1) * PAGE_SIZE, pendingPage * PAGE_SIZE);
-  const pagedRejected = rejectedDrives.slice((rejectedPage - 1) * PAGE_SIZE, rejectedPage * PAGE_SIZE);
+  const pagedDrives = filteredDrives.slice((drivePage - 1) * PAGE_SIZE, drivePage * PAGE_SIZE);
+  const pagedUsers  = filteredUsers.slice((userPage  - 1) * PAGE_SIZE, userPage  * PAGE_SIZE);
 
   const handleUserSearch  = (v) => { setUserSearch(v);  setUserPage(1);  };
-  const handleDriveSearch = (v) => { setDriveSearch(v); setDrivePage(1); }; // ← NEW
-
-  // ── Deadline badge helper ───────────────────────────────────────────────
-  const deadlineBadge = (deadline) => {
-    if (!deadline) return { label: "—", color: "#94a3b8", bg: dark ? "#1e293b" : "transparent", border: "transparent" };
-    const diff = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    if (diff < 0)  return { label: deadline, color: "#f87171", bg: dark ? "#450a0a" : "#fef2f2", border: dark ? "#7f1d1d" : "#fecaca" };
-    if (diff <= 3) return { label: `${deadline} (${diff}d)`, color: "#fbbf24", bg: dark ? "#422006" : "#fffbeb", border: dark ? "#78350f" : "#fde68a" };
-    if (diff <= 7) return { label: `${deadline} (${diff}d)`, color: "#38bdf8", bg: dark ? "#0c2a3e" : "#f0f9ff", border: dark ? "#0369a1" : "#bae6fd" };
-    return         { label: deadline, color: "#4ade80", bg: dark ? "#052e16" : "#f0fdf4", border: dark ? "#14532d" : "#bbf7d0" };
-  };
+  const handleDriveSearch = (v) => { setDriveSearch(v); setDrivePage(1); };
 
   const tabs = [
     { key: "drives",    label: "Drives" },
     ...(isAdmin ? [{ key: "users", label: `Users${users.length > 0 ? ` (${users.length})` : ""}` }] : []),
-    { key: "discovery", label: `AI Discovery${pendingDrives.length > 0 ? ` (${pendingDrives.length})` : ""}` },
+    { key: "discovery", label: "AI Discovery" },
   ];
-
-  // ── Shared input style ──────────────────────────────────────────────────
-  const inputStyle = {
-    padding: "9px 12px",
-    border: `1px solid ${inputBorder}`,
-    borderRadius: "7px",
-    fontSize: "13px",
-    background: inputBg,
-    color: inputColor,
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-  };
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', system-ui, sans-serif", background: pageBg, minHeight: "100vh", padding: isMobile ? "16px 12px" : "24px 20px" }}>
 
-      {/* ── Edit modal ────────────────────────────────────────────────────── */}
-      {editingDrive && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "16px" }}>
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "24px", width: isMobile ? "95vw" : "520px", maxHeight: "90vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: textPrimary }}>
-                Edit drive
-              </h3>
-              <button onClick={() => setEditingDrive(null)} style={{ background: "transparent", border: "none", fontSize: "18px", cursor: "pointer", color: textSecondary }}>✕</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
-              {[
-                { key: "companyName",     label: "Company name"          },
-                { key: "jobRole",         label: "Job role"              },
-                { key: "location",        label: "Location"              },
-                { key: "deadline",        label: "Deadline (YYYY-MM-DD)" },
-                { key: "ctcDisplay",      label: "CTC / Salary"          },
-                { key: "eligibleBatches", label: "Eligible batches"      },
-                { key: "applyLink",       label: "Apply link"            },
-              ].map(({ key, label }) => (
-                <div key={key} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "11px", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-                    {label}
-                  </label>
-                  <input
-                    style={inputStyle}
-                    value={editFields[key] || ""}
-                    onChange={e => setEditFields({ ...editFields, [key]: e.target.value })}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Auto-expire toggle */}
-            <div style={{ marginTop: "16px", padding: "12px 14px", background: dark ? "#0f172a" : "#f8fafc", borderRadius: "8px", border: `1px solid ${cardBorder}` }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={editFields.autoExpireAfter30Days !== false}
-                  onChange={e => setEditFields({ ...editFields, autoExpireAfter30Days: e.target.checked })}
-                  style={{ width: "16px", height: "16px", accentColor: "#2563eb" }}
-                />
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: textPrimary }}>Auto-delete after 30 days of expiry</div>
-                  <div style={{ fontSize: "11px", color: textSecondary, marginTop: "2px" }}>Drive will be removed 30 days after its deadline passes</div>
-                </div>
-              </label>
-            </div>
-
-            <div style={{ display: "flex", gap: "8px", marginTop: "18px", justifyContent: "flex-end" }}>
-              <button onClick={() => setEditingDrive(null)} style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${cardBorder}`, borderRadius: "6px", fontSize: "12px", color: textSecondary, cursor: "pointer" }}>Cancel</button>
-              <button onClick={saveEdit} disabled={editSaving} style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer", opacity: editSaving ? 0.6 : 1 }}>
-                {editSaving ? "Saving…" : "Save changes"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── TOP BAR ──────────────────────────────────────────────────────── */}
+      {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: isMobile ? "wrap" : "nowrap", gap: isMobile ? "10px" : "0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ width: "34px", height: "34px", background: "#2563eb", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -531,33 +364,23 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── TABS ─────────────────────────────────────────────────────────── */}
+      {/* ── TABS ─────────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "16px", overflowX: "auto", WebkitOverflowScrolling: "touch", borderBottom: `1px solid ${cardBorder}` }}>
         {tabs.map(tb => (
-          <button
-            key={tb.key}
-            onClick={() => setTab(tb.key)}
-            style={{
-              padding: "8px 18px",
-              background: "transparent",
-              color: tab === tb.key ? textPrimary : textSecondary,
-              border: "none",
-              borderBottom: tab === tb.key ? "2px solid #2563eb" : "2px solid transparent",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              marginBottom: "-1px",
-            }}
-          >
+          <button key={tb.key} onClick={() => setTab(tb.key)} style={{
+            padding: "8px 18px", background: "transparent",
+            color: tab === tb.key ? textPrimary : textSecondary,
+            border: "none", borderBottom: tab === tb.key ? "2px solid #2563eb" : "2px solid transparent",
+            fontSize: "13px", fontWeight: "600", cursor: "pointer", whiteSpace: "nowrap", marginBottom: "-1px",
+          }}>
             {tb.label}
           </button>
         ))}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════════════════════════════
           DRIVES TAB
-      ════════════════════════════════════════════════════════════════════ */}
+      ════════════════════════════════════════════════════════════════════════ */}
       {tab === "drives" && (
         <>
           {isAdmin && (
@@ -570,9 +393,7 @@ function AdminDashboard() {
               ].map(m => (
                 <div key={m.label} style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "10px", padding: "14px 16px" }}>
                   <div style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>{m.label}</div>
-                  <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "4px", color: m.warn && m.value > 0 ? "#d97706" : textPrimary }}>
-                    {m.value}
-                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "4px", color: m.warn && m.value > 0 ? "#d97706" : textPrimary }}>{m.value}</div>
                 </div>
               ))}
             </div>
@@ -585,7 +406,23 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* Create / Edit form */}
+          {/* Email status toast */}
+          {emailTriggerStatus && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              background: emailTriggerStatus.status === "sent" ? (dark?"#052e16":"#f0fdf4") : emailTriggerStatus.status === "error" ? (dark?"#450a0a":"#fef2f2") : (dark?"#0c2a3e":"#eff6ff"),
+              border: `1px solid ${emailTriggerStatus.status === "sent" ? (dark?"#14532d":"#bbf7d0") : emailTriggerStatus.status === "error" ? (dark?"#7f1d1d":"#fecaca") : (dark?"#0369a1":"#bae6fd")}`,
+              borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
+              color: emailTriggerStatus.status === "sent" ? (dark?"#4ade80":"#15803d") : emailTriggerStatus.status === "error" ? (dark?"#f87171":"#b91c1c") : (dark?"#38bdf8":"#1d4ed8"),
+              marginBottom: "14px",
+            }}>
+              {emailTriggerStatus.status === "pending" && "📧 Sending email notification…"}
+              {emailTriggerStatus.status === "sent"    && "✅ Email notification sent to all students!"}
+              {emailTriggerStatus.status === "error"   && "❌ Failed to send email notification."}
+            </div>
+          )}
+
+          {/* ── Create / Edit form ─────────────────────────────────────────── */}
           <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>{editingId ? "Edit drive" : "Create drive"}</h2>
@@ -593,6 +430,7 @@ function AdminDashboard() {
                 <button onClick={cancelEdit} style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${cardBorder}`, borderRadius: "6px", fontSize: "12px", color: textSecondary, cursor: "pointer" }}>Cancel</button>
               )}
             </div>
+
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "12px" }}>
               {[
                 { key: "companyName",      placeholder: "Company name"         },
@@ -610,51 +448,120 @@ function AdminDashboard() {
                   <input style={inputStyle} placeholder={placeholder} value={form[key]} onChange={set(key)} />
                 </div>
               ))}
-              {[
-                { key: "category", label: "Category", options: [["IT_SOFTWARE","IT / Software"],["CORE_ENGINEERING","Core Engineering"],["GOVERNMENT","Government"],["BANKING","Banking"],["MANAGEMENT","Management"],["INTERNSHIP","Internship"],["OTHERS","Others"]] },
-                { key: "status",   label: "Status",   options: [["ACTIVE","Active"],["UPCOMING","Upcoming"],["CLOSED","Closed"],["EXPIRED","Expired"]] },
-                { key: "jobType",  label: "Job type", options: [["Full-Time","Full-Time"],["Internship","Internship"],["Contract","Contract"]] },
-                { key: "experienceLevel", label: "Experience level", options: [["Freshers","Freshers"],["0-1 Years","0-1 Years"],["1-2 Years","1-2 Years"],["2-3 Years","2-3 Years"],["3+ Years","3+ Years"]] },
-              ].map(({ key, label, options }) => (
-                <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>{label}</label>
-                  <select style={inputStyle} value={form[key]} onChange={set(key)}>
-                    {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+
+              {/* Category */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Category</label>
+                <select style={inputStyle} value={form.category} onChange={set("category")}>
+                  {[["IT_SOFTWARE","IT / Software"],["CORE_ENGINEERING","Core Engineering"],["GOVERNMENT","Government"],["BANKING","Banking"],["MANAGEMENT","Management"],["INTERNSHIP","Internship"],["OTHERS","Others"]].map(([v,l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status — ADMIN only (employees always go UPCOMING via buildPayload) */}
+              {isAdmin && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Status</label>
+                  <select style={inputStyle} value={form.status} onChange={set("status")}>
+                    {[["ACTIVE","Active"],["UPCOMING","Upcoming"],["CLOSED","Closed"],["EXPIRED","Expired"]].map(([v,l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
                   </select>
                 </div>
-              ))}
+              )}
+
+              {/* Job type */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Job type</label>
+                <select style={inputStyle} value={form.jobType} onChange={set("jobType")}>
+                  {[["Full-Time","Full-Time"],["Internship","Internship"],["Contract","Contract"]].map(([v,l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Experience level */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Experience level</label>
+                <select style={inputStyle} value={form.experienceLevel} onChange={set("experienceLevel")}>
+                  {[["Freshers","Freshers"],["0-1 Years","0-1 Years"],["1-2 Years","1-2 Years"],["2-3 Years","2-3 Years"],["3+ Years","3+ Years"]].map(([v,l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Deadline */}
               <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Deadline *</label>
                 <input type="date" style={inputStyle} value={form.deadline} onChange={set("deadline")} />
               </div>
             </div>
+
+            {/* Job description */}
             <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "12px" }}>
               <label style={{ fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px" }}>Job description</label>
               <textarea
                 style={{ ...inputStyle, minHeight: "110px", resize: "vertical", fontFamily: "inherit" }}
-                placeholder="Describe the role..."
+                placeholder="Describe the role…"
                 value={form.jobDescription}
                 onChange={set("jobDescription")}
               />
             </div>
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: textSecondary, marginTop: "14px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.autoDeleteEnabled} onChange={e => setForm({ ...form, autoDeleteEnabled: e.target.checked })} />
-              <span>Auto-delete after deadline</span>
-            </label>
+
+            {/* Bottom options row */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "14px", alignItems: "center" }}>
+              {/* Auto-delete toggle — default ON */}
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: textSecondary, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.autoDeleteEnabled}
+                  onChange={e => setForm({ ...form, autoDeleteEnabled: e.target.checked })}
+                />
+                Auto-delete after deadline
+              </label>
+
+              {/* Admin: email on publish toggle */}
+              {isAdmin && !editingId && (
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: textSecondary, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={requestEmailNotify}
+                    onChange={e => setRequestEmailNotify(e.target.checked)}
+                    style={{ accentColor: "#2563eb" }}
+                  />
+                  📧 Send email notification on publish
+                </label>
+              )}
+
+              {/* Employee notice */}
+              {isEmployee && !editingId && (
+                <span style={{ fontSize: "12px", color: textSecondary, background: dark?"#0c2a3e":"#eff6ff", border: `1px solid ${dark?"#0369a1":"#bae6fd"}`, borderRadius: "6px", padding: "4px 10px" }}>
+                  ℹ️ Drive will be published as <strong>Upcoming</strong> — you can request email approval after publishing.
+                </span>
+              )}
+            </div>
+
             <div style={{ display: "flex", gap: "8px", marginTop: "14px", flexWrap: "wrap" }}>
-              <button style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }} onClick={editingId ? handleUpdate : handleAdd}>
+              <button
+                style={{ padding: "9px 20px", background: "#2563eb", color: "white", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
+                onClick={editingId ? handleUpdate : handleAdd}
+              >
                 {editingId ? "Update drive" : "Publish drive"}
               </button>
               {!editingId && (
-                <button onClick={() => setForm(emptyForm)} style={{ padding: "9px 16px", background: "transparent", color: textSecondary, border: `1px solid ${cardBorder}`, borderRadius: "7px", fontSize: "13px", cursor: "pointer" }}>Reset</button>
+                <button
+                  onClick={() => { setForm(emptyForm); setRequestEmailNotify(false); }}
+                  style={{ padding: "9px 16px", background: "transparent", color: textSecondary, border: `1px solid ${cardBorder}`, borderRadius: "7px", fontSize: "13px", cursor: "pointer" }}
+                >
+                  Reset
+                </button>
               )}
             </div>
           </div>
 
-          {/* ── Live drives table ── */}
+          {/* ── Live drives table ───────────────────────────────────────────── */}
           <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-
-            {/* Header row */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Live drives</h2>
               <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px", whiteSpace: "nowrap" }}>
@@ -662,7 +569,6 @@ function AdminDashboard() {
               </span>
             </div>
 
-            {/* ── Search bar ── */}
             <input
               style={{ ...inputStyle, marginBottom: "14px" }}
               placeholder="Search by company, role, location, category, CTC or status…"
@@ -679,17 +585,18 @@ function AdminDashboard() {
             ) : (
               <>
                 <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "800px" : "unset" }}>
                     <thead>
                       <tr>
-                        {["Company","Role","Location","CTC","Category","Status","Auto-del","Actions","Deadline"].map(h => (
+                        {["Company","Role","Location","CTC","Category","Status","Auto-del","Deadline","Actions"].map(h => (
                           <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {pagedDrives.map(d => {
-                        const dl = deadlineBadge(d.deadline);
+                        const dl = deadlineBadge(d.deadline, dark);
+                        const emailStatus = emailTriggerStatus?.driveId === d.id ? emailTriggerStatus.status : null;
                         return (
                           <tr key={d.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
                             <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
@@ -707,10 +614,15 @@ function AdminDashboard() {
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                               <span style={{
                                 display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
-                                background: d.autoDeleteEnabled ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#1e293b" : "#f1f5f9"),
-                                color:      d.autoDeleteEnabled ? (dark ? "#4ade80" : "#15803d") : textSecondary,
+                                background: d.autoDeleteEnabled?(dark?"#052e16":"#dcfce7"):(dark?"#1e293b":"#f1f5f9"),
+                                color:      d.autoDeleteEnabled?(dark?"#4ade80":"#15803d"):textSecondary,
                               }}>
                                 {d.autoDeleteEnabled ? "ON" : "OFF"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
+                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
+                                {dl.label}
                               </span>
                             </td>
                             <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
@@ -718,23 +630,34 @@ function AdminDashboard() {
                                 <button
                                   style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
                                   onClick={() => startEdit(d)}
-                                >
-                                  Edit
-                                </button>
+                                >Edit</button>
+
+                                {/* Admin: direct email trigger */}
                                 {isAdmin && (
                                   <button
-                                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
-                                    onClick={() => deleteDrive(d.id)}
+                                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer", opacity: emailStatus==="pending"?0.5:1 }}
+                                    disabled={emailStatus === "pending"}
+                                    onClick={() => triggerEmailForDrive(d.id)}
                                   >
-                                    Delete
+                                    {emailStatus === "pending" ? "Sending…" : emailStatus === "sent" ? "✓ Sent" : "📧 Email"}
                                   </button>
                                 )}
+
+                                {/* Employee: request email approval */}
+                                {isEmployee && (
+                                  <button
+                                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(234,179,8,0.4)", background: "transparent", color: dark?"#fbbf24":"#d97706", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                                    onClick={() => requestEmailApproval(d.id)}
+                                  >📧 Request</button>
+                                )}
+
+                                {isAdmin && (
+                                  <button
+                                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark?"#f87171":"#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                                    onClick={() => deleteDrive(d.id)}
+                                  >Delete</button>
+                                )}
                               </div>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
-                                {dl.label}
-                              </span>
                             </td>
                           </tr>
                         );
@@ -749,9 +672,9 @@ function AdminDashboard() {
         </>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════════════════════════════
           USERS TAB
-      ════════════════════════════════════════════════════════════════════ */}
+      ════════════════════════════════════════════════════════════════════════ */}
       {tab === "users" && isAdmin && (
         <>
           {userError && (
@@ -763,14 +686,9 @@ function AdminDashboard() {
           <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Registered users</h2>
-              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{filteredUsers.length} shown</span>
+              <span style={{ background: dark?"#0f172a":"#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{filteredUsers.length} shown</span>
             </div>
-            <input
-              style={inputStyle}
-              placeholder="Search by name, email, or college..."
-              value={userSearch}
-              onChange={e => handleUserSearch(e.target.value)}
-            />
+            <input style={inputStyle} placeholder="Search by name, email, or college..." value={userSearch} onChange={e => handleUserSearch(e.target.value)} />
             <div style={{ marginTop: "14px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {usersLoading ? (
                 <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
@@ -800,14 +718,14 @@ function AdminDashboard() {
                               {u.role==="ROLE_ADMIN"?"Admin":u.role==="ROLE_EMPLOYEE"?"Employee":"User"}
                             </span>
                           </td>
-                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.college || "—"}</td>
-                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.branch  || "—"}</td>
-                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.batchYear|| "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.college   || "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.branch    || "—"}</td>
+                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{u.batchYear || "—"}</td>
                           <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                             <span style={{
                               display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
-                              background: u.emailVerified ? (dark ? "#052e16" : "#dcfce7") : (dark ? "#422006" : "#fef9c3"),
-                              color:      u.emailVerified ? (dark ? "#4ade80" : "#15803d") : (dark ? "#fbbf24" : "#92400e"),
+                              background: u.emailVerified?(dark?"#052e16":"#dcfce7"):(dark?"#422006":"#fef9c3"),
+                              color:      u.emailVerified?(dark?"#4ade80":"#15803d"):(dark?"#fbbf24":"#92400e"),
                             }}>
                               {u.emailVerified ? "Verified" : "Unverified"}
                             </span>
@@ -815,14 +733,17 @@ function AdminDashboard() {
                           <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
                             {u.role !== "ROLE_ADMIN" && (
                               <button
-                                style={{ padding: "5px 10px", borderRadius: "6px", border: u.role==="ROLE_EMPLOYEE" ? "1px solid rgba(217,119,6,0.4)" : "1px solid rgba(37,99,235,0.4)", background: "transparent", color: u.role==="ROLE_EMPLOYEE" ? (dark?"#fbbf24":"#d97706") : (dark?"#60a5fa":"#2563eb"), fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer" }}
+                                style={{ padding: "5px 10px", borderRadius: "6px", border: u.role==="ROLE_EMPLOYEE"?"1px solid rgba(217,119,6,0.4)":"1px solid rgba(37,99,235,0.4)", background: "transparent", color: u.role==="ROLE_EMPLOYEE"?(dark?"#fbbf24":"#d97706"):(dark?"#60a5fa":"#2563eb"), fontSize: "12px", fontWeight: "500", marginRight: "6px", cursor: "pointer" }}
                                 onClick={() => promoteUser(u)}
                               >
                                 {u.role==="ROLE_EMPLOYEE" ? "Demote" : "Make Employee"}
                               </button>
                             )}
                             {u.role !== "ROLE_ADMIN" && (
-                              <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => deleteUser(u)}>Delete</button>
+                              <button
+                                style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark?"#f87171":"#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                                onClick={() => deleteUser(u)}
+                              >Delete</button>
                             )}
                           </td>
                         </tr>
@@ -837,224 +758,19 @@ function AdminDashboard() {
         </>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════
-          AI DISCOVERY TAB
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          DISCOVERY TAB
+      ════════════════════════════════════════════════════════════════════════ */}
       {tab === "discovery" && (
-        <>
-          {pendingError && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: dark ? "#450a0a" : "#fef2f2", border: `1px solid ${dark ? "#7f1d1d" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: dark ? "#f87171" : "#b91c1c", marginBottom: "14px" }}>
-              <span>⚠️ {pendingError}</span>
-              <button style={{ background: "transparent", border: "none", color: dark ? "#f87171" : "#b91c1c", cursor: "pointer", fontSize: "14px" }} onClick={() => setPendingError(null)}>✕</button>
-            </div>
-          )}
-
-          {isEmployee && (
-            <div style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              background: rejectionStatus.onCooldown ? (dark ? "#450a0a" : "#fef2f2") : (dark ? "#052e16" : "#f0fdf4"),
-              border: `1px solid ${rejectionStatus.onCooldown ? (dark ? "#7f1d1d" : "#fecaca") : (dark ? "#14532d" : "#bbf7d0")}`,
-              borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
-              color: rejectionStatus.onCooldown ? (dark ? "#f87171" : "#b91c1c") : (dark ? "#4ade80" : "#15803d"),
-              marginBottom: "14px",
-            }}>
-              {rejectionStatus.onCooldown
-                ? `🚫 Rejection limit reached. Cooldown: ${rejectionStatus.cooldownMinutesLeft} minute(s) remaining.`
-                : `✅ Rejections this hour: ${rejectionStatus.used} / 10 used — ${rejectionStatus.remaining} remaining`}
-            </div>
-          )}
-
-          {last5Approved.length > 0 && (
-            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>✓ Last 5 approved — for reference</h2>
-                <span style={{ background: dark ? "#052e16" : "#f0fdf4", color: dark ? "#4ade80" : "#15803d", fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
-                  {last5Approved.length} recent
-                </span>
-              </div>
-              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "500px" : "unset" }}>
-                  <thead>
-                    <tr>
-                      {["Company","Role","Location","Source","Deadline"].map(h => (
-                        <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {last5Approved.map(d => {
-                      const dl = deadlineBadge(d.deadline);
-                      return (
-                        <tr key={d.id} style={{ opacity: 0.8, borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
-                          <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
-                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
-                          <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
-                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", background: dark ? "#052e16" : "#f0fdf4", color: dark ? "#4ade80" : "#15803d" }}>
-                              {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI":"Manual"}
-                            </span>
-                          </td>
-                          <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                            <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
-                              {dl.label}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ── Pending drives ── */}
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Pending AI-discovered drives</h2>
-              <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSecondary, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>{pendingDrives.length} awaiting review</span>
-            </div>
-            <p style={{ color: textSecondary, fontSize: "13px", marginTop: "0", marginBottom: "16px" }}>
-              Found automatically by the discovery scheduler. Not visible publicly until approved.
-              Verify deadlines marked "guessed" before approving.
-            </p>
-            {pendingLoading ? (
-              <p style={{ color: textSecondary, fontSize: "14px" }}>Loading...</p>
-            ) : pendingDrives.length === 0 ? (
-              <p style={{ color: textSecondary, fontSize: "14px" }}>No pending drives right now.</p>
-            ) : (
-              <>
-                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
-                    <thead>
-                      <tr>
-                        {["Company","Role","Location","Source","Auto-expire 30d","Link","Actions","Deadline"].map(h => (
-                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pagedPending.map(d => {
-                        const dl = deadlineBadge(d.deadline);
-                        const autoExpire = d.autoExpireAfter30Days !== false;
-                        return (
-                          <tr key={d.id} style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
-                            <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
-                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
-                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{
-                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
-                                background: d.source==="RSS_FEED"?(dark?"#052e16":"#f0fdf4"):d.source==="AI_SEARCH"?(dark?"#0c2a3e":"#eff6ff"):(dark?"#1e293b":"#f1f5f9"),
-                                color:      d.source==="RSS_FEED"?(dark?"#4ade80":"#15803d"):d.source==="AI_SEARCH"?(dark?"#38bdf8":"#1d4ed8"):(dark?"#94a3b8":"#64748b"),
-                              }}>
-                                {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI Search":"Manual"}
-                              </span>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{
-                                display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
-                                background: autoExpire ? (dark?"#052e16":"#f0fdf4") : (dark?"#1e293b":"#f1f5f9"),
-                                color:      autoExpire ? (dark?"#4ade80":"#15803d") : textSecondary,
-                              }}>
-                                {autoExpire ? "ON" : "OFF"}
-                              </span>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              {d.applyLink
-                                ? <a href={d.applyLink} target="_blank" rel="noopener noreferrer" style={{ color: dark ? "#60a5fa" : "#2563eb", fontSize: "12px" }}>View ↗</a>
-                                : "—"}
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => openEdit(d)}>Edit</button>
-                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => approveDrive(d)}>Approve</button>
-                                <button
-                                  style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark?"#f87171":"#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer", opacity: (!isAdmin && rejectionStatus.onCooldown) ? 0.4 : 1 }}
-                                  disabled={!isAdmin && rejectionStatus.onCooldown}
-                                  onClick={() => rejectDrive(d)}
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
-                                {dl.label}
-                                {d.deadlineGuessed && <span style={{ marginLeft: 4, opacity: 0.7 }}>⚠</span>}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <Pagination total={pendingDrives.length} page={pendingPage} pageSize={PAGE_SIZE} onChange={setPendingPage} />
-              </>
-            )}
-          </div>
-
-          {/* ── Rejected drives ── */}
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>✕ Rejected drives</h2>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: textSecondary }}>Auto-deleted after 3 days</span>
-                <span style={{ background: dark ? "#450a0a" : "#fef2f2", color: dark ? "#f87171" : "#b91c1c", fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
-                  {rejectedDrives.length}
-                </span>
-              </div>
-            </div>
-            {rejectedDrives.length === 0 ? (
-              <p style={{ color: textSecondary, fontSize: "14px" }}>No rejected drives.</p>
-            ) : (
-              <>
-                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "600px" : "unset" }}>
-                    <thead>
-                      <tr>
-                        {["Company","Role","Location","Source","Actions","Deadline"].map(h => (
-                          <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600", color: textSecondary, textTransform: "uppercase", letterSpacing: "0.4px", borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pagedRejected.map(d => {
-                        const dl = deadlineBadge(d.deadline);
-                        return (
-                          <tr key={d.id} style={{ opacity: 0.75, borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
-                            <td style={{ padding: "11px 12px", color: textPrimary, fontWeight: "600", verticalAlign: "middle" }}>{d.companyName}</td>
-                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.jobRole}</td>
-                            <td style={{ padding: "11px 12px", color: textSecondary, verticalAlign: "middle" }}>{d.location || "—"}</td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", background: dark ? "#450a0a" : "#fee2e2", color: dark ? "#f87171" : "#b91c1c" }}>
-                                {d.source==="RSS_FEED"?"RSS":d.source==="AI_SEARCH"?"AI":"Manual"}
-                              </span>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => openEdit(d)}>Edit</button>
-                                <button style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }} onClick={() => approveDrive(d)}>Approve anyway</button>
-                              </div>
-                            </td>
-                            <td style={{ padding: "11px 12px", verticalAlign: "middle" }}>
-                              <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap", background: dl.bg, color: dl.color, border: `1px solid ${dl.border}` }}>
-                                {dl.label}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <Pagination total={rejectedDrives.length} page={rejectedPage} pageSize={PAGE_SIZE} onChange={setRejectedPage} />
-              </>
-            )}
-          </div>
-        </>
+        <AdminDiscoveryTab
+          dark={dark}
+          isMobile={isMobile}
+          isAdmin={isAdmin}
+          isEmployee={isEmployee}
+          onDrivesChanged={fetchDrives}
+        />
       )}
+
     </div>
   );
 }
