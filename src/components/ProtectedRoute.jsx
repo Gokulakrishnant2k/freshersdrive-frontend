@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 function ProtectedRoute({ children, roleRequired }) {
   const { auth } = useAuth();
 
+  if (auth.loading) return null;
+
   if (!auth.token) return <Navigate to="/login" />;
 
   if (roleRequired) {

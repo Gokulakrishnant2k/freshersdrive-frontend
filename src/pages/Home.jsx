@@ -446,7 +446,7 @@ export default function Home() {
 
 const isAdmin = useMemo(() => {
   try {
-    const user = JSON.parse(localStorage.getItem("fd_user") || "{}");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     console.log("fd_user full object:", user);
     console.log("fd_user role:", user?.role);
     return ADMIN_LIKE_ROLES.includes(user?.role);
