@@ -22,7 +22,7 @@ import DriveCalendar from "./pages/DriveCalendar";
 import SavedDrives from "./pages/SavedDrives";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import ManageHighlightedDrives from "./pages/ManageHighlightedDrives";
+import ManageHighlightedDrives from "./pages/HighlightedDrives";
 
 // Legal Pages
 import PrivacyPolicy from "./pages/PrivacyPolicy";
