@@ -4,18 +4,24 @@ import { Pagination, deadlineBadge } from "./AdminDashboard";
 
 const PAGE_SIZE = 10;
 
+// ─── hide scrollbar globally for this component ───────────────────────────────
+const HIDE_SCROLLBAR_STYLE = `
+  .fd-discovery-panel::-webkit-scrollbar { display: none; }
+  .fd-discovery-panel { -ms-overflow-style: none; scrollbar-width: none; }
+`;
+
 // ─── tiny spinner ─────────────────────────────────────────────────────────────
 function Spinner() {
   return (
     <span style={{
       display: "inline-block", width: "12px", height: "12px",
       border: "2px solid currentColor", borderTopColor: "transparent",
-      borderRadius: "50%", animation: "spin 0.7s linear infinite", verticalAlign: "middle", marginRight: "6px",
+      borderRadius: "50%", animation: "spin 0.7s linear infinite",
+      verticalAlign: "middle", marginRight: "6px",
     }} />
   );
 }
 
-// inject keyframe once
 if (typeof document !== "undefined" && !document.getElementById("_spin_kf")) {
   const s = document.createElement("style");
   s.id = "_spin_kf";
@@ -23,16 +29,17 @@ if (typeof document !== "undefined" && !document.getElementById("_spin_kf")) {
   document.head.appendChild(s);
 }
 
-// ─── trigger button with inline status ───────────────────────────────────────
+// ─── trigger button ───────────────────────────────────────────────────────────
 function TriggerBtn({ label, icon, onClick, status, accentColor, dark }) {
-  const idle    = !status;
   const running = status?.state === "running";
   const done    = status?.state === "done";
   const failed  = status?.state === "error";
 
-  const statusColor = done ? (dark ? "#4ade80" : "#15803d")
-    : failed ? (dark ? "#f87171" : "#b91c1c")
-    : (dark ? "#38bdf8" : "#1d4ed8");
+  const statusColor = done
+    ? (dark ? "#4ade80" : "#15803d")
+    : failed
+      ? (dark ? "#f87171" : "#b91c1c")
+      : (dark ? "#38bdf8" : "#1d4ed8");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -44,8 +51,8 @@ function TriggerBtn({ label, icon, onClick, status, accentColor, dark }) {
           padding: "9px 18px", borderRadius: "8px",
           border: `1px solid ${accentColor}55`,
           background: running ? (dark ? "#1e293b" : "#f1f5f9") : "transparent",
-          color: accentColor,
-          fontSize: "13px", fontWeight: "600", cursor: running ? "not-allowed" : "pointer",
+          color: accentColor, fontSize: "13px", fontWeight: "600",
+          cursor: running ? "not-allowed" : "pointer",
           opacity: running ? 0.7 : 1, transition: "opacity 0.15s",
         }}
       >
@@ -54,7 +61,7 @@ function TriggerBtn({ label, icon, onClick, status, accentColor, dark }) {
       </button>
       {(done || failed) && (
         <span style={{ fontSize: "12px", color: statusColor, paddingLeft: "4px" }}>
-          {done && `✓ ${status.message}`}
+          {done   && `✓ ${status.message}`}
           {failed && `✕ ${status.message}`}
         </span>
       )}
@@ -62,7 +69,7 @@ function TriggerBtn({ label, icon, onClick, status, accentColor, dark }) {
   );
 }
 
-// ─── edit modal for a pending / rejected drive ────────────────────────────────
+// ─── edit modal ───────────────────────────────────────────────────────────────
 function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
   const cardBorder  = dark ? "#334155" : "#e2e8f0";
   const textPrimary = dark ? "#f1f5f9" : "#0f172a";
@@ -70,7 +77,6 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
   const inputBg     = dark ? "#0f172a" : "#f8fafc";
   const inputBorder = dark ? "#475569" : "#e2e8f0";
   const inputColor  = dark ? "#f1f5f9" : "#0f172a";
-  const overlayBg   = dark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)";
 
   const inputStyle = {
     padding: "9px 12px", border: `1px solid ${inputBorder}`, borderRadius: "7px",
@@ -79,39 +85,46 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
   };
 
   const [form, setForm] = useState({
-    companyName:      drive.companyName      || "",
-    jobRole:          drive.jobRole          || "",
-    jobDescription:   drive.jobDescription   || "",
-    keySkills:        drive.keySkills        || "",
-    location:         drive.location         || "",
-    ctcDisplay:       drive.ctcDisplay       || "",
-    minCgpa:          drive.minCgpa          ?? "",
-    deadline:         drive.deadline         || "",
-    eligibleBranches: drive.eligibleBranches || "",
-    eligibleBatches:  drive.eligibleBatches  || "",
-    experienceLevel:  drive.experienceLevel  || "Freshers",
-    category:         drive.category         || "IT_SOFTWARE",
-    status:           drive.status           || "ACTIVE",
-    jobType:          drive.jobType          || "Full-Time",
-    applyLink:        drive.applyLink        || "",
+    companyName:       drive.companyName      || "",
+    jobRole:           drive.jobRole          || "",
+    jobDescription:    drive.jobDescription   || "",
+    keySkills:         drive.keySkills        || "",
+    location:          drive.location         || "",
+    ctcDisplay:        drive.ctcDisplay       || "",
+    minCgpa:           drive.minCgpa          ?? "",
+    deadline:          drive.deadline         || "",
+    eligibleBranches:  drive.eligibleBranches || "",
+    eligibleBatches:   drive.eligibleBatches  || "",
+    experienceLevel:   drive.experienceLevel  || "Freshers",
+    category:          drive.category         || "IT_SOFTWARE",
+    status:            drive.status           || "ACTIVE",
+    jobType:           drive.jobType          || "Full-Time",
+    applyLink:         drive.applyLink        || "",
     autoDeleteEnabled: drive.autoDeleteEnabled ?? true,
   });
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center",
-      background: overlayBg, padding: "16px",
-    }} onClick={onClose}>
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000, display: "flex",
+        alignItems: "center", justifyContent: "center",
+        background: dark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)", padding: "16px",
+      }}
+      onClick={onClose}
+    >
       <div
         style={{
-          background: dark ? "#1e293b" : "#ffffff", border: `1px solid ${cardBorder}`,
-          borderRadius: "14px", padding: "24px", width: "100%", maxWidth: "720px",
+          background: dark ? "#1e293b" : "#ffffff",
+          border: `1px solid ${cardBorder}`, borderRadius: "14px",
+          padding: "24px", width: "100%", maxWidth: "720px",
           maxHeight: "90vh", overflowY: "auto",
+          scrollbarWidth: "none", msOverflowStyle: "none",
         }}
         onClick={e => e.stopPropagation()}
       >
+        <style>{`.fd-modal-scroll::-webkit-scrollbar{display:none}`}</style>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h3 style={{ fontSize: "15px", fontWeight: "700", color: textPrimary, margin: 0 }}>Edit discovered drive</h3>
           <button onClick={onClose} style={{ background: "transparent", border: "none", fontSize: "18px", color: textSec, cursor: "pointer" }}>✕</button>
@@ -119,15 +132,15 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: "12px" }}>
           {[
-            { key: "companyName",      label: "Company name"        },
-            { key: "jobRole",          label: "Job role"            },
-            { key: "location",         label: "Location"            },
-            { key: "ctcDisplay",       label: "CTC"                 },
-            { key: "minCgpa",          label: "Min CGPA"            },
-            { key: "eligibleBranches", label: "Eligible branches"   },
-            { key: "eligibleBatches",  label: "Eligible batches"    },
-            { key: "applyLink",        label: "Apply link"          },
-            { key: "keySkills",        label: "Key skills"          },
+            { key: "companyName",      label: "Company name"      },
+            { key: "jobRole",          label: "Job role"          },
+            { key: "location",         label: "Location"          },
+            { key: "ctcDisplay",       label: "CTC"               },
+            { key: "minCgpa",          label: "Min CGPA"          },
+            { key: "eligibleBranches", label: "Eligible branches" },
+            { key: "eligibleBatches",  label: "Eligible batches"  },
+            { key: "applyLink",        label: "Apply link"        },
+            { key: "keySkills",        label: "Key skills"        },
           ].map(({ key, label }) => (
             <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <label style={{ fontSize: "11px", fontWeight: "600", color: textSec, textTransform: "uppercase", letterSpacing: "0.4px" }}>{label}</label>
@@ -135,7 +148,6 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
             </div>
           ))}
 
-          {/* Status — always shown in edit, default ACTIVE */}
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label style={{ fontSize: "11px", fontWeight: "600", color: textSec, textTransform: "uppercase", letterSpacing: "0.4px" }}>Status</label>
             <select style={inputStyle} value={form.status} onChange={set("status")}>
@@ -187,7 +199,6 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
           />
         </div>
 
-        {/* Auto-delete toggle */}
         <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: textSec, cursor: "pointer", marginTop: "14px" }}>
           <input
             type="checkbox"
@@ -197,26 +208,19 @@ function EditModal({ drive, dark, onClose, onSave, onSaveAndApprove }) {
           Auto-delete after deadline
         </label>
 
-        {/* Action buttons */}
         <div style={{ display: "flex", gap: "8px", marginTop: "20px", flexWrap: "wrap" }}>
           <button
             onClick={() => onSave(form)}
             style={{ padding: "9px 18px", borderRadius: "7px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
-          >
-            Save only
-          </button>
+          >Save only</button>
           <button
             onClick={() => onSaveAndApprove(form)}
             style={{ padding: "9px 18px", borderRadius: "7px", border: "none", background: "#2563eb", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
-          >
-            Save &amp; Approve
-          </button>
+          >Save &amp; Approve</button>
           <button
             onClick={onClose}
             style={{ padding: "9px 18px", borderRadius: "7px", border: `1px solid ${cardBorder}`, background: "transparent", color: textSec, fontSize: "13px", cursor: "pointer" }}
-          >
-            Cancel
-          </button>
+          >Cancel</button>
         </div>
       </div>
     </div>
@@ -239,41 +243,34 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     outline: "none", width: "100%", boxSizing: "border-box",
   };
 
-  // ── discovered drives lists ─────────────────────────────────────────────────
-  const [pending,  setPending]  = useState([]);
-  const [rejected, setRejected] = useState([]);
+  const [pending,     setPending]     = useState([]);
+  const [rejected,    setRejected]    = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listError,   setListError]   = useState(null);
 
-  // ── pagination ──────────────────────────────────────────────────────────────
-  const [pendPage,  setPendPage]  = useState(1);
-  const [rejPage,   setRejPage]   = useState(1);
+  const [pendPage,   setPendPage]   = useState(1);
+  const [rejPage,    setRejPage]    = useState(1);
   const [pendSearch, setPendSearch] = useState("");
   const [rejSearch,  setRejSearch]  = useState("");
 
-  // ── edit modal ──────────────────────────────────────────────────────────────
-  const [editingDrive, setEditingDrive] = useState(null);
-
-  // ── trigger statuses: { rss, ai, url } each null | { state, message } ──────
-  const [triggerStatus, setTriggerStatus] = useState({ rss: null, ai: null, url: null });
-  const [customUrls, setCustomUrls] = useState("");
-
-  // ── action feedback (approve/reject) ────────────────────────────────────────
-  const [actionMsg, setActionMsg] = useState(null); // { type: "ok"|"err", text }
+  const [editingDrive,   setEditingDrive]   = useState(null);
+  const [triggerStatus,  setTriggerStatus]  = useState({ rss: null, ai: null, url: null });
+  const [customUrls,     setCustomUrls]     = useState("");
+  const [actionMsg,      setActionMsg]      = useState(null);
 
   const flashAction = (type, text) => {
     setActionMsg({ type, text });
     setTimeout(() => setActionMsg(null), 4000);
   };
 
-  // ── fetch pending + rejected ────────────────────────────────────────────────
+  // ── fetch pending + rejected — correct paths ────────────────────────────
   const fetchDiscovered = useCallback(async () => {
     setLoadingList(true);
     setListError(null);
     try {
       const [pRes, rRes] = await Promise.all([
-        axios.get("/admin/discovery/pending"),
-        axios.get("/admin/discovery/rejected"),
+        axios.get("/admin/drives/pending"),
+        axios.get("/admin/drives/rejected"),
       ]);
       setPending(pRes.data);
       setRejected(rRes.data);
@@ -286,18 +283,17 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
 
   useEffect(() => { fetchDiscovered(); }, [fetchDiscovered]);
 
-  // ── trigger helpers ─────────────────────────────────────────────────────────
+  // ── trigger helpers — paths are correct (/admin/discovery/rss etc.) ────
   const runTrigger = async (type) => {
     setTriggerStatus(s => ({ ...s, [type]: { state: "running" } }));
     try {
       let url = `/admin/discovery/${type}`;
       if (type === "url" && customUrls.trim()) {
-        const encoded = encodeURIComponent(customUrls.trim());
-        url += `?extraUrls=${encoded}`;
+        url += `?extraUrls=${encodeURIComponent(customUrls.trim())}`;
       }
       const res = await axios.post(url);
-      const count = Array.isArray(res.data) ? res.data.length : (res.data?.count ?? "?");
-      setTriggerStatus(s => ({ ...s, [type]: { state: "done", message: `${count} drive(s) discovered` } }));
+      const count = res.data?.ingested ?? "?";
+      setTriggerStatus(s => ({ ...s, [type]: { state: "done", message: `${count} drive(s) queued for review` } }));
       fetchDiscovered();
     } catch (err) {
       const msg = err.response?.data?.message || err.message || "Unknown error";
@@ -306,10 +302,10 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     setTimeout(() => setTriggerStatus(s => ({ ...s, [type]: null })), 6000);
   };
 
-  // ── approve / reject ────────────────────────────────────────────────────────
+  // ── approve ─────────────────────────────────────────────────────────────
   const approve = async (id) => {
     try {
-      await axios.post(`/admin/discovery/${id}/approve`);
+      await axios.post(`/admin/drives/${id}/approve`);
       setPending(p => p.filter(d => d.id !== id));
       flashAction("ok", "Drive approved and published.");
       onDrivesChanged?.();
@@ -318,36 +314,43 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     }
   };
 
+  // ── reject ──────────────────────────────────────────────────────────────
   const reject = async (id) => {
     if (!window.confirm("Reject this discovered drive?")) return;
     try {
-      await axios.post(`/admin/discovery/${id}/reject`);
+      await axios.post(`/admin/drives/${id}/reject`);
       const drive = pending.find(d => d.id === id);
       setPending(p => p.filter(d => d.id !== id));
-      if (drive) setRejected(r => [{ ...drive, status: "REJECTED" }, ...r]);
+      if (drive) setRejected(r => [{ ...drive }, ...r]);
       flashAction("ok", "Drive rejected.");
     } catch (err) {
-      flashAction("err", err.response?.data?.message || "Failed to reject.");
+      const msg = err.response?.data?.message || "Failed to reject.";
+      if (err.response?.status === 429) {
+        flashAction("err", `Rate limited: ${msg}`);
+      } else {
+        flashAction("err", msg);
+      }
     }
   };
 
+  // ── restore ─────────────────────────────────────────────────────────────
   const restore = async (id) => {
     try {
-      await axios.post(`/admin/discovery/${id}/restore`);
+      await axios.post(`/admin/drives/${id}/restore`);
       const drive = rejected.find(d => d.id === id);
       setRejected(r => r.filter(d => d.id !== id));
-      if (drive) setPending(p => [{ ...drive, status: "PENDING" }, ...p]);
+      if (drive) setPending(p => [{ ...drive }, ...p]);
       flashAction("ok", "Drive moved back to pending.");
     } catch (err) {
       flashAction("err", err.response?.data?.message || "Failed to restore.");
     }
   };
 
-  // ── edit save / save+approve ─────────────────────────────────────────────────
+  // ── edit save ────────────────────────────────────────────────────────────
   const handleSave = async (form) => {
     const id = editingDrive.id;
     try {
-      const res = await axios.put(`/admin/discovery/${id}`, form);
+      const res = await axios.put(`/admin/drives/${id}`, form);
       setPending(p => p.map(d => d.id === id ? res.data : d));
       setRejected(r => r.map(d => d.id === id ? res.data : d));
       setEditingDrive(null);
@@ -358,11 +361,12 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     }
   };
 
+  // ── edit save + approve ──────────────────────────────────────────────────
   const handleSaveAndApprove = async (form) => {
     const id = editingDrive.id;
     try {
-      await axios.put(`/admin/discovery/${id}`, form);
-      await axios.post(`/admin/discovery/${id}/approve`);
+      await axios.put(`/admin/drives/${id}`, form);
+      await axios.post(`/admin/drives/${id}/approve`);
       setPending(p => p.filter(d => d.id !== id));
       setRejected(r => r.filter(d => d.id !== id));
       setEditingDrive(null);
@@ -374,15 +378,15 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     }
   };
 
-  // ── filtered + paged ────────────────────────────────────────────────────────
+  // ── filter + page ────────────────────────────────────────────────────────
   const filterDrives = (list, q) => {
     if (!q.trim()) return list;
     const lq = q.toLowerCase();
     return list.filter(d =>
-      (d.companyName||"").toLowerCase().includes(lq) ||
-      (d.jobRole    ||"").toLowerCase().includes(lq) ||
-      (d.location   ||"").toLowerCase().includes(lq) ||
-      (d.category   ||"").toLowerCase().includes(lq)
+      (d.companyName || "").toLowerCase().includes(lq) ||
+      (d.jobRole     || "").toLowerCase().includes(lq) ||
+      (d.location    || "").toLowerCase().includes(lq) ||
+      (d.category    || "").toLowerCase().includes(lq)
     );
   };
 
@@ -391,7 +395,6 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
   const pagedPend    = filteredPend.slice((pendPage - 1) * PAGE_SIZE, pendPage * PAGE_SIZE);
   const pagedRej     = filteredRej.slice((rejPage  - 1) * PAGE_SIZE, rejPage  * PAGE_SIZE);
 
-  // ── shared table cell style ─────────────────────────────────────────────────
   const td = { padding: "11px 12px", verticalAlign: "middle" };
   const th = {
     textAlign: "left", padding: "9px 12px", fontSize: "11px", fontWeight: "600",
@@ -399,7 +402,7 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
     borderBottom: `1px solid ${cardBorder}`, whiteSpace: "nowrap",
   };
 
-  const DriveRow = ({ d, isRejected }) => {
+  function DriveRow({ d, isRejected }) {
     const dl = deadlineBadge(d.deadline, dark);
     return (
       <tr style={{ borderBottom: `1px solid ${dark ? "#1e293b" : "#f1f5f9"}` }}>
@@ -407,22 +410,23 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
         <td style={{ ...td, color: textSec }}>{d.jobRole}</td>
         <td style={{ ...td, color: textSec }}>{d.location || "—"}</td>
         <td style={{ ...td, color: textSec }}>{d.category || "—"}</td>
-        <td style={{ ...td }}>
+        <td style={td}>
           <span style={{
             display: "inline-flex", padding: "3px 10px", borderRadius: "20px",
             fontSize: "11px", fontWeight: "600", whiteSpace: "nowrap",
             background: dl.bg, color: dl.color, border: `1px solid ${dl.border}`,
           }}>{dl.label}</span>
         </td>
-        <td style={{ ...td }}>
+        <td style={td}>
           <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
             <button
               style={{ padding: "5px 10px", borderRadius: "6px", border: `1px solid ${cardBorder}`, background: "transparent", color: textPrimary, fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
               onClick={() => setEditingDrive(d)}
             >Edit</button>
+
             {isRejected ? (
               <button
-                style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark?"#60a5fa":"#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(37,99,235,0.4)", background: "transparent", color: dark ? "#60a5fa" : "#2563eb", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
                 onClick={() => restore(d.id)}
               >Restore</button>
             ) : (
@@ -434,7 +438,7 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
                   >Approve</button>
                 )}
                 <button
-                  style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark?"#f87171":"#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
+                  style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.4)", background: "transparent", color: dark ? "#f87171" : "#dc2626", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}
                   onClick={() => reject(d.id)}
                 >Reject</button>
               </>
@@ -443,29 +447,30 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
         </td>
       </tr>
     );
-  };
+  }
 
   return (
-    <div>
-      {/* ── edit modal ──────────────────────────────────────────────────────── */}
+    <div className="fd-discovery-panel">
+      <style>{HIDE_SCROLLBAR_STYLE}</style>
+
+      {/* edit modal */}
       {editingDrive && (
         <EditModal
-          drive={editingDrive}
-          dark={dark}
+          drive={editingDrive} dark={dark}
           onClose={() => setEditingDrive(null)}
           onSave={handleSave}
           onSaveAndApprove={handleSaveAndApprove}
         />
       )}
 
-      {/* ── action feedback toast ────────────────────────────────────────────── */}
+      {/* action toast */}
       {actionMsg && (
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: actionMsg.type === "ok" ? (dark?"#052e16":"#f0fdf4") : (dark?"#450a0a":"#fef2f2"),
-          border: `1px solid ${actionMsg.type==="ok"?(dark?"#14532d":"#bbf7d0"):(dark?"#7f1d1d":"#fecaca")}`,
+          background: actionMsg.type === "ok" ? (dark ? "#052e16" : "#f0fdf4") : (dark ? "#450a0a" : "#fef2f2"),
+          border: `1px solid ${actionMsg.type === "ok" ? (dark ? "#14532d" : "#bbf7d0") : (dark ? "#7f1d1d" : "#fecaca")}`,
           borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
-          color: actionMsg.type === "ok" ? (dark?"#4ade80":"#15803d") : (dark?"#f87171":"#b91c1c"),
+          color: actionMsg.type === "ok" ? (dark ? "#4ade80" : "#15803d") : (dark ? "#f87171" : "#b91c1c"),
           marginBottom: "14px",
         }}>
           <span>{actionMsg.type === "ok" ? "✓" : "⚠️"} {actionMsg.text}</span>
@@ -473,47 +478,17 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          ADMIN-ONLY: trigger panel
-      ════════════════════════════════════════════════════════════════════════ */}
+      {/* ── trigger panel (admin only) ──────────────────────────────────── */}
       {isAdmin && (
         <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: "0 0 4px" }}>Run discovery</h2>
-            <p style={{ fontSize: "12px", color: textSec, margin: 0 }}>Manually trigger each source. Results appear in the Pending review table below.</p>
-          </div>
+          <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: "0 0 4px" }}>Run discovery</h2>
+          <p style={{ fontSize: "12px", color: textSec, margin: "0 0 14px" }}>Manually trigger each source. Results appear in Pending review below.</p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-start" }}>
-            {/* RSS */}
-            <TriggerBtn
-              label="Run RSS feeds"
-              icon="📡"
-              dark={dark}
-              accentColor={dark ? "#34d399" : "#059669"}
-              status={triggerStatus.rss}
-              onClick={() => runTrigger("rss")}
-            />
-
-            {/* AI search */}
-            <TriggerBtn
-              label="Run AI search"
-              icon="🤖"
-              dark={dark}
-              accentColor={dark ? "#a78bfa" : "#7c3aed"}
-              status={triggerStatus.ai}
-              onClick={() => runTrigger("ai")}
-            />
-
-            {/* URL scraping — with custom URL input */}
+            <TriggerBtn label="Run RSS feeds"    icon="📡" dark={dark} accentColor={dark?"#34d399":"#059669"} status={triggerStatus.rss} onClick={() => runTrigger("rss")} />
+            <TriggerBtn label="Run AI search"    icon="🤖" dark={dark} accentColor={dark?"#a78bfa":"#7c3aed"} status={triggerStatus.ai}  onClick={() => runTrigger("ai")}  />
             <div style={{ display: "flex", flexDirection: "column", gap: "6px", minWidth: "260px", flex: 1 }}>
-              <TriggerBtn
-                label="Run URL scraping"
-                icon="🔗"
-                dark={dark}
-                accentColor={dark ? "#38bdf8" : "#0369a1"}
-                status={triggerStatus.url}
-                onClick={() => runTrigger("url")}
-              />
+              <TriggerBtn label="Run URL scraping" icon="🔗" dark={dark} accentColor={dark?"#38bdf8":"#0369a1"} status={triggerStatus.url} onClick={() => runTrigger("url")} />
               <input
                 style={{ ...inputStyle, fontSize: "12px" }}
                 placeholder="Custom URLs (comma-separated, optional)"
@@ -526,28 +501,24 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          PENDING REVIEW
-      ════════════════════════════════════════════════════════════════════════ */}
+      {/* ── pending review ──────────────────────────────────────────────── */}
       <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
           <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Pending review</h2>
-          <span style={{ background: dark?"#0f172a":"#f1f5f9", color: textSec, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
+          <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSec, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
             {filteredPend.length} {pendSearch.trim() ? "found" : "total"}
           </span>
         </div>
-
-        <input
-          style={{ ...inputStyle, marginBottom: "14px" }}
-          placeholder="Search pending…"
-          value={pendSearch}
-          onChange={e => { setPendSearch(e.target.value); setPendPage(1); }}
-        />
+        <input style={{ ...inputStyle, marginBottom: "14px" }} placeholder="Search pending…" value={pendSearch}
+          onChange={e => { setPendSearch(e.target.value); setPendPage(1); }} />
 
         {loadingList ? (
           <p style={{ color: textSec, fontSize: "14px" }}>Loading…</p>
         ) : listError ? (
-          <p style={{ color: dark?"#f87171":"#b91c1c", fontSize: "13px" }}>{listError}</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: dark?"#450a0a":"#fef2f2", border:`1px solid ${dark?"#7f1d1d":"#fecaca"}`, borderRadius:"8px", padding:"10px 14px", fontSize:"13px", color:dark?"#f87171":"#b91c1c" }}>
+            <span>⚠️ {listError}</span>
+            <button style={{ background:"transparent",border:"none",cursor:"pointer",color:"inherit",fontSize:"14px" }} onClick={fetchDiscovered}>Retry</button>
+          </div>
         ) : filteredPend.length === 0 ? (
           <p style={{ color: textSec, fontSize: "14px" }}>
             {pendSearch.trim() ? `No pending drives matching "${pendSearch}".` : "No drives awaiting review."}
@@ -556,16 +527,8 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
           <>
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
-                <thead>
-                  <tr>
-                    {["Company","Role","Location","Category","Deadline","Actions"].map(h => (
-                      <th key={h} style={th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedPend.map(d => <DriveRow key={d.id} d={d} isRejected={false} />)}
-                </tbody>
+                <thead><tr>{["Company","Role","Location","Category","Deadline","Actions"].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+                <tbody>{pagedPend.map(d => <DriveRow key={d.id} d={d} isRejected={false} />)}</tbody>
               </table>
             </div>
             <Pagination total={filteredPend.length} page={pendPage} pageSize={PAGE_SIZE} onChange={setPendPage} />
@@ -573,23 +536,16 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
         )}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          REJECTED
-      ════════════════════════════════════════════════════════════════════════ */}
+      {/* ── rejected ────────────────────────────────────────────────────── */}
       <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
           <h2 style={{ fontSize: "15px", fontWeight: "600", color: textPrimary, margin: 0 }}>Rejected</h2>
-          <span style={{ background: dark?"#0f172a":"#f1f5f9", color: textSec, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
+          <span style={{ background: dark ? "#0f172a" : "#f1f5f9", color: textSec, fontSize: "12px", fontWeight: "500", padding: "3px 10px", borderRadius: "20px" }}>
             {filteredRej.length} {rejSearch.trim() ? "found" : "total"}
           </span>
         </div>
-
-        <input
-          style={{ ...inputStyle, marginBottom: "14px" }}
-          placeholder="Search rejected…"
-          value={rejSearch}
-          onChange={e => { setRejSearch(e.target.value); setRejPage(1); }}
-        />
+        <input style={{ ...inputStyle, marginBottom: "14px" }} placeholder="Search rejected…" value={rejSearch}
+          onChange={e => { setRejSearch(e.target.value); setRejPage(1); }} />
 
         {filteredRej.length === 0 ? (
           <p style={{ color: textSec, fontSize: "14px" }}>
@@ -599,16 +555,8 @@ export default function AdminDiscoveryTab({ dark, isMobile, isAdmin, isEmployee,
           <>
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: isMobile ? "700px" : "unset" }}>
-                <thead>
-                  <tr>
-                    {["Company","Role","Location","Category","Deadline","Actions"].map(h => (
-                      <th key={h} style={th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedRej.map(d => <DriveRow key={d.id} d={d} isRejected={true} />)}
-                </tbody>
+                <thead><tr>{["Company","Role","Location","Category","Deadline","Actions"].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+                <tbody>{pagedRej.map(d => <DriveRow key={d.id} d={d} isRejected={true} />)}</tbody>
               </table>
             </div>
             <Pagination total={filteredRej.length} page={rejPage} pageSize={PAGE_SIZE} onChange={setRejPage} />
